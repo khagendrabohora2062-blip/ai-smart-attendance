@@ -1,2 +1,11 @@
-Flask-SQLAlchemy
-PyMySQL
+Flask
+Flask-MySQLdb
+gunicorn
+
+numpy
+opencv-python-headless
+Pillow
+
+qrcode
+openpyxl
+reportlab

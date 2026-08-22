@@ -1,11 +1,47 @@
+import os
+
+
 class Config:
+    # =========================================================
+    # SECRET KEY
+    # =========================================================
 
-    SECRET_KEY = "smart_attendance_secret_key_2026"
+    SECRET_KEY = os.getenv(
+        "SECRET_KEY",
+        "local-development-secret-change-in-render"
+    )
 
-    MYSQL_HOST = "localhost"
+    # =========================================================
+    # MYSQL DATABASE
+    # =========================================================
 
-    MYSQL_USER = "root"
+    MYSQL_HOST = os.getenv(
+        "MYSQL_HOST",
+        "localhost"
+    )
 
-    MYSQL_PASSWORD = ""
+    MYSQL_USER = os.getenv(
+        "MYSQL_USER",
+        "root"
+    )
 
-    MYSQL_DB = "smart_attendance"
+    MYSQL_PASSWORD = os.getenv(
+        "MYSQL_PASSWORD",
+        ""
+    )
+
+    MYSQL_DB = os.getenv(
+        "MYSQL_DB",
+        "smart_attendance"
+    )
+
+    MYSQL_PORT = int(
+        os.getenv(
+            "MYSQL_PORT",
+            "3306"
+        )
+    )
+
+    MYSQL_CURSORCLASS = "Cursor"
+
+    MYSQL_AUTOCOMMIT = True
