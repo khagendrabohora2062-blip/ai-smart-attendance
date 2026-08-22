@@ -1,0 +1,501 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Open Attendance Session
+{% endblock %}
+
+
+{% block css %}
+
+<style>
+
+.open-session-page {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+
+.open-session-header {
+    margin-bottom: 25px;
+}
+
+
+.open-session-title {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 29px;
+
+    font-weight: 700;
+}
+
+
+.open-session-title i {
+    color: #2563eb;
+
+    margin-right: 8px;
+}
+
+
+.open-session-subtitle {
+    margin: 7px 0 0;
+
+    color: #64748b;
+
+    font-size: 14px;
+}
+
+
+.open-session-card {
+    background: #ffffff;
+
+    border: 1px solid #e5eaf1;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.07);
+
+    overflow: hidden;
+}
+
+
+.open-session-card-header {
+    padding: 22px 25px;
+
+    border-bottom: 1px solid #edf1f5;
+}
+
+
+.open-session-card-header h4 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+
+.open-session-card-header p {
+    margin: 6px 0 0;
+
+    color: #64748b;
+
+    font-size: 13px;
+}
+
+
+.open-session-card-body {
+    padding: 28px 25px;
+}
+
+
+.open-session-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #334155;
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+
+.open-session-input,
+.open-session-select {
+    width: 100%;
+
+    min-height: 47px;
+
+    padding: 10px 13px;
+
+    border: 1px solid #dbe2ea;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #334155;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+
+.open-session-input:focus,
+.open-session-select:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+
+.open-session-info {
+    padding: 15px 17px;
+
+    margin-top: 5px;
+
+    border-radius: 9px;
+
+    background: #eff6ff;
+
+    border: 1px solid #dbeafe;
+
+    color: #1e40af;
+
+    font-size: 13px;
+}
+
+
+.open-session-actions {
+    padding: 20px 25px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    border-top: 1px solid #edf1f5;
+}
+
+
+.open-session-back {
+    min-height: 43px;
+
+    padding: 9px 17px;
+
+    border-radius: 8px;
+
+    border: 1px solid #dbe2ea;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+.open-session-back:hover {
+    background: #f8fafc;
+
+    color: #334155;
+}
+
+
+.open-session-submit {
+    min-height: 43px;
+
+    padding: 9px 19px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #2563eb;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    box-shadow:
+        0 5px 14px rgba(37, 99, 235, 0.20);
+}
+
+
+.open-session-submit:hover {
+    background: #1d4ed8;
+}
+
+
+@media (max-width: 576px) {
+
+    .open-session-title {
+        font-size: 23px;
+    }
+
+    .open-session-card-body {
+        padding: 20px;
+    }
+
+    .open-session-actions {
+        padding: 17px 20px;
+
+        flex-direction: column-reverse;
+    }
+
+    .open-session-back,
+    .open-session-submit {
+        width: 100%;
+
+        text-align: center;
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="open-session-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="open-session-header">
+
+        <h2 class="open-session-title">
+
+            <i class="bi bi-calendar-plus-fill"></i>
+
+            Open Attendance Session
+
+        </h2>
+
+        <p class="open-session-subtitle">
+
+            Create an attendance session for one of your assigned subjects.
+
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         CARD
+    ====================================================== -->
+
+    <div class="open-session-card">
+
+
+        <!-- HEADER -->
+
+        <div class="open-session-card-header">
+
+            <h4>
+
+                <i class="bi bi-unlock-fill text-primary me-2"></i>
+
+                Session Details
+
+            </h4>
+
+            <p>
+                Select the subject and set the attendance time.
+            </p>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div class="open-session-card-body">
+
+            <form
+                <form method="POST"
+      action="{{ url_for('teacher_attendance.open_session_page') }}">
+
+
+                <!-- SUBJECT -->
+
+                <div class="mb-4">
+
+                    <label class="open-session-label">
+
+                        Select Subject
+
+                    </label>
+
+                    <select
+                        name="subject_id"
+                        class="open-session-select"
+                        required
+                    >
+
+                        <option value="">
+                            -- Select Subject --
+                        </option>
+
+                        {% for subject in subjects %}
+
+                        <option value="{{ subject[0] }}">
+
+                            {{ subject[1] }}
+                            -
+                            {{ subject[2] }}
+
+                            {% if subject[3] %}
+                                (Semester {{ subject[3] }})
+                            {% endif %}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TIME -->
+
+                <div class="row g-4">
+
+
+                    <!-- START -->
+
+                    <div class="col-md-6">
+
+                        <label class="open-session-label">
+
+                            Start Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            name="start_time"
+                            id="openStartTime"
+                            class="open-session-input"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- END -->
+
+                    <div class="col-md-6">
+
+                        <label class="open-session-label">
+
+                            End Time
+
+                        </label>
+
+                        <input
+                            type="time"
+                            name="end_time"
+                            id="openEndTime"
+                            class="open-session-input"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- INFO -->
+
+                <div class="open-session-info mt-4">
+
+                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                    <strong>Important:</strong>
+
+                    Only one attendance session can be created
+                    for the same subject on the same day.
+
+                    When the session is closed, students without
+                    attendance records will automatically be marked
+                    <strong>Absent</strong>.
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="open-session-actions mt-4">
+
+                    <a
+                        href="{{ url_for('teacher_attendance.index') }}"
+                        class="open-session-back"
+                    >
+
+                        <i class="bi bi-arrow-left me-1"></i>
+
+                        Back to Attendance
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="open-session-submit"
+                    >
+
+                        <i class="bi bi-unlock-fill me-1"></i>
+
+                        Open Attendance Session
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================
+     CURRENT TIME
+============================================================= -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const startInput =
+            document.getElementById(
+                "openStartTime"
+            );
+
+        if (startInput && !startInput.value) {
+
+            const now = new Date();
+
+            const hours =
+                String(now.getHours()).padStart(2, "0");
+
+            const minutes =
+                String(now.getMinutes()).padStart(2, "0");
+
+            startInput.value =
+                `${hours}:${minutes}`;
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

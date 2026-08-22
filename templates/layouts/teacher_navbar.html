@@ -1,0 +1,1110 @@
+<!-- =====================================================
+     TEACHER NAVBAR
+====================================================== -->
+
+<nav class="teacher-navbar">
+
+    <!-- =================================================
+         LEFT SIDE
+    ================================================== -->
+
+    <div class="teacher-navbar-left">
+
+        <!-- MOBILE MENU -->
+
+        <button
+            type="button"
+            class="teacher-menu-btn d-lg-none"
+            id="teacherMenuToggle"
+            aria-label="Open menu"
+            aria-expanded="false"
+            aria-controls="teacherSidebar">
+
+            <i class="bi bi-list"></i>
+
+        </button>
+
+
+        <!-- TITLE -->
+
+        <div class="teacher-navbar-title">
+
+            <h5>
+                Teacher Dashboard
+            </h5>
+
+            <small>
+                AI Smart Attendance System
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         RIGHT SIDE
+    ================================================== -->
+
+    <div class="teacher-navbar-right">
+
+        <!-- DATE -->
+
+        <div class="teacher-navbar-date-box">
+
+            <i class="bi bi-calendar3"></i>
+
+            <span
+                id="teacherNavbarDate"
+                class="teacher-navbar-date">
+            </span>
+
+        </div>
+
+
+        <!-- TIME -->
+
+        <div class="teacher-navbar-time-box">
+
+            <i class="bi bi-clock"></i>
+
+            <span
+                id="teacherNavbarTime"
+                class="teacher-navbar-time">
+            </span>
+
+        </div>
+
+
+        <!-- =================================================
+             NOTIFICATION
+        ================================================== -->
+
+        <div class="dropdown">
+
+            <button
+                type="button"
+                class="teacher-notification-btn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+
+                <i class="bi bi-bell-fill"></i>
+
+                <span class="teacher-notification-badge">
+                    0
+                </span>
+
+            </button>
+
+
+            <ul
+                class="dropdown-menu
+                       dropdown-menu-end
+                       teacher-notification-menu
+                       shadow">
+
+                <li>
+
+                    <h6 class="dropdown-header">
+
+                        <i class="bi bi-bell me-2"></i>
+
+                        Notifications
+
+                    </h6>
+
+                </li>
+
+
+                <li>
+
+                    <span class="dropdown-item text-muted">
+
+                        No new notifications
+
+                    </span>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- =================================================
+             TEACHER PROFILE
+        ================================================== -->
+
+        <div class="dropdown">
+
+            <button
+                type="button"
+                class="teacher-profile-btn"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+
+
+                <!-- AVATAR -->
+
+                <div class="teacher-navbar-avatar">
+
+                    {% if session.get("teacher_profile_photo") %}
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename='uploads/teachers/' ~ session.get('teacher_profile_photo')
+                            ) }}"
+                            alt="Teacher Profile"
+                            class="teacher-navbar-avatar-img"
+                        >
+
+                    {% else %}
+
+                        <i class="bi bi-person-fill"></i>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- TEACHER INFORMATION -->
+
+                <div class="teacher-navbar-info">
+
+                    <strong>
+
+                        {{ session.get(
+                            "teacher_name",
+                            "Teacher"
+                        ) }}
+
+                    </strong>
+
+
+                    <small>
+
+                        {{ session.get(
+                            "teacher_department",
+                            "Department"
+                        ) }}
+
+                    </small>
+
+                </div>
+
+
+                <!-- ARROW -->
+
+                <i
+                    class="bi bi-chevron-down teacher-profile-arrow">
+                </i>
+
+            </button>
+
+
+            <!-- =================================================
+                 PROFILE DROPDOWN
+            ================================================== -->
+
+            <ul
+                class="dropdown-menu
+                       dropdown-menu-end
+                       teacher-dropdown-menu
+                       shadow">
+
+
+                <li>
+
+                    <h6 class="dropdown-header">
+
+                        <i
+                            class="bi bi-person-workspace me-2">
+                        </i>
+
+                        Teacher Panel
+
+                    </h6>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_auth.dashboard') }}">
+
+                        <i
+                            class="bi bi-speedometer2 me-2">
+                        </i>
+
+                        Dashboard
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_attendance.index') }}">
+
+                        <i
+                            class="bi bi-calendar-check me-2">
+                        </i>
+
+                        Attendance
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_attendance.reports') }}">
+
+                        <i
+                            class="bi bi-file-earmark-bar-graph me-2">
+                        </i>
+
+                        Reports
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_auth.control_panel') }}">
+
+                        <i
+                            class="bi bi-sliders me-2">
+                        </i>
+
+                        Control Panel
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_auth.profile') }}">
+
+                        <i
+                            class="bi bi-person-vcard me-2">
+                        </i>
+
+                        My Profile
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item"
+                        href="{{ url_for('teacher_auth.settings') }}">
+
+                        <i
+                            class="bi bi-gear me-2">
+                        </i>
+
+                        Settings
+
+                    </a>
+
+                </li>
+
+
+                <li>
+
+                    <hr class="dropdown-divider">
+
+                </li>
+
+
+                <li>
+
+                    <a
+                        class="dropdown-item text-danger"
+                        href="{{ url_for('teacher_auth.logout') }}">
+
+                        <i
+                            class="bi bi-box-arrow-right me-2">
+                        </i>
+
+                        Logout
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- =====================================================
+     NAVBAR CSS
+====================================================== -->
+
+<style>
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+.teacher-navbar {
+
+    width: 100%;
+
+    min-height: 76px;
+
+    padding: 12px 26px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    background: #ffffff;
+
+    border-bottom:
+        1px solid #e2e8f0;
+
+    box-shadow:
+        0 2px 10px rgba(15,23,42,.05);
+
+    position: relative;
+
+    z-index: 1000;
+
+}
+
+
+/* =========================================================
+   LEFT
+========================================================= */
+
+.teacher-navbar-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    min-width: 0;
+
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.teacher-navbar-title {
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+}
+
+
+.teacher-navbar-title h5 {
+
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 18px;
+
+    font-weight: 800;
+
+    line-height: 24px;
+
+}
+
+
+.teacher-navbar-title small {
+
+    margin-top: 2px;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+========================================================= */
+
+.teacher-menu-btn {
+
+    width: 43px;
+
+    height: 43px;
+
+    min-width: 43px;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+
+    color: #334155;
+
+    font-size: 22px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+
+    touch-action: manipulation;
+
+    transition:
+        background .2s ease,
+        color .2s ease;
+
+}
+
+
+.teacher-menu-btn:hover {
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+}
+
+
+.teacher-menu-btn:active {
+
+    transform: scale(.95);
+
+}
+
+
+/* =========================================================
+   RIGHT
+========================================================= */
+
+.teacher-navbar-right {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 17px;
+
+}
+
+
+/* =========================================================
+   DATE
+========================================================= */
+
+.teacher-navbar-date-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+.teacher-navbar-date-box i {
+
+    color: #2563eb;
+
+    font-size: 16px;
+
+}
+
+
+/* =========================================================
+   TIME
+========================================================= */
+
+.teacher-navbar-time-box {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: #172033;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    white-space: nowrap;
+
+}
+
+
+.teacher-navbar-time-box i {
+
+    color: #16a34a;
+
+    font-size: 16px;
+
+}
+
+
+/* =========================================================
+   NOTIFICATION
+========================================================= */
+
+.teacher-notification-btn {
+
+    width: 44px;
+
+    height: 44px;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 50%;
+
+    background: #f8fafc;
+
+    color: #334155;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    position: relative;
+
+    font-size: 17px;
+
+    cursor: pointer;
+
+}
+
+
+.teacher-notification-btn:hover {
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+}
+
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.teacher-notification-badge {
+
+    position: absolute;
+
+    top: -2px;
+
+    right: -2px;
+
+    min-width: 17px;
+
+    height: 17px;
+
+    padding: 0 4px;
+
+    border-radius: 20px;
+
+    background: #ef4444;
+
+    color: #ffffff;
+
+    font-size: 9px;
+
+    font-weight: 800;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: 2px solid #ffffff;
+
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.teacher-profile-btn {
+
+    min-height: 48px;
+
+    padding:
+        4px 7px 4px 5px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: transparent;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    cursor: pointer;
+
+}
+
+
+.teacher-profile-btn:hover {
+
+    background: #f8fafc;
+
+}
+
+
+/* =========================================================
+   AVATAR
+========================================================= */
+
+.teacher-navbar-avatar {
+
+    width: 43px;
+
+    height: 43px;
+
+    min-width: 43px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #eff6ff;
+
+    border:
+        2px solid #dbeafe;
+
+    color: #2563eb;
+
+    font-size: 21px;
+
+}
+
+
+.teacher-navbar-avatar-img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+
+}
+
+
+/* =========================================================
+   PROFILE INFO
+========================================================= */
+
+.teacher-navbar-info {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    min-width: 100px;
+
+}
+
+
+.teacher-navbar-info strong {
+
+    max-width: 150px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #172033;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+}
+
+
+.teacher-navbar-info small {
+
+    max-width: 150px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: #94a3b8;
+
+    font-size: 11px;
+
+}
+
+
+/* =========================================================
+   ARROW
+========================================================= */
+
+.teacher-profile-arrow {
+
+    color: #94a3b8;
+
+    font-size: 12px;
+
+}
+
+
+/* =========================================================
+   DROPDOWNS
+========================================================= */
+
+.teacher-notification-menu {
+
+    min-width: 260px;
+
+    margin-top: 10px !important;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 12px;
+
+    padding: 7px;
+
+}
+
+
+.teacher-dropdown-menu {
+
+    min-width: 235px;
+
+    margin-top: 10px !important;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 12px;
+
+    padding: 8px;
+
+}
+
+
+.teacher-dropdown-menu .dropdown-header {
+
+    padding:
+        10px 12px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+}
+
+
+.teacher-dropdown-menu .dropdown-item {
+
+    padding:
+        10px 12px;
+
+    border-radius: 8px;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.teacher-dropdown-menu .dropdown-item:hover {
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+}
+
+
+.teacher-dropdown-menu
+.dropdown-item.text-danger:hover {
+
+    background: #fef2f2;
+
+    color: #dc2626;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 991px) {
+
+    .teacher-navbar {
+
+        min-height: 70px;
+
+        padding:
+            11px 18px;
+
+    }
+
+
+    .teacher-navbar-date-box,
+
+    .teacher-navbar-time-box {
+
+        display: none;
+
+    }
+
+
+    .teacher-navbar-right {
+
+        gap: 9px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 576px) {
+
+    .teacher-navbar {
+
+        min-height: 66px;
+
+        padding:
+            9px 13px;
+
+    }
+
+
+    .teacher-navbar-title h5 {
+
+        font-size: 15px;
+
+        line-height: 20px;
+
+    }
+
+
+    .teacher-navbar-title small {
+
+        font-size: 10px;
+
+    }
+
+
+    .teacher-navbar-info {
+
+        display: none;
+
+    }
+
+
+    .teacher-profile-arrow {
+
+        display: none;
+
+    }
+
+
+    .teacher-navbar-avatar {
+
+        width: 40px;
+
+        height: 40px;
+
+        min-width: 40px;
+
+    }
+
+
+    .teacher-notification-btn {
+
+        width: 40px;
+
+        height: 40px;
+
+    }
+
+
+    .teacher-menu-btn {
+
+        width: 40px;
+
+        height: 40px;
+
+        min-width: 40px;
+
+        font-size: 21px;
+
+    }
+
+}
+
+</style>
+
+
+<!-- =====================================================
+     LIVE DATE / TIME
+====================================================== -->
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    function updateTeacherNavbarDateTime() {
+
+        const now = new Date();
+
+
+        /* DATE */
+
+        const dateElement =
+            document.getElementById(
+                "teacherNavbarDate"
+            );
+
+
+        if (dateElement) {
+
+            dateElement.textContent =
+                now.toLocaleDateString(
+                    "en-US",
+                    {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric"
+                    }
+                );
+
+        }
+
+
+        /* TIME */
+
+        const timeElement =
+            document.getElementById(
+                "teacherNavbarTime"
+            );
+
+
+        if (timeElement) {
+
+            timeElement.textContent =
+                now.toLocaleTimeString(
+                    "en-US",
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true
+                    }
+                );
+
+        }
+
+    }
+
+
+    updateTeacherNavbarDateTime();
+
+
+    setInterval(
+        updateTeacherNavbarDateTime,
+        1000
+    );
+
+})();
+
+</script>

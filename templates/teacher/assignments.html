@@ -1,0 +1,694 @@
+
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Assignments - AI Smart Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+
+                <i class="bi bi-journal-text text-primary me-2"></i>
+
+                Assignments
+
+            </h3>
+
+            <p class="text-muted mb-0">
+
+                Create and manage assignments for your students.
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('teacher_assignment.create') }}"
+            class="btn btn-primary"
+        >
+
+            <i class="bi bi-plus-circle me-1"></i>
+
+            Create Assignment
+
+        </a>
+
+    </div>
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+    ========================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }}
+                           alert-dismissible fade show shadow-sm"
+                    role="alert"
+                >
+
+                    <i class="bi bi-info-circle me-1"></i>
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         ASSIGNMENT CARD
+    ========================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white py-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0 fw-bold">
+
+                    <i class="bi bi-list-task me-2 text-primary"></i>
+
+                    My Assignments
+
+                </h5>
+
+
+                {% if assignments %}
+
+                    <span class="badge bg-primary">
+
+                        {{ assignments|length }}
+
+                        Assignment{% if assignments|length != 1 %}s{% endif %}
+
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+            {% if assignments %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="ps-4">
+                                    #
+                                </th>
+
+                                <th>
+                                    Assignment
+                                </th>
+
+                                <th>
+                                    Subject
+                                </th>
+
+                                <th>
+                                    Due Date
+                                </th>
+
+                                <th>
+                                    Total Marks
+                                </th>
+
+                                <th>
+                                    Attachment
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for assignment in assignments %}
+
+                                <tr>
+
+                                    <!-- =================================================
+                                         SERIAL NUMBER
+                                    ================================================== -->
+
+                                    <td class="ps-4">
+
+                                        <span class="fw-semibold text-muted">
+
+                                            {{ loop.index }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ASSIGNMENT
+                                    ================================================== -->
+
+                                    <td>
+
+                                        <div>
+
+                                            <strong class="text-dark">
+
+                                                {{ assignment["title"] }}
+
+                                            </strong>
+
+                                        </div>
+
+
+                                        {% if assignment["description"] %}
+
+                                            <div
+                                                class="small text-muted mt-1"
+                                                style="max-width: 350px;"
+                                            >
+
+                                                {{ assignment["description"][:100] }}
+
+                                                {% if assignment["description"]|length > 100 %}
+                                                    ...
+                                                {% endif %}
+
+                                            </div>
+
+                                        {% else %}
+
+                                            <div class="small text-muted mt-1">
+
+                                                No description provided.
+
+                                            </div>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         SUBJECT
+                                    ================================================== -->
+
+                                    <td>
+
+                                        <span
+                                            class="badge bg-primary-subtle text-primary px-2 py-1"
+                                        >
+
+                                            {{ assignment["subject_code"] }}
+
+                                        </span>
+
+
+                                        <div class="small text-muted mt-1">
+
+                                            {{ assignment["subject_name"] }}
+
+                                        </div>
+
+
+                                        {% if assignment["semester"] %}
+
+                                            <div class="small text-muted">
+
+                                                Semester:
+                                                {{ assignment["semester"] }}
+
+                                            </div>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         DUE DATE
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if assignment["due_date"] %}
+
+                                            <strong>
+
+                                                {{ assignment["due_date"] }}
+
+                                            </strong>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+
+                                                No due date
+
+                                            </span>
+
+                                        {% endif %}
+
+
+                                        {% if assignment["due_time"] %}
+
+                                            <div class="small text-muted mt-1">
+
+                                                <i class="bi bi-clock me-1"></i>
+
+                                                {{ assignment["due_time"] }}
+
+                                            </div>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         TOTAL MARKS
+                                    ================================================== -->
+
+                                    <td>
+
+                                        <span
+                                            class="badge bg-success-subtle text-success"
+                                        >
+
+                                            <i class="bi bi-award me-1"></i>
+
+                                            {{ assignment["total_marks"] }}
+
+                                            marks
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ATTACHMENT
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if assignment["attachment"] %}
+
+                                            <a
+                                                href="{{ url_for(
+                                                    'teacher_assignment.download',
+                                                    assignment_id=assignment['id']
+                                                ) }}"
+                                                target="_blank"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                title="View Attachment"
+                                            >
+
+                                                <i class="bi bi-paperclip me-1"></i>
+
+                                                View
+
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted small">
+
+                                                No file
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         STATUS
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if assignment["status"] == "ACTIVE" %}
+
+                                            <span class="badge bg-success">
+
+                                                <i class="bi bi-check-circle me-1"></i>
+
+                                                Active
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">
+
+                                                <i class="bi bi-pause-circle me-1"></i>
+
+                                                Inactive
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ACTIONS
+                                    ================================================== -->
+                                       <td class="text-end pe-4">
+
+    <!-- EDIT -->
+
+    <a
+        href="{{ url_for(
+            'teacher_assignment.edit',
+            assignment_id=assignment['id']
+        ) }}"
+        class="btn btn-sm btn-outline-primary"
+        title="Edit Assignment"
+    >
+        <i class="bi bi-pencil"></i>
+    </a>
+
+
+    <!-- SUBMISSIONS -->
+
+    <a
+        href="{{ url_for(
+            'teacher_assignment.submissions',
+            assignment_id=assignment['id']
+        ) }}"
+        class="btn btn-sm btn-outline-info"
+        title="View Submissions"
+    >
+        <i class="bi bi-people"></i>
+    </a>
+
+
+    <!-- TOGGLE -->
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'teacher_assignment.toggle_status',
+            assignment_id=assignment['id']
+        ) }}"
+        class="d-inline"
+    >
+
+        {% if assignment["status"] == "ACTIVE" %}
+
+            <button
+                type="submit"
+                class="btn btn-sm btn-outline-warning"
+                title="Deactivate"
+            >
+                <i class="bi bi-pause-circle"></i>
+            </button>
+
+        {% else %}
+
+            <button
+                type="submit"
+                class="btn btn-sm btn-outline-success"
+                title="Activate"
+            >
+                <i class="bi bi-play-circle"></i>
+            </button>
+
+        {% endif %}
+
+    </form>
+
+
+    <!-- DELETE -->
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'teacher_assignment.delete',
+            assignment_id=assignment['id']
+        ) }}"
+        class="d-inline"
+        onsubmit="return confirm(
+            'Are you sure you want to delete this assignment?'
+        );"
+    >
+
+        <button
+            type="submit"
+            class="btn btn-sm btn-outline-danger"
+            title="Delete Assignment"
+        >
+            <i class="bi bi-trash"></i>
+        </button>
+
+    </form>
+
+</td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            <!-- =====================================================
+                 NO ASSIGNMENTS
+            ====================================================== -->
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <div class="mb-3">
+
+                        <i
+                            class="bi bi-journal-x"
+                            style="font-size: 55px; color: #adb5bd;"
+                        ></i>
+
+                    </div>
+
+
+                    <h5 class="fw-bold">
+
+                        No Assignments Yet
+
+                    </h5>
+
+
+                    <p class="text-muted mb-4">
+
+                        You have not created any assignments yet.
+
+                    </p>
+
+
+                    <a
+                        href="{{ url_for('teacher_assignment.create') }}"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-plus-circle me-1"></i>
+
+                        Create Your First Assignment
+
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     PAGE STYLE
+============================================================== -->
+
+<style>
+
+    .table > :not(caption) > * > * {
+
+        padding-top: 14px;
+
+        padding-bottom: 14px;
+
+    }
+
+
+    .table tbody tr {
+
+        transition: background 0.2s ease;
+
+    }
+
+
+    .table tbody tr:hover {
+
+        background: #f8faff;
+
+    }
+
+
+    .badge {
+
+        font-weight: 600;
+
+    }
+
+
+    .bg-primary-subtle {
+
+        background-color: #e7f0ff !important;
+
+    }
+
+
+    .text-primary {
+
+        color: #2161e0 !important;
+
+    }
+
+
+    .bg-success-subtle {
+
+        background-color: #e8f7ee !important;
+
+    }
+
+
+    .text-success {
+
+        color: #198754 !important;
+
+    }
+
+
+    .bg-info-subtle {
+
+        background-color: #e8f7fb !important;
+
+    }
+
+
+    .text-info {
+
+        color: #0dcaf0 !important;
+
+    }
+
+
+    .bg-warning-subtle {
+
+        background-color: #fff4d6 !important;
+
+    }
+
+
+    .text-warning {
+
+        color: #d39e00 !important;
+
+    }
+
+
+    @media (max-width: 768px) {
+
+        .container-fluid {
+
+            padding-left: 12px !important;
+
+            padding-right: 12px !important;
+
+        }
+
+
+        .d-flex.justify-content-between.align-items-center.mb-4 {
+
+            align-items: flex-start !important;
+
+            gap: 15px;
+
+            flex-direction: column;
+
+        }
+
+
+        .d-flex.justify-content-between.align-items-center.mb-4 .btn {
+
+            width: 100%;
+
+        }
+
+
+        .table {
+
+            min-width: 1000px;
+
+        }
+
+    }
+
+</style>
+
+{% endblock %}
+

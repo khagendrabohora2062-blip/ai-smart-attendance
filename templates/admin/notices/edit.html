@@ -1,0 +1,644 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Edit Notice - AI Smart Attendance System
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-pencil-square me-2"></i>
+                Edit Notice
+            </h3>
+
+            <p class="text-muted mb-0">
+                Update notice, photo and PDF
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin_notice.index') }}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         EDIT FORM
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <div class="row g-4">
+
+
+                    <!-- =================================================
+                         TITLE
+                    ================================================== -->
+
+                    <div class="col-md-8">
+
+                        <label class="form-label fw-semibold">
+                            Notice Title
+                        </label>
+
+                        <input
+                            type="text"
+                            name="title"
+                            class="form-control"
+                            value="{{ notice[1] or '' }}"
+                            placeholder="Enter notice title"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         TYPE
+                    ================================================== -->
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Notice Type
+                        </label>
+
+                        <select
+                            name="notice_type"
+                            class="form-select"
+                        >
+
+                            <option
+                                value="General"
+                                {% if notice[7] == "General" %}selected{% endif %}
+                            >
+                                General
+                            </option>
+
+                            <option
+                                value="Exam"
+                                {% if notice[7] == "Exam" %}selected{% endif %}
+                            >
+                                Exam
+                            </option>
+
+                            <option
+                                value="Result"
+                                {% if notice[7] == "Result" %}selected{% endif %}
+                            >
+                                Result
+                            </option>
+
+                            <option
+                                value="Important"
+                                {% if notice[7] == "Important" %}selected{% endif %}
+                            >
+                                Important
+                            </option>
+
+                            <option
+                                value="Holiday"
+                                {% if notice[7] == "Holiday" %}selected{% endif %}
+                            >
+                                Holiday
+                            </option>
+
+                            <option
+                                value="Event"
+                                {% if notice[7] == "Event" %}selected{% endif %}
+                            >
+                                Event
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DESCRIPTION
+                    ================================================== -->
+
+                    <div class="col-12">
+
+                        <label class="form-label fw-semibold">
+                            Notice Description
+                        </label>
+
+                        <textarea
+                            name="description"
+                            class="form-control"
+                            rows="6"
+                            placeholder="Write notice details here..."
+                        >{{ notice[2] or '' }}</textarea>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SEMESTER
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Target Semester
+                        </label>
+
+                        <select
+                            name="target_semester"
+                            class="form-select"
+                        >
+
+                            <option
+                                value=""
+                                {% if not notice[5] %}selected{% endif %}
+                            >
+                                All Semesters
+                            </option>
+
+                            <option
+                                value="1st"
+                                {% if notice[5] == "1st" %}selected{% endif %}
+                            >
+                                1st Semester
+                            </option>
+
+                            <option
+                                value="2nd"
+                                {% if notice[5] == "2nd" %}selected{% endif %}
+                            >
+                                2nd Semester
+                            </option>
+
+                            <option
+                                value="3rd"
+                                {% if notice[5] == "3rd" %}selected{% endif %}
+                            >
+                                3rd Semester
+                            </option>
+
+                            <option
+                                value="4th"
+                                {% if notice[5] == "4th" %}selected{% endif %}
+                            >
+                                4th Semester
+                            </option>
+
+                            <option
+                                value="5th"
+                                {% if notice[5] == "5th" %}selected{% endif %}
+                            >
+                                5th Semester
+                            </option>
+
+                            <option
+                                value="6th"
+                                {% if notice[5] == "6th" %}selected{% endif %}
+                            >
+                                6th Semester
+                            </option>
+
+                            <option
+                                value="7th"
+                                {% if notice[5] == "7th" %}selected{% endif %}
+                            >
+                                7th Semester
+                            </option>
+
+                            <option
+                                value="8th"
+                                {% if notice[5] == "8th" %}selected{% endif %}
+                            >
+                                8th Semester
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DEPARTMENT
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Target Department
+                        </label>
+
+                        <input
+                            type="text"
+                            name="target_department"
+                            class="form-control"
+                            value="{{ notice[6] or '' }}"
+                            placeholder="Leave empty for all departments"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         CURRENT IMAGE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Current Notice Photo
+                        </label>
+
+                        {% if notice[3] %}
+
+                        <div class="current-file-box">
+
+                            <img
+                                src="{{ url_for(
+                                    'static',
+                                    filename='uploads/notices/' ~ notice[3]
+                                ) }}"
+                                class="current-notice-image"
+                                alt="Current Notice Image"
+                            >
+
+                            <div class="mt-2">
+
+                                <span class="badge bg-success">
+                                    <i class="bi bi-image me-1"></i>
+                                    Current Photo
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        {% else %}
+
+                        <div class="no-file-box">
+                            <i class="bi bi-image text-muted"></i>
+                            <span>No photo uploaded</span>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NEW IMAGE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Replace Notice Photo
+                        </label>
+
+                        <input
+                            type="file"
+                            name="image"
+                            class="form-control"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            onchange="previewImage(event)"
+                        >
+
+                        <small class="text-muted">
+                            Leave empty to keep the current photo.
+                            JPG, JPEG, PNG or WEBP.
+                        </small>
+
+                        <div
+                            id="imagePreviewContainer"
+                            class="mt-3"
+                            style="display:none;"
+                        >
+
+                            <p class="small fw-semibold mb-2">
+                                New Photo Preview
+                            </p>
+
+                            <img
+                                id="imagePreview"
+                                src=""
+                                class="preview-image"
+                                alt="New Image Preview"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         CURRENT PDF
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Current PDF
+                        </label>
+
+                        {% if notice[4] %}
+
+                        <div class="current-pdf-box">
+
+                            <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                            <div>
+
+                                <strong>
+                                    PDF Attached
+                                </strong>
+
+                                <small>
+                                    {{ notice[4] }}
+                                </small>
+
+                            </div>
+
+                            <a
+                                href="{{ url_for(
+                                    'static',
+                                    filename='uploads/notices/pdf/' ~ notice[4]
+                                ) }}"
+                                target="_blank"
+                                class="btn btn-sm btn-outline-danger ms-auto"
+                            >
+                                <i class="bi bi-eye"></i>
+                                View
+                            </a>
+
+                        </div>
+
+                        {% else %}
+
+                        <div class="no-file-box">
+                            <i class="bi bi-file-earmark-pdf text-muted"></i>
+                            <span>No PDF uploaded</span>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NEW PDF
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label class="form-label fw-semibold">
+                            Replace Official Notice PDF
+                        </label>
+
+                        <input
+                            type="file"
+                            name="pdf_file"
+                            class="form-control"
+                            accept=".pdf"
+                        >
+
+                        <small class="text-muted">
+                            Leave empty to keep the current PDF.
+                            PDF file only.
+                        </small>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PUBLISH
+                    ================================================== -->
+
+                    <div class="col-12">
+
+                        <div class="form-check form-switch">
+
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                name="is_published"
+                                id="is_published"
+                                {% if notice[8] %}checked{% endif %}
+                            >
+
+                            <label
+                                class="form-check-label fw-semibold"
+                                for="is_published"
+                            >
+                                Publish this notice
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         BUTTONS
+                    ================================================== -->
+
+                    <div class="col-12">
+
+                        <hr>
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary px-4"
+                            >
+                                <i class="bi bi-check-circle me-1"></i>
+                                Update Notice
+                            </button>
+
+                            <a
+                                href="{{ url_for('admin_notice.index') }}"
+                                class="btn btn-light"
+                            >
+                                Cancel
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     STYLE
+============================================================= -->
+
+<style>
+
+.current-file-box {
+    padding: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.current-notice-image {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 8px;
+    background: white;
+}
+
+.no-file-box {
+    min-height: 100px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    color: #64748b;
+}
+
+.no-file-box i {
+    font-size: 1.5rem;
+}
+
+.current-pdf-box {
+    min-height: 80px;
+    padding: 14px;
+
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+
+    background: #fff7f7;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.current-pdf-box > i {
+    font-size: 2rem;
+    color: #dc2626;
+}
+
+.current-pdf-box div {
+    display: flex;
+    flex-direction: column;
+}
+
+.current-pdf-box small {
+    color: #64748b;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-image {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+</style>
+
+
+<!-- =============================================================
+     IMAGE PREVIEW SCRIPT
+============================================================= -->
+
+<script>
+
+function previewImage(event) {
+
+    const file = event.target.files[0];
+
+    const previewContainer =
+        document.getElementById("imagePreviewContainer");
+
+    const preview =
+        document.getElementById("imagePreview");
+
+    if (!file) {
+
+        previewContainer.style.display = "none";
+        preview.src = "";
+
+        return;
+    }
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+
+        alert(
+            "Please select a JPG, JPEG, PNG or WEBP image."
+        );
+
+        event.target.value = "";
+
+        previewContainer.style.display = "none";
+        preview.src = "";
+
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        preview.src = e.target.result;
+
+        previewContainer.style.display = "block";
+
+    };
+
+    reader.readAsDataURL(file);
+}
+
+</script>
+
+{% endblock %}

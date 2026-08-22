@@ -1,0 +1,129 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Feedback Management
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                Feedback Management
+            </h2>
+
+            <small class="text-muted">
+                AI Smart Attendance System
+            </small>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-header bg-dark text-white">
+
+            <h5 class="mb-0">
+                All Feedback
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Rating</th>
+                            <th>Feedback</th>
+                            <th>Date</th>
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% if feedbacks %}
+
+                        {% for fb in feedbacks %}
+
+                        <tr>
+
+                            <td>{{ fb[0] }}</td>
+
+                            <td>{{ fb[1] }}</td>
+
+                            <td>{{ fb[2] }}</td>
+
+                            <td>
+
+                                {% for i in range(fb[3]) %}
+                                    ⭐
+                                {% endfor %}
+
+                            </td>
+
+                            <td>{{ fb[4] }}</td>
+
+                            <td>{{ fb[5] }}</td>
+
+                            <td>
+
+                                <a href="{{ url_for('admin.delete_feedback', id=fb[0]) }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Delete this feedback?')">
+
+                                    <i class="bi bi-trash-fill"></i>
+
+                                    Delete
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td colspan="7" class="text-center">
+
+                                No Feedback Available
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

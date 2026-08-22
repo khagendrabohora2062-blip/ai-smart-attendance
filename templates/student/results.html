@@ -1,0 +1,1004 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+My Results - AI Smart Attendance System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between
+                align-items-center
+                flex-wrap gap-3 mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+
+                <i class="bi bi-mortarboard-fill me-2"></i>
+
+                My Results
+
+            </h3>
+
+            <p class="text-muted mb-0">
+
+                View your subject-wise marks,
+                grades and academic results.
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('student_auth.dashboard') }}"
+            class="btn btn-outline-primary"
+        >
+
+            <i class="bi bi-arrow-left me-1"></i>
+
+            Dashboard
+
+        </a>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         STUDENT INFORMATION
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row align-items-center g-3">
+
+
+                <!-- PHOTO -->
+
+                <div class="col-auto">
+
+                    <div class="student-result-avatar">
+
+                        {% if student[6] %}
+
+                            <img
+                                src="{{ url_for(
+                                    'static',
+                                    filename='uploads/students/' ~ student[6]
+                                ) }}"
+                                alt="Student Photo"
+                            >
+
+                        {% else %}
+
+                            <i class="bi bi-person-fill"></i>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- INFO -->
+
+                <div class="col">
+
+                    <h5 class="fw-bold mb-1">
+
+                        {{ student[2] }}
+
+                    </h5>
+
+                    <div class="text-muted small">
+
+                        Student ID:
+                        <strong>
+                            {{ student[1] }}
+                        </strong>
+
+                        &nbsp; | &nbsp;
+
+                        {{ student[3] or "N/A" }}
+
+                        &nbsp; | &nbsp;
+
+                        {{ student[4] or "N/A" }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         SUMMARY CARDS
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+
+        <!-- TOTAL SUBJECTS -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="result-stat">
+
+                        <div class="result-stat-icon
+                                    bg-primary-subtle
+                                    text-primary">
+
+                            <i class="bi bi-book-fill"></i>
+
+                        </div>
+
+                        <div>
+
+                            <div class="text-muted small">
+
+                                Total Subjects
+
+                            </div>
+
+                            <h4 class="fw-bold mb-0">
+
+                                {{ total_subjects }}
+
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PASSED -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="result-stat">
+
+                        <div class="result-stat-icon
+                                    bg-success-subtle
+                                    text-success">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                        </div>
+
+                        <div>
+
+                            <div class="text-muted small">
+
+                                Passed
+
+                            </div>
+
+                            <h4 class="fw-bold text-success mb-0">
+
+                                {{ passed_subjects }}
+
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- FAILED -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="result-stat">
+
+                        <div class="result-stat-icon
+                                    bg-danger-subtle
+                                    text-danger">
+
+                            <i class="bi bi-x-circle-fill"></i>
+
+                        </div>
+
+                        <div>
+
+                            <div class="text-muted small">
+
+                                Failed
+
+                            </div>
+
+                            <h4 class="fw-bold text-danger mb-0">
+
+                                {{ failed_subjects }}
+
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PERCENTAGE -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="result-stat">
+
+                        <div class="result-stat-icon
+                                    bg-info-subtle
+                                    text-info">
+
+                            <i class="bi bi-percent"></i>
+
+                        </div>
+
+                        <div>
+
+                            <div class="text-muted small">
+
+                                Overall Percentage
+
+                            </div>
+
+                            <h4 class="fw-bold mb-0">
+
+                                {{ "%.2f"|format(percentage) }}%
+
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULT TABLE
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+
+        <!-- HEADER -->
+
+        <div class="card-header bg-white border-0 py-3">
+
+            <div>
+
+                <h5 class="fw-bold mb-1">
+
+                    <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>
+
+                    Subject-wise Result
+
+                </h5>
+
+                <small class="text-muted">
+
+                    Theory + Practical + Total marks
+
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- BODY -->
+
+        <div class="card-body p-0">
+
+
+            {% if results %}
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-hover
+                           align-middle mb-0"
+                >
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Semester
+                            </th>
+
+                            <th>
+                                Subject
+                            </th>
+
+                            <th class="text-center">
+                                Theory
+                            </th>
+
+                            <th class="text-center">
+                                Practical
+                            </th>
+
+                            <th class="text-center">
+                                Total
+                            </th>
+
+                            <th class="text-center">
+                                Pass
+                            </th>
+
+                            <th class="text-center">
+                                Grade
+                            </th>
+
+                            <th class="text-center">
+                                GP
+                            </th>
+
+                            <th class="text-center">
+                                Result
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                    {% for mark in results %}
+
+                        <!--
+
+                        INDEX MAPPING
+
+                        0  = marksheet id
+                        1  = subject code
+                        2  = subject name
+                        3  = semester
+
+                        4  = theory full marks
+                        5  = practical full marks
+                        6  = total full marks
+                        7  = pass marks
+
+                        8  = theory obtained
+                        9  = practical obtained
+                        10 = total obtained
+
+                        11 = grade
+                        12 = grade point
+                        13 = remarks
+
+                        -->
+
+
+                        {% set theory_full =
+                            mark[4] or 0
+                        %}
+
+                        {% set practical_full =
+                            mark[5] or 0
+                        %}
+
+                        {% set total_full =
+                            mark[6] or 0
+                        %}
+
+                        {% set pass_mark =
+                            mark[7] or 0
+                        %}
+
+                        {% set theory =
+                            mark[8] or 0
+                        %}
+
+                        {% set practical =
+                            mark[9] or 0
+                        %}
+
+                        {% set total =
+                            mark[10] or 0
+                        %}
+
+
+                        <tr>
+
+
+                            <!-- NUMBER -->
+
+                            <td class="ps-4 fw-semibold text-muted">
+
+                                {{ loop.index }}
+
+                            </td>
+
+
+                            <!-- SEMESTER -->
+
+                            <td>
+
+                                <span
+                                    class="badge bg-secondary"
+                                >
+
+                                    {{ mark[3] or "N/A" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- SUBJECT -->
+
+                            <td>
+
+                                <div class="fw-semibold">
+
+                                    {{ mark[2] }}
+
+                                </div>
+
+                                <small class="text-muted">
+
+                                    {{ mark[1] }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- THEORY -->
+
+                            <td class="text-center">
+
+                                <strong>
+
+                                    {{ "%.2f"|format(theory) }}
+
+                                </strong>
+
+                                <small
+                                    class="text-muted d-block"
+                                >
+
+                                    /
+                                    {{ "%.2f"|format(
+                                        theory_full
+                                    ) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- PRACTICAL -->
+
+                            <td class="text-center">
+
+                                <strong>
+
+                                    {{ "%.2f"|format(practical) }}
+
+                                </strong>
+
+                                <small
+                                    class="text-muted d-block"
+                                >
+
+                                    /
+                                    {{ "%.2f"|format(
+                                        practical_full
+                                    ) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- TOTAL -->
+
+                            <td class="text-center">
+
+                                <strong
+                                    class="
+                                    {% if total >= pass_mark %}
+                                        text-success
+                                    {% else %}
+                                        text-danger
+                                    {% endif %}
+                                    "
+                                >
+
+                                    {{ "%.2f"|format(total) }}
+
+                                </strong>
+
+                                <small
+                                    class="text-muted d-block"
+                                >
+
+                                    /
+                                    {{ "%.2f"|format(
+                                        total_full
+                                    ) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- PASS MARK -->
+
+                            <td class="text-center">
+
+                                <span class="text-muted">
+
+                                    {{ "%.2f"|format(
+                                        pass_mark
+                                    ) }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- GRADE -->
+
+                            <td class="text-center">
+
+                                {% if mark[11] == "A+" %}
+
+                                    <span
+                                        class="badge bg-success
+                                               grade-badge"
+                                    >
+                                        A+
+                                    </span>
+
+                                {% elif mark[11] == "A" %}
+
+                                    <span
+                                        class="badge bg-success
+                                               grade-badge"
+                                    >
+                                        A
+                                    </span>
+
+                                {% elif mark[11] == "B+" %}
+
+                                    <span
+                                        class="badge bg-primary
+                                               grade-badge"
+                                    >
+                                        B+
+                                    </span>
+
+                                {% elif mark[11] == "B" %}
+
+                                    <span
+                                        class="badge bg-primary
+                                               grade-badge"
+                                    >
+                                        B
+                                    </span>
+
+                                {% elif mark[11] == "C+" %}
+
+                                    <span
+                                        class="badge bg-warning
+                                               text-dark
+                                               grade-badge"
+                                    >
+                                        C+
+                                    </span>
+
+                                {% elif mark[11] == "C" %}
+
+                                    <span
+                                        class="badge bg-warning
+                                               text-dark
+                                               grade-badge"
+                                    >
+                                        C
+                                    </span>
+
+                                {% elif mark[11] == "F" %}
+
+                                    <span
+                                        class="badge bg-danger
+                                               grade-badge"
+                                    >
+                                        F
+                                    </span>
+
+                                {% else %}
+
+                                    <span
+                                        class="badge bg-secondary
+                                               grade-badge"
+                                    >
+                                        {{ mark[11] or "N/A" }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- GP -->
+
+                            <td class="text-center">
+
+                                {% if mark[12] is not none %}
+
+                                    {{ "%.2f"|format(
+                                        mark[12]
+                                    ) }}
+
+                                {% else %}
+
+                                    -
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- RESULT -->
+
+                            <td class="text-center">
+
+                                {% if total >= pass_mark %}
+
+                                    <span
+                                        class="badge
+                                               bg-success"
+                                    >
+
+                                        <i
+                                            class="bi bi-check-circle me-1"
+                                        ></i>
+
+                                        Pass
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span
+                                        class="badge
+                                               bg-danger"
+                                    >
+
+                                        <i
+                                            class="bi bi-x-circle me-1"
+                                        ></i>
+
+                                        Fail
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =================================================
+                 TOTAL
+            ================================================== -->
+
+            <div class="border-top p-3">
+
+                <div
+                    class="d-flex
+                           justify-content-end
+                           gap-4 flex-wrap"
+                >
+
+                    <div>
+
+                        <span class="text-muted">
+
+                            Total Obtained:
+
+                        </span>
+
+                        <strong>
+
+                            {{ "%.2f"|format(
+                                total_obtained
+                            ) }}
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="text-muted">
+
+                            Total Full Marks:
+
+                        </span>
+
+                        <strong>
+
+                            {{ "%.2f"|format(
+                                total_full
+                            ) }}
+
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="text-muted">
+
+                            Percentage:
+
+                        </span>
+
+                        <strong class="text-primary">
+
+                            {{ "%.2f"|format(
+                                percentage
+                            ) }}%
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {% else %}
+
+
+            <!-- =================================================
+                 EMPTY RESULT
+            ================================================== -->
+
+            <div class="text-center py-5 px-3">
+
+                <div class="empty-result-icon">
+
+                    <i
+                        class="bi bi-file-earmark-x"
+                    ></i>
+
+                </div>
+
+                <h5 class="fw-bold mt-3">
+
+                    No Results Available
+
+                </h5>
+
+                <p class="text-muted mb-0">
+
+                    Your marks have not been published yet.
+
+                </p>
+
+            </div>
+
+
+            {% endif %}
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     CSS
+========================================================= -->
+
+<style>
+
+.result-stat {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+}
+
+
+.result-stat-icon {
+
+    width: 48px;
+
+    height: 48px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 21px;
+
+    flex-shrink: 0;
+
+}
+
+
+.student-result-avatar {
+
+    width: 64px;
+
+    height: 64px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background: #eef2ff;
+
+    color: #4f46e5;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 30px;
+
+}
+
+
+.student-result-avatar img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+}
+
+
+.grade-badge {
+
+    min-width: 40px;
+
+    padding: 6px 8px;
+
+    font-size: 12px;
+
+}
+
+
+.empty-result-icon {
+
+    width: 80px;
+
+    height: 80px;
+
+    margin: 0 auto;
+
+    border-radius: 50%;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 36px;
+
+}
+
+
+@media (max-width: 768px) {
+
+    .container-fluid {
+
+        padding-left: 12px !important;
+
+        padding-right: 12px !important;
+
+    }
+
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,914 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Syllabus Management
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid syllabus-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>
+                Syllabus Management
+            </h3>
+
+            <p class="text-muted mb-0">
+                Upload and manage department, semester and subject-wise syllabus PDFs.
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         UPLOAD CARD
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                Upload Syllabus
+            </h5>
+
+            <small class="text-muted">
+                Select department, semester and subject before uploading the PDF.
+            </small>
+
+        </div>
+
+
+        <div class="card-body px-4 pb-4">
+
+            <form
+                action="{{ url_for('admin_syllabus.upload') }}"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                <div class="row g-3">
+
+
+                    <!-- =================================================
+                         DEPARTMENT
+                    ================================================== -->
+
+                    <div class="col-md-4">
+
+                        <label
+                            for="department"
+                            class="form-label fw-semibold"
+                        >
+                            Department
+                        </label>
+
+                        <select
+                            name="department"
+                            id="department"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select Department
+                            </option>
+
+                            {% set department_list = [] %}
+
+                            {% for subject in subjects %}
+
+                                {% set dept = subject[4] %}
+
+                                {% if dept and dept not in department_list %}
+
+                                    {% set _ = department_list.append(dept) %}
+
+                                    <option value="{{ dept }}">
+                                        {{ dept }}
+                                    </option>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SEMESTER
+                    ================================================== -->
+
+                    <div class="col-md-4">
+
+                        <label
+                            for="semester"
+                            class="form-label fw-semibold"
+                        >
+                            Semester
+                        </label>
+
+                        <select
+                            name="semester"
+                            id="semester"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select Semester
+                            </option>
+
+                            <option value="1st Semester">
+                                1st Semester
+                            </option>
+
+                            <option value="2nd Semester">
+                                2nd Semester
+                            </option>
+
+                            <option value="3rd Semester">
+                                3rd Semester
+                            </option>
+
+                            <option value="4th Semester">
+                                4th Semester
+                            </option>
+
+                            <option value="5th Semester">
+                                5th Semester
+                            </option>
+
+                            <option value="6th Semester">
+                                6th Semester
+                            </option>
+
+                            <option value="7th Semester">
+                                7th Semester
+                            </option>
+
+                            <option value="8th Semester">
+                                8th Semester
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SUBJECT
+                    ================================================== -->
+
+                    <div class="col-md-4">
+
+                        <label
+                            for="subject_id"
+                            class="form-label fw-semibold"
+                        >
+                            Subject
+                        </label>
+
+                        <select
+                            name="subject_id"
+                            id="subject_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Select Department & Semester First
+                            </option>
+
+                            {% for subject in subjects %}
+
+                                <option
+                                    value="{{ subject[0] }}"
+                                    data-department="{{ subject[4] | trim }}"
+                                    data-semester="{{ subject[3] | trim }}"
+                                >
+                                    {{ subject[1] }} - {{ subject[2] }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                        <small
+                            id="subjectHelp"
+                            class="text-muted"
+                        >
+                            Select department and semester first.
+                        </small>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         TITLE
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label
+                            for="title"
+                            class="form-label fw-semibold"
+                        >
+                            Syllabus Title
+                        </label>
+
+                        <input
+                            type="text"
+                            name="title"
+                            id="title"
+                            class="form-control"
+                            placeholder="Example: Computer Engineering Syllabus"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PDF
+                    ================================================== -->
+
+                    <div class="col-md-6">
+
+                        <label
+                            for="file"
+                            class="form-label fw-semibold"
+                        >
+                            PDF File
+                        </label>
+
+                        <input
+                            type="file"
+                            name="file"
+                            id="file"
+                            class="form-control"
+                            accept=".pdf,application/pdf"
+                            required
+                        >
+
+                        <small class="text-muted">
+                            PDF files only
+                        </small>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DESCRIPTION
+                    ================================================== -->
+
+                    <div class="col-12">
+
+                        <label
+                            for="description"
+                            class="form-label fw-semibold"
+                        >
+                            Description
+                            <span class="text-muted fw-normal">
+                                (Optional)
+                            </span>
+                        </label>
+
+                        <textarea
+                            name="description"
+                            id="description"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Write a short description about this syllabus..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         BUTTON
+                    ================================================== -->
+
+                    <div class="col-12">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary px-4"
+                        >
+
+                            <i class="bi bi-upload me-1"></i>
+
+                            Upload Syllabus
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         UPLOADED SYLLABUS
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white border-0 pt-4 px-4">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-folder2-open text-warning me-2"></i>
+
+                        Uploaded Syllabus
+
+                    </h5>
+
+                    <small class="text-muted">
+                        All uploaded syllabus documents
+                    </small>
+
+                </div>
+
+
+                <span class="badge bg-primary rounded-pill">
+
+                    {{ syllabuses|length }}
+
+                    Document{% if syllabuses|length != 1 %}s{% endif %}
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body px-4">
+
+            {% if syllabuses %}
+
+                <div class="table-responsive">
+
+                    <table class="table align-middle syllabus-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>#</th>
+
+                                <th>Department</th>
+
+                                <th>Semester</th>
+
+                                <th>Subject</th>
+
+                                <th>Title</th>
+
+                                <th>Description</th>
+
+                                <th>Uploaded</th>
+
+                                <th class="text-end">
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for syllabus in syllabuses %}
+
+                            <tr>
+
+                                <!-- NUMBER -->
+
+                                <td>
+                                    {{ loop.index }}
+                                </td>
+
+
+                                <!-- DEPARTMENT -->
+
+                                <td>
+
+                                    <span class="badge bg-dark">
+                                        {{ syllabus[1] }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- SEMESTER -->
+
+                                <td>
+
+                                    <span class="badge bg-primary">
+                                        {{ syllabus[2] }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- SUBJECT -->
+
+                                <td>
+
+                                    {% if syllabus[4] %}
+
+                                        <div class="subject-code">
+                                            {{ syllabus[4] }}
+                                        </div>
+
+                                        <div class="subject-name">
+                                            {{ syllabus[5] }}
+                                        </div>
+
+                                    {% else %}
+
+                                        <span class="text-danger">
+                                            Subject unavailable
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- TITLE -->
+
+                                <td>
+
+                                    <div class="fw-semibold">
+                                        {{ syllabus[6] }}
+                                    </div>
+
+                                </td>
+
+
+                                <!-- DESCRIPTION -->
+
+                                <td>
+
+                                    {% if syllabus[7] %}
+
+                                        <span
+                                            class="description-text"
+                                            title="{{ syllabus[7] }}"
+                                        >
+                                            {{ syllabus[7] }}
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- CREATED -->
+
+                                <td>
+
+                                    <small class="text-muted">
+                                        {{ syllabus[10] }}
+                                    </small>
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td class="text-end text-nowrap">
+
+
+                                    <!-- VIEW -->
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_syllabus.file',
+                                            filename=syllabus[8]
+                                        ) }}"
+                                        target="_blank"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="View PDF"
+                                    >
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </a>
+
+
+                                    <!-- DOWNLOAD -->
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_syllabus.file',
+                                            filename=syllabus[8]
+                                        ) }}"
+                                        download
+                                        class="btn btn-sm btn-outline-success"
+                                        title="Download PDF"
+                                    >
+
+                                        <i class="bi bi-download"></i>
+
+                                    </a>
+
+
+                                    <!-- DELETE -->
+
+                                    <form
+                                        action="{{ url_for(
+                                            'admin_syllabus.delete',
+                                            id=syllabus[0]
+                                        ) }}"
+                                        method="POST"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Are you sure you want to delete this syllabus?');"
+                                    >
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Delete"
+                                        >
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+
+                <!-- =================================================
+                     EMPTY STATE
+                ================================================== -->
+
+                <div class="text-center py-5">
+
+                    <div class="mb-3">
+
+                        <i
+                            class="bi bi-file-earmark-pdf"
+                            style="
+                                font-size: 60px;
+                                color: #cbd5e1;
+                            "
+                        ></i>
+
+                    </div>
+
+
+                    <h5 class="fw-semibold">
+                        No syllabus uploaded yet
+                    </h5>
+
+
+                    <p class="text-muted mb-0">
+                        Upload your first syllabus PDF above.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     SUBJECT FILTER SCRIPT
+========================================================= -->
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const department = document.getElementById("department");
+    const semester = document.getElementById("semester");
+    const subject = document.getElementById("subject_id");
+
+
+    // =====================================================
+    // NORMALIZE DEPARTMENT
+    // =====================================================
+
+    function normalizeDepartment(value) {
+
+        return String(value || "")
+            .trim()
+            .toLowerCase();
+    }
+
+
+    // =====================================================
+    // NORMALIZE SEMESTER
+    //
+    // 4
+    // 4th
+    // 4th Semester
+    // 4 Semester
+    //
+    // All become:
+    // 4
+    // =====================================================
+
+    function normalizeSemester(value) {
+
+        return String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/semester/g, "")
+            .replace(/sem/g, "")
+            .replace(/st/g, "")
+            .replace(/nd/g, "")
+            .replace(/rd/g, "")
+            .replace(/th/g, "")
+            .replace(/\s/g, "");
+    }
+
+
+    // =====================================================
+    // FILTER SUBJECTS
+    // =====================================================
+
+    function filterSubjects() {
+
+        const selectedDepartment =
+            normalizeDepartment(department.value);
+
+        const selectedSemester =
+            normalizeSemester(semester.value);
+
+
+        const options =
+            subject.querySelectorAll(
+                "option[data-department]"
+            );
+
+
+        let visibleCount = 0;
+
+
+        options.forEach(function (option) {
+
+            const optionDepartment =
+                normalizeDepartment(
+                    option.dataset.department
+                );
+
+            const optionSemester =
+                normalizeSemester(
+                    option.dataset.semester
+                );
+
+
+            const departmentMatch =
+                selectedDepartment === optionDepartment;
+
+
+            const semesterMatch =
+                selectedSemester === optionSemester;
+
+
+            if (
+                selectedDepartment &&
+                selectedSemester &&
+                departmentMatch &&
+                semesterMatch
+            ) {
+
+                option.hidden = false;
+
+                visibleCount++;
+
+            } else {
+
+                option.hidden = true;
+
+            }
+
+        });
+
+
+        // =================================================
+        // NOTHING SELECTED
+        // =================================================
+
+        if (
+            !selectedDepartment ||
+            !selectedSemester
+        ) {
+
+            subject.value = "";
+
+            subject.options[0].text =
+                "Select Department & Semester First";
+
+            return;
+        }
+
+
+        // =================================================
+        // SUBJECT FOUND
+        // =================================================
+
+        if (visibleCount > 0) {
+
+            subject.options[0].text =
+                "Select Subject";
+
+        }
+
+        // =================================================
+        // NO SUBJECT FOUND
+        // =================================================
+
+        else {
+
+            subject.options[0].text =
+                "No Subject Found";
+
+        }
+
+
+        subject.value = "";
+    }
+
+
+    // =====================================================
+    // EVENTS
+    // =====================================================
+
+    department.addEventListener(
+        "change",
+        filterSubjects
+    );
+
+
+    semester.addEventListener(
+        "change",
+        filterSubjects
+    );
+
+
+    // =====================================================
+    // INITIAL STATE
+    // =====================================================
+
+    filterSubjects();
+
+});
+</script>
+
+
+<!-- =========================================================
+     PAGE CSS
+========================================================= -->
+
+<style>
+
+.syllabus-page .card {
+    border-radius: 16px;
+}
+
+
+.syllabus-page .form-control,
+.syllabus-page .form-select {
+    border-radius: 10px;
+    min-height: 44px;
+}
+
+
+.syllabus-page textarea.form-control {
+    min-height: auto;
+}
+
+
+.syllabus-page .table {
+    margin-bottom: 0;
+}
+
+
+.syllabus-page .table thead th {
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    background: #f8fafc;
+    white-space: nowrap;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+
+.syllabus-page .table tbody td {
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+
+.syllabus-page .table tbody tr {
+    transition: background 0.15s ease;
+}
+
+
+.syllabus-page .table tbody tr:hover {
+    background: #f8fafc;
+}
+
+
+.subject-code {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+
+.subject-name {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+
+.description-text {
+    display: block;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #64748b;
+}
+
+
+.syllabus-page .btn {
+    border-radius: 8px;
+}
+
+
+.syllabus-page #subjectHelp {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+
+@media (max-width: 768px) {
+
+    .syllabus-page h3 {
+        font-size: 21px;
+    }
+
+}
+
+</style>
+
+{% endblock %}

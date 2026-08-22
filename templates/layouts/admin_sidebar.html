@@ -1,0 +1,887 @@
+<!-- =====================================================
+     ADMIN SIDEBAR
+====================================================== -->
+
+<style>
+
+    /* =====================================================
+       ADMIN SIDEBAR
+    ====================================================== */
+
+    .admin-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+
+        background:
+            linear-gradient(
+                180deg,
+                #0b1736 0%,
+                #101d3f 50%,
+                #0a1530 100%
+            );
+
+        color: #ffffff;
+        z-index: 1100;
+
+        display: flex;
+        flex-direction: column;
+
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        box-shadow:
+            4px 0 20px rgba(2, 6, 23, 0.20);
+
+        scrollbar-width: thin;
+        scrollbar-color:
+            rgba(255,255,255,.20)
+            transparent;
+    }
+
+
+    /* =====================================================
+       SCROLLBAR
+    ====================================================== */
+
+    .admin-sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .admin-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .admin-sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,.18);
+        border-radius: 10px;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .admin-sidebar .sidebar-header {
+        min-height: 82px;
+        padding: 17px 18px;
+
+        display: flex;
+        align-items: center;
+
+        border-bottom:
+            1px solid rgba(255,255,255,.10);
+
+        flex-shrink: 0;
+    }
+
+
+    .admin-sidebar .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+
+    .admin-sidebar .logo-icon {
+        width: 43px;
+        height: 43px;
+        min-width: 43px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 11px;
+
+        background: #0d6efd;
+        color: #ffffff;
+
+        font-size: 20px;
+
+        box-shadow:
+            0 6px 15px rgba(13,110,253,.30);
+    }
+
+
+    .admin-sidebar .logo h4 {
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+
+
+    .admin-sidebar .logo small {
+        color: #9fb0d0;
+        font-size: 9px;
+        display: block;
+        margin-top: 3px;
+    }
+
+
+    /* =====================================================
+       PROFILE
+    ====================================================== */
+
+    .admin-sidebar .admin-profile {
+        text-align: center;
+
+        padding: 20px 15px 18px;
+
+        border-bottom:
+            1px solid rgba(255,255,255,.10);
+
+        flex-shrink: 0;
+    }
+
+
+    .admin-sidebar .avatar {
+        width: 76px;
+        height: 76px;
+
+        margin: 0 auto 10px;
+
+        border-radius: 50%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        overflow: hidden;
+
+        background: #172858;
+
+        border:
+            3px solid rgba(255,255,255,.85);
+
+        color: #ffffff;
+
+        font-size: 29px;
+
+        box-shadow:
+            0 5px 15px rgba(0,0,0,.20);
+    }
+
+
+    .admin-sidebar .admin-sidebar-avatar-img {
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+        display: block;
+    }
+
+
+    .admin-sidebar .admin-profile h6 {
+        margin: 0;
+
+        color: #ffffff;
+
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+
+    .admin-sidebar .admin-profile small {
+        display: block;
+
+        color: #94a3c7;
+
+        font-size: 10px;
+
+        margin-top: 4px;
+    }
+
+
+    /* =====================================================
+       MENU
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu {
+        list-style: none;
+
+        padding: 14px 11px;
+        margin: 0;
+
+        flex: 1;
+    }
+
+
+    .admin-sidebar .sidebar-menu li {
+        margin-bottom: 4px;
+    }
+
+
+    .admin-sidebar .sidebar-menu a {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        width: 100%;
+        min-height: 43px;
+
+        padding: 10px 13px;
+
+        border-radius: 9px;
+
+        color: #c4cee2;
+
+        font-size: 13px;
+        font-weight: 500;
+
+        transition:
+            background .2s ease,
+            color .2s ease,
+            transform .2s ease;
+
+        text-decoration: none;
+    }
+
+
+    /* =====================================================
+       ALL MENU ICONS
+       Same color as menu text
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu a i {
+        width: 21px;
+        min-width: 21px;
+
+        text-align: center;
+
+        font-size: 16px;
+
+        color: inherit;
+
+        transition:
+            color .2s ease,
+            transform .2s ease;
+    }
+
+
+    /* =====================================================
+       HOVER
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu a:hover {
+        color: #ffffff;
+
+        background:
+            rgba(255,255,255,.08);
+
+        transform:
+            translateX(2px);
+    }
+
+
+    .admin-sidebar .sidebar-menu a:hover i {
+        color: #ffffff;
+    }
+
+
+    /* =====================================================
+       ACTIVE
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu a.active {
+        color: #ffffff;
+
+        background: #0d6efd;
+
+        box-shadow:
+            0 5px 14px rgba(13,110,253,.30);
+    }
+
+
+    .admin-sidebar .sidebar-menu a.active i {
+        color: #ffffff;
+    }
+
+
+    /* =====================================================
+       ROUTINE
+       SAME STYLE AS OTHER MENU ITEMS
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu .routine-link {
+        color: #c4cee2;
+    }
+
+
+    .admin-sidebar .sidebar-menu .routine-link i {
+        color: inherit;
+    }
+
+
+    .admin-sidebar .sidebar-menu .routine-link:hover {
+        color: #ffffff;
+
+        background:
+            rgba(255,255,255,.08);
+
+        transform:
+            translateX(2px);
+    }
+
+
+    .admin-sidebar .sidebar-menu .routine-link:hover i {
+        color: #ffffff;
+    }
+
+
+    .admin-sidebar .sidebar-menu .routine-link.active {
+        color: #ffffff;
+
+        background: #0d6efd;
+
+        box-shadow:
+            0 5px 14px rgba(13,110,253,.30);
+    }
+
+
+    .admin-sidebar .sidebar-menu .routine-link.active i {
+        color: #ffffff;
+    }
+
+
+    /* =====================================================
+       DIVIDER
+    ====================================================== */
+
+    .admin-sidebar .sidebar-divider {
+        padding: 4px 4px 7px;
+    }
+
+
+    .admin-sidebar .sidebar-divider hr {
+        margin: 0;
+
+        border: 0;
+
+        border-top:
+            1px solid rgba(255,255,255,.12);
+    }
+
+
+    /* =====================================================
+       LOGOUT
+    ====================================================== */
+
+    .admin-sidebar .sidebar-menu .logout-link {
+        color: #ff9c9c;
+
+        margin-top: 4px;
+    }
+
+
+    .admin-sidebar .sidebar-menu .logout-link i {
+        color: inherit;
+    }
+
+
+    .admin-sidebar .sidebar-menu .logout-link:hover {
+        color: #ffffff;
+
+        background:
+            rgba(220,53,69,.16);
+    }
+
+
+    /* =====================================================
+       FOOTER
+    ====================================================== */
+
+    .admin-sidebar .sidebar-footer {
+        padding: 13px 15px 16px;
+
+        text-align: center;
+
+        border-top:
+            1px solid rgba(255,255,255,.10);
+
+        flex-shrink: 0;
+    }
+
+
+    .admin-sidebar .sidebar-footer small {
+        color: #7182a5;
+
+        font-size: 8px;
+
+        line-height: 1.7;
+    }
+
+
+    /* =====================================================
+       MOBILE OVERLAY
+    ====================================================== */
+
+    .admin-sidebar-overlay {
+        display: none;
+
+        position: fixed;
+
+        inset: 0;
+
+        background:
+            rgba(2,6,23,.55);
+
+        z-index: 1050;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media (max-width: 991px) {
+
+        .admin-sidebar {
+            transform:
+                translateX(-100%);
+
+            transition:
+                transform .25s ease;
+        }
+
+
+        .admin-sidebar.show {
+            transform:
+                translateX(0);
+        }
+
+
+        .admin-sidebar-overlay.show {
+            display: block;
+        }
+    }
+
+</style>
+
+
+<!-- =====================================================
+     MOBILE OVERLAY
+====================================================== -->
+
+<div
+    class="admin-sidebar-overlay"
+    id="adminSidebarOverlay">
+</div>
+
+
+<!-- =====================================================
+     SIDEBAR
+====================================================== -->
+
+<aside
+    class="admin-sidebar"
+    id="adminSidebar">
+
+
+    <!-- =================================================
+         LOGO
+    ================================================== -->
+
+    <div class="sidebar-header">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+
+                <i class="bi bi-camera-video-fill"></i>
+
+            </div>
+
+
+            <div>
+
+                <h4 class="mb-0">
+                    AI Smart
+                </h4>
+
+                <small>
+                    Attendance System
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         ADMIN PROFILE
+    ================================================== -->
+
+    <div class="admin-profile">
+
+        <div class="avatar admin-sidebar-avatar">
+
+            {% if session.get("admin_photo") %}
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='uploads/admins/' ~ session.get('admin_photo')
+                    ) }}"
+                    alt="Administrator"
+                    class="admin-sidebar-avatar-img"
+                >
+
+            {% else %}
+
+                <i class="bi bi-person-fill"></i>
+
+            {% endif %}
+
+        </div>
+
+
+        <h6>
+
+            {{ session.get(
+                "admin_name",
+                "Administrator"
+            ) }}
+
+        </h6>
+
+
+        <small>
+            System Administrator
+        </small>
+
+    </div>
+
+
+    <!-- =================================================
+         NAVIGATION
+    ================================================== -->
+
+    <ul class="sidebar-menu">
+
+
+        <!-- =================================================
+             DASHBOARD
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('admin.dashboard') }}"
+                class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}"
+            >
+
+                <i class="bi bi-speedometer2"></i>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             STUDENTS
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('students.index') }}"
+                class="{% if request.endpoint and request.endpoint.startswith('students') %}active{% endif %}"
+            >
+
+                <i class="bi bi-people-fill"></i>
+
+                <span>
+                    Students
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             TEACHERS
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('teachers.index') }}"
+                class="{% if request.endpoint and request.endpoint.startswith('teachers') %}active{% endif %}"
+            >
+
+                <i class="bi bi-person-workspace"></i>
+
+                <span>
+                    Teachers
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             SUBJECTS
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('subjects.index') }}"
+                class="{% if request.endpoint and request.endpoint.startswith('subjects') %}active{% endif %}"
+            >
+
+                <i class="bi bi-book-fill"></i>
+
+                <span>
+                    Subjects
+                </span>
+
+            </a>
+
+        </li>
+
+         <!-- =================================================*
+     SYLLABUS
+================================================== -->
+<li>
+    <a
+        href="{{ url_for('admin_syllabus.index') }}"
+        class="{% if request.endpoint and request.endpoint.startswith('admin_syllabus.') %}active{% endif %}"
+    >
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span>
+            Syllabus
+        </span>
+    </a>
+</li> 
+
+        <!-- =================================================
+             ATTENDANCE
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('attendance.index') }}"
+                class="{% if request.endpoint and request.endpoint.startswith('attendance') %}active{% endif %}"
+            >
+
+                <i class="bi bi-calendar-check-fill"></i>
+
+                <span>
+                    Attendance
+                </span>
+
+            </a>
+
+        </li>
+
+        <a
+             href="{{ url_for('admin_notice.index') }}"
+             class="admin-nav-link
+             {% if request.endpoint and request.endpoint.startswith('admin_notice.') %}
+             active
+             {% endif %}">
+
+             <span class="admin-nav-icon">
+                  <i class="bi bi-megaphone-fill"></i>
+                  </span>
+
+                 <span class="admin-nav-text">
+                  Notices
+             </span>
+
+            </a>
+
+        <!-- =================================================
+             ROUTINE
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('routine.index') }}"
+                class="{% if request.endpoint and request.endpoint.startswith('routine') %}active{% endif %}"
+            >
+
+                <i class="bi bi-calendar-week-fill"></i>
+
+                <span>
+                    Routine
+                </span>
+
+            </a>
+
+        </li>
+        <!-- =====================================================
+     MARKSHEET MANAGEMENT
+====================================================== -->
+
+<li class="nav-item">
+    <a
+        href="{{ url_for('admin_marksheet.index') }}"
+        class="nav-link
+        {% if request.endpoint and request.endpoint.startswith('admin_marksheet.') %}
+            active
+        {% endif %}"
+    >
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+        <span>Marksheets</span>
+    </a>
+</li>
+        <!-- =================================================
+             FEEDBACK
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('admin.feedback') }}"
+                class="{% if request.endpoint == 'admin.feedback' %}active{% endif %}"
+            >
+
+                <i class="bi bi-star-fill"></i>
+
+                <span>
+                    Feedback
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             MESSAGES
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('admin.contact_messages') }}"
+                class="{% if request.endpoint == 'admin.contact_messages' %}active{% endif %}"
+            >
+
+                <i class="bi bi-envelope-fill"></i>
+
+                <span>
+                    Messages
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             DIVIDER
+        ================================================== -->
+
+        <li class="sidebar-divider">
+
+            <hr>
+
+        </li>
+
+
+        <!-- =================================================
+             MY PROFILE
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('admin.profile') }}"
+                class="{% if request.endpoint == 'admin.profile' %}active{% endif %}"
+            >
+
+                <i class="bi bi-person-vcard-fill"></i>
+
+                <span>
+                    My Profile
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             CHANGE PASSWORD
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('admin.change_password') }}"
+                class="{% if request.endpoint == 'admin.change_password' %}active{% endif %}"
+            >
+
+                <i class="bi bi-key-fill"></i>
+
+                <span>
+                    Change Password
+                </span>
+
+            </a>
+
+        </li>
+
+
+        <!-- =================================================
+             LOGOUT
+        ================================================== -->
+
+        <li>
+
+            <a
+                href="{{ url_for('auth.logout') }}"
+                class="logout-link"
+            >
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                <span>
+                    Logout
+                </span>
+
+            </a>
+
+        </li>
+
+    </ul>
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <div class="sidebar-footer">
+
+        <small>
+            © 2026 AI Smart Attendance
+        </small>
+
+        <br>
+
+        <small>
+            Version 2.0
+        </small>
+
+    </div>
+
+</aside>

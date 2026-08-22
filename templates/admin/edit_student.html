@@ -1,0 +1,186 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Edit Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-8">
+
+        <div class="card shadow">
+
+            <div class="card-header bg-warning">
+
+                <h4 class="mb-0 text-dark">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit Student
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+
+                <form method="POST" enctype="multipart/form-data">
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Student ID
+                            </label>
+
+                            <input
+                                type="text"
+                                name="student_id"
+                                class="form-control"
+                                value="{{ student[1] }}"
+                                required>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="full_name"
+                                class="form-control"
+                                value="{{ student[2] }}"
+                                required>
+
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Department
+                            </label>
+
+                            <input
+                                type="text"
+                                name="department"
+                                class="form-control"
+                                value="{{ student[3] }}"
+                                required>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Semester
+                            </label>
+
+                            <select
+                                name="semester"
+                                class="form-select"
+                                required>
+
+                                <option value="1st" {% if student[4]=='1st' %}selected{% endif %}>1st Semester</option>
+                                <option value="2nd" {% if student[4]=='2nd' %}selected{% endif %}>2nd Semester</option>
+                                <option value="3rd" {% if student[4]=='3rd' %}selected{% endif %}>3rd Semester</option>
+                                <option value="4th" {% if student[4]=='4th' %}selected{% endif %}>4th Semester</option>
+                                <option value="5th" {% if student[4]=='5th' %}selected{% endif %}>5th Semester</option>
+                                <option value="6th" {% if student[4]=='6th' %}selected{% endif %}>6th Semester</option>
+                                <option value="7th" {% if student[4]=='7th' %}selected{% endif %}>7th Semester</option>
+                                <option value="8th" {% if student[4]=='8th' %}selected{% endif %}>8th Semester</option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Current Photo
+                        </label>
+
+                        <br>
+
+                        {% if student[5] %}
+
+                            <img
+                                src="{{ url_for('static', filename='uploads/students/' ~ student[5]) }}"
+                                width="150"
+                                class="img-thumbnail mb-3">
+
+                        {% else %}
+
+                            <p class="text-muted">
+                                No Photo Uploaded
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Change Photo
+                        </label>
+
+                        <input
+                            type="file"
+                            name="photo"
+                            class="form-control"
+                            accept=".jpg,.jpeg,.png">
+
+                        <small class="text-muted">
+                            Leave empty to keep existing photo.
+                        </small>
+
+                    </div>
+
+                    <hr>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        Update Student
+
+                    </button>
+
+                    <a
+                        href="{{ url_for('students.index') }}"
+                        class="btn btn-secondary">
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        Back
+
+                    </a>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

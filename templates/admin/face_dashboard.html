@@ -1,0 +1,135 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Face Recognition
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        <i class="bi bi-camera-fill"></i>
+        Face Recognition Dashboard
+    </h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button class="btn-close"
+                            data-bs-dismiss="alert"></button>
+
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+
+        <!-- Register Face -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow mb-4">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-person-bounding-box display-3 text-success"></i>
+
+                    <h4 class="mt-3">
+
+                        Register Face
+
+                    </h4>
+
+                    <p>
+
+                        Go to the Student page, register the student's face, and capture 50 face images.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Train Model -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow mb-4">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-cpu display-3 text-primary"></i>
+
+                    <h4 class="mt-3">
+
+                        Train Face Model
+
+                    </h4>
+
+                    <p>
+
+                        After adding a new student, click "Train Model" to update the face recognition system.
+
+                    </p>
+
+                    <a href="{{ url_for('face.train_model') }}"
+                       class="btn btn-primary">
+
+                        Train Model
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Attendance -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow mb-4">
+
+                <div class="card-body text-center">
+
+                    <i class="bi bi-camera-video-fill display-3 text-danger"></i>
+
+                    <h4 class="mt-3">
+
+                        Start Attendance
+
+                    </h4>
+
+                    <p>
+
+                        Open the camera and mark attendance.
+
+                    </p>
+
+                    <a href="{{ url_for('face.start_face_attendance') }}"
+                       class="btn btn-danger">
+
+                        Start Attendance
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

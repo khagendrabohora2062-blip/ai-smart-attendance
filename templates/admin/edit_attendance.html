@@ -1,0 +1,187 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Edit Attendance Session
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+
+<div class="row justify-content-center">
+
+    <div class="col-md-8">
+
+        <div class="card shadow">
+
+            <div class="card-header bg-warning text-dark">
+
+                <h4 class="mb-0">
+                    Edit Attendance Session
+                </h4>
+
+            </div>
+
+            <div class="card-body">
+
+                <form method="POST">
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Subject
+                        </label>
+
+                        <select name="subject_id"
+                                class="form-select"
+                                required>
+
+                            {% for subject in subjects %}
+
+                            <option value="{{ subject[0] }}"
+                            {% if subject[0] == attendance_session[1] %}
+                            selected
+                            {% endif %}>
+
+                                {{ subject[1] }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Teacher
+                        </label>
+
+                        <select name="teacher_id"
+                                class="form-select"
+                                required>
+
+                            {% for teacher in teachers %}
+
+                            <option value="{{ teacher[0] }}"
+                            {% if teacher[0] == attendance_session[2] %}
+                            selected
+                            {% endif %}>
+
+                                {{ teacher[1] }}
+
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Session Date
+                        </label>
+
+                        <input
+                            type="date"
+                            name="session_date"
+                            class="form-control"
+                            value="{{ attendance_session[3]}}"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Start Time
+                        </label>
+
+                        <input
+                            type="time"
+                            name="start_time"
+                            class="form-control"
+                            value="{{ attendance_session[4] }}"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            End Time
+                        </label>
+
+                        <input
+                            type="time"
+                            name="end_time"
+                            class="form-control"
+                            value="{{ attendance_session[5] }}"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Status
+                        </label>
+
+                        <select
+                            name="session_status"
+                            class="form-select">
+
+                            <option value="OPEN"
+                            {% if attendance_session[6] == "OPEN" %}
+                            selected
+                            {% endif %}>
+                                OPEN
+                            </option>
+
+                            <option value="CLOSED"
+                            {% if attendance_session[6] == "CLOSED" %}
+                            selected
+                            {% endif %}>
+                                CLOSED
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        Update Session
+
+                    </button>
+
+                    <a href="{{ url_for('attendance.index') }}"
+                       class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

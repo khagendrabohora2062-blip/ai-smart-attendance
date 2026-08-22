@@ -1,0 +1,455 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Add Subject
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-9 col-lg-10">
+
+            <div class="card shadow border-0">
+
+                <!-- HEADER -->
+                <div class="card-header bg-primary text-white py-3">
+
+                    <h4 class="mb-0">
+                        <i class="bi bi-book-fill me-2"></i>
+                        Add Subject
+                    </h4>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form method="POST" id="subjectForm">
+
+                        <!-- ================================================= -->
+                        <!-- BASIC SUBJECT INFORMATION -->
+                        <!-- ================================================= -->
+
+                        <h5 class="fw-bold mb-3">
+                            <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                            Subject Information
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+                                    Subject Code
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="subject_code"
+                                    class="form-control"
+                                    placeholder="e.g. COE101"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+                                    Subject Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="subject_name"
+                                    class="form-control"
+                                    placeholder="e.g. Computer Programming"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+                                    Semester
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="semester"
+                                    class="form-control"
+                                    placeholder="e.g. 3"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+                                    Department
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="department"
+                                    class="form-control"
+                                    placeholder="e.g. Computer Engineering"
+                                    required
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+                                Assign Teacher
+                            </label>
+
+                            <select
+                                name="teacher_id"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    -- Select Teacher --
+                                </option>
+
+                                {% for teacher in teachers %}
+
+                                <option value="{{ teacher[0] }}">
+                                    {{ teacher[1] }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ================================================= -->
+                        <!-- MARKS CONFIGURATION -->
+                        <!-- ================================================= -->
+
+                        <div class="card border-primary mb-4">
+
+                            <div class="card-header bg-primary text-white">
+
+                                <h5 class="mb-0">
+                                    <i class="bi bi-calculator-fill me-2"></i>
+                                    Marks Configuration
+                                </h5>
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="alert alert-info">
+
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                                    Admin can set any full marks.
+                                    Total Full Marks will be calculated automatically
+                                    from Theory + Practical.
+
+                                </div>
+
+                                <div class="row">
+
+                                    <!-- THEORY -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Theory Full Marks
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="theory_full_marks"
+                                            id="theoryFullMarks"
+                                            class="form-control"
+                                            min="0.01"
+                                            step="0.01"
+                                            placeholder="e.g. 50"
+                                            required
+                                        >
+
+                                    </div>
+
+                                    <!-- PRACTICAL -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Practical Full Marks
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="practical_full_marks"
+                                            id="practicalFullMarks"
+                                            class="form-control"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="e.g. 50"
+                                            required
+                                        >
+
+                                    </div>
+
+                                    <!-- TOTAL -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Total Full Marks
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            id="totalFullMarks"
+                                            class="form-control bg-light fw-bold"
+                                            readonly
+                                        >
+
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+
+                                    <!-- PASS MARKS -->
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Pass Marks
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="pass_marks"
+                                            id="passMarks"
+                                            class="form-control"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="e.g. 40"
+                                            required
+                                        >
+
+                                        <small class="text-muted">
+                                            Must not be greater than Total Full Marks.
+                                        </small>
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label fw-semibold">
+                                            Marks Summary
+                                        </label>
+
+                                        <div
+                                            id="marksSummary"
+                                            class="alert alert-secondary mb-0"
+                                        >
+                                            Set Theory and Practical Full Marks.
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ================================================= -->
+                        <!-- BUTTONS -->
+                        <!-- ================================================= -->
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-success"
+                            >
+
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                Save Subject
+
+                            </button>
+
+                            <a
+                                href="{{ url_for('subjects.index') }}"
+                                class="btn btn-secondary"
+                            >
+
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+{% block js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const theoryInput =
+        document.getElementById("theoryFullMarks");
+
+    const practicalInput =
+        document.getElementById("practicalFullMarks");
+
+    const totalInput =
+        document.getElementById("totalFullMarks");
+
+    const passInput =
+        document.getElementById("passMarks");
+
+    const summary =
+        document.getElementById("marksSummary");
+
+
+    function calculateTotal() {
+
+        const theory =
+            parseFloat(theoryInput.value) || 0;
+
+        const practical =
+            parseFloat(practicalInput.value) || 0;
+
+        const total =
+            theory + practical;
+
+        totalInput.value =
+            total > 0 ? total.toFixed(2) : "";
+
+        passInput.max = total > 0 ? total : "";
+
+        if (total > 0) {
+
+            summary.className =
+                "alert alert-success mb-0";
+
+            summary.innerHTML =
+                "<strong>Theory:</strong> " +
+                theory.toFixed(2) +
+                " &nbsp; + &nbsp; " +
+                "<strong>Practical:</strong> " +
+                practical.toFixed(2) +
+                " &nbsp; = &nbsp; " +
+                "<strong>Total:</strong> " +
+                total.toFixed(2);
+
+        } else {
+
+            summary.className =
+                "alert alert-secondary mb-0";
+
+            summary.innerHTML =
+                "Set Theory and Practical Full Marks.";
+        }
+    }
+
+
+    theoryInput.addEventListener(
+        "input",
+        calculateTotal
+    );
+
+    practicalInput.addEventListener(
+        "input",
+        calculateTotal
+    );
+
+
+    document.getElementById("subjectForm")
+        .addEventListener("submit", function (event) {
+
+            const theory =
+                parseFloat(theoryInput.value) || 0;
+
+            const practical =
+                parseFloat(practicalInput.value) || 0;
+
+            const pass =
+                parseFloat(passInput.value) || 0;
+
+            const total =
+                theory + practical;
+
+
+            if (theory <= 0) {
+
+                alert(
+                    "Theory Full Marks must be greater than 0."
+                );
+
+                event.preventDefault();
+                return;
+            }
+
+
+            if (practical < 0) {
+
+                alert(
+                    "Practical Full Marks cannot be negative."
+                );
+
+                event.preventDefault();
+                return;
+            }
+
+
+            if (pass < 0 || pass > total) {
+
+                alert(
+                    "Pass Marks must be between 0 and Total Full Marks."
+                );
+
+                event.preventDefault();
+                return;
+            }
+
+        });
+
+
+    calculateTotal();
+
+});
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,1180 @@
+<!-- =====================================================
+     ADMIN NAVBAR CSS
+====================================================== -->
+
+<style>
+
+    /* =====================================================
+       NAVBAR
+    ====================================================== */
+
+    .admin-navbar {
+
+        width: 100%;
+
+        min-height: 76px;
+
+        background: #ffffff;
+
+        border-bottom: 1px solid #e2e8f0;
+
+        box-shadow:
+            0 3px 12px rgba(15,23,42,.05);
+
+        position: relative;
+
+        z-index: 100;
+
+    }
+
+
+    /* =====================================================
+       CONTAINER
+    ====================================================== */
+
+    .admin-navbar .container-fluid {
+
+        min-height: 76px;
+
+        padding-left: 24px;
+
+        padding-right: 24px;
+
+        display: flex;
+
+        align-items: center;
+
+    }
+
+
+    /* =====================================================
+       MOBILE BUTTON
+    ====================================================== */
+
+    .admin-navbar #menuToggle {
+
+        width: 42px;
+
+        height: 42px;
+
+        border: 1px solid #dbe3ef;
+
+        border-radius: 9px;
+
+        background: #ffffff;
+
+        color: #334155;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        flex-shrink: 0;
+
+    }
+
+
+    .admin-navbar #menuToggle:hover {
+
+        color: #0d6efd;
+
+        background: #f1f5ff;
+
+        border-color: #bcd2ff;
+
+    }
+
+
+    /* =====================================================
+       TITLE
+    ====================================================== */
+
+    .admin-navbar .navbar-page-title {
+
+        line-height: 1.2;
+
+    }
+
+
+    .admin-navbar .navbar-page-title h5 {
+
+        color: #172554;
+
+        font-size: 17px;
+
+        font-weight: 700;
+
+        margin: 0;
+
+    }
+
+
+    .admin-navbar .navbar-page-title small {
+
+        color: #64748b;
+
+        font-size: 10px;
+
+        display: block;
+
+        margin-top: 4px;
+
+    }
+
+
+    /* =====================================================
+       RIGHT SIDE
+    ====================================================== */
+
+    .admin-navbar .navbar-right {
+
+        margin-left: auto;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ====================================================== */
+
+    .admin-navbar .search-box {
+
+        width: 235px;
+
+    }
+
+
+    .admin-navbar .search-box .input-group {
+
+        height: 40px;
+
+    }
+
+
+    .admin-navbar .search-box .input-group-text {
+
+        background: #f8fafc;
+
+        border-color: #dfe6ef;
+
+        color: #64748b;
+
+        padding-left: 12px;
+
+        padding-right: 10px;
+
+    }
+
+
+    .admin-navbar .search-box .form-control {
+
+        height: 40px;
+
+        background: #f8fafc;
+
+        border-color: #dfe6ef;
+
+        font-size: 12px;
+
+        color: #334155;
+
+        box-shadow: none;
+
+    }
+
+
+    .admin-navbar .search-box .form-control:focus {
+
+        background: #ffffff;
+
+        border-color: #86b7fe;
+
+        box-shadow: none;
+
+    }
+
+
+    /* =====================================================
+       DATE
+    ====================================================== */
+
+    .admin-navbar .navbar-date {
+
+        font-size: 10px;
+
+        font-weight: 500;
+
+        padding: 8px 10px;
+
+        border-radius: 7px;
+
+        white-space: nowrap;
+
+    }
+
+
+    /* =====================================================
+       TIME
+    ====================================================== */
+
+    .admin-navbar .navbar-time {
+
+        font-size: 10px;
+
+        font-weight: 500;
+
+        padding: 8px 10px;
+
+        border-radius: 7px;
+
+        white-space: nowrap;
+
+    }
+
+
+    /* =====================================================
+       NOTIFICATION
+    ====================================================== */
+
+    .admin-navbar .notification-btn {
+
+        width: 40px;
+
+        height: 40px;
+
+        border: 1px solid #dfe6ef;
+
+        background: #ffffff;
+
+        color: #475569;
+
+        border-radius: 9px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+    }
+
+
+    .admin-navbar .notification-btn:hover {
+
+        color: #0d6efd;
+
+        background: #f8fafc;
+
+        border-color: #bfd2f4;
+
+    }
+
+
+    .admin-navbar .notification-btn .badge {
+
+        font-size: 8px;
+
+        padding: 4px 5px;
+
+    }
+
+
+    .admin-navbar .notification-menu {
+
+        min-width: 280px;
+
+        margin-top: 8px !important;
+
+        padding: 6px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 11px;
+
+    }
+
+
+    .admin-navbar .notification-menu .dropdown-item {
+
+        padding: 10px 12px;
+
+        border-radius: 7px;
+
+        font-size: 12px;
+
+    }
+
+
+    .admin-navbar .notification-menu .dropdown-item:hover {
+
+        background: #f1f5f9;
+
+    }
+
+
+    /* =====================================================
+       PROFILE BUTTON
+    ====================================================== */
+
+    .admin-navbar .admin-profile-btn {
+
+        min-height: 44px;
+
+        padding: 4px 9px;
+
+        border: 1px solid #dfe6ef;
+
+        border-radius: 10px;
+
+        background: #ffffff;
+
+        color: #334155;
+
+        box-shadow: none;
+
+    }
+
+
+    .admin-navbar .admin-profile-btn:hover {
+
+        background: #f8fafc;
+
+        border-color: #cbd5e1;
+
+    }
+
+
+    /* =====================================================
+       AVATAR
+    ====================================================== */
+
+    .admin-navbar .admin-navbar-avatar {
+
+        width: 34px;
+
+        height: 34px;
+
+        min-width: 34px;
+
+        border-radius: 50%;
+
+        overflow: hidden;
+
+        background: #172554;
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 16px;
+
+    }
+
+
+    .admin-navbar .admin-navbar-avatar-img {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: cover;
+
+        display: block;
+
+    }
+
+
+    /* =====================================================
+       ADMIN INFO
+    ====================================================== */
+
+    .admin-navbar .admin-navbar-info {
+
+        text-align: left;
+
+        line-height: 1.2;
+
+    }
+
+
+    .admin-navbar .admin-navbar-info strong {
+
+        display: block;
+
+        color: #172554;
+
+        font-size: 11px;
+
+        font-weight: 600;
+
+    }
+
+
+    .admin-navbar .admin-navbar-info small {
+
+        display: block;
+
+        color: #64748b;
+
+        font-size: 8px;
+
+        margin-top: 3px;
+
+    }
+
+
+    /* =====================================================
+       ARROW
+    ====================================================== */
+
+    .admin-navbar .profile-arrow {
+
+        font-size: 10px;
+
+        color: #64748b;
+
+        margin-left: 2px;
+
+    }
+
+
+    /* =====================================================
+       DROPDOWN
+    ====================================================== */
+
+    .admin-navbar .admin-dropdown-menu {
+
+        min-width: 250px;
+
+        margin-top: 8px !important;
+
+        padding: 6px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 11px;
+
+    }
+
+
+    .admin-navbar .admin-dropdown-menu .dropdown-item {
+
+        padding: 9px 12px;
+
+        border-radius: 7px;
+
+        font-size: 12px;
+
+    }
+
+
+    .admin-navbar .admin-dropdown-menu .dropdown-item:hover {
+
+        background: #f1f5f9;
+
+    }
+
+
+    /* =====================================================
+       DROPDOWN AVATAR
+    ====================================================== */
+
+    .admin-navbar .admin-dropdown-avatar {
+
+        width: 43px;
+
+        height: 43px;
+
+        min-width: 43px;
+
+        border-radius: 50%;
+
+        overflow: hidden;
+
+        background: #172554;
+
+        color: #ffffff;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 19px;
+
+    }
+
+
+    .admin-navbar .admin-dropdown-avatar img {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: cover;
+
+    }
+
+
+    /* =====================================================
+       IMPORTANT
+       NAVBAR IS NOT FIXED
+    ====================================================== */
+
+    .admin-navbar {
+
+        position: relative !important;
+
+        top: auto !important;
+
+        left: auto !important;
+
+        right: auto !important;
+
+        bottom: auto !important;
+
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media (max-width: 1199px) {
+
+        .admin-navbar .search-box {
+
+            width: 190px;
+
+        }
+
+    }
+
+
+    @media (max-width: 991px) {
+
+        .admin-navbar {
+
+            min-height: 66px;
+
+        }
+
+
+        .admin-navbar .container-fluid {
+
+            min-height: 66px;
+
+            padding-left: 16px;
+
+            padding-right: 16px;
+
+        }
+
+
+        .admin-navbar .navbar-page-title {
+
+            display: none;
+
+        }
+
+    }
+
+
+    @media (max-width: 767px) {
+
+        .admin-navbar .navbar-date {
+
+            display: none;
+
+        }
+
+
+        .admin-navbar .admin-profile-btn {
+
+            padding: 4px 6px;
+
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .admin-navbar .navbar-time {
+
+            display: none;
+
+        }
+
+
+        .admin-navbar .navbar-right {
+
+            gap: 6px;
+
+        }
+
+
+        .admin-navbar .notification-btn {
+
+            width: 38px;
+
+            height: 38px;
+
+        }
+
+
+        .admin-navbar .admin-navbar-avatar {
+
+            width: 32px;
+
+            height: 32px;
+
+            min-width: 32px;
+
+        }
+
+    }
+
+</style>
+
+
+
+<!-- =====================================================
+     ADMIN NAVBAR
+====================================================== -->
+
+<nav class="admin-navbar">
+
+    <div class="container-fluid">
+
+
+        <!-- =================================================
+             MOBILE MENU
+        ================================================== -->
+
+        <button
+            type="button"
+            class="btn d-lg-none me-3"
+            id="menuToggle"
+            aria-label="Toggle Sidebar"
+        >
+
+            <i class="bi bi-list fs-4"></i>
+
+        </button>
+
+
+
+        <!-- =================================================
+             PAGE TITLE
+        ================================================== -->
+
+        <div class="navbar-page-title d-none d-lg-block">
+
+            <h5>
+                Teacher/Admin Panel
+            </h5>
+
+            <small>
+                AI Smart Attendance System
+            </small>
+
+        </div>
+
+
+
+        <!-- =================================================
+             RIGHT SIDE
+        ================================================== -->
+
+        <div class="navbar-right">
+
+
+            <!-- SEARCH -->
+
+            <form
+                class="d-none d-xl-flex search-box"
+                role="search"
+            >
+
+                <div class="input-group">
+
+                    <span class="input-group-text">
+
+                        <i class="bi bi-search"></i>
+
+                    </span>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        placeholder="Search..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </form>
+
+
+
+            <!-- DATE -->
+
+            <span
+                id="navbarDate"
+                class="badge bg-primary navbar-date">
+            </span>
+
+
+
+            <!-- TIME -->
+
+            <span
+                id="navbarTime"
+                class="badge bg-dark navbar-time">
+            </span>
+
+
+
+            <!-- =================================================
+                 NOTIFICATION
+            ================================================== -->
+
+            <div class="dropdown">
+
+                <button
+                    type="button"
+                    class="btn notification-btn position-relative"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Notifications"
+                >
+
+                    <i class="bi bi-bell-fill"></i>
+
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        3
+                    </span>
+
+                </button>
+
+
+                <ul
+                    class="dropdown-menu dropdown-menu-end shadow notification-menu"
+                >
+
+                    <li>
+
+                        <h6 class="dropdown-header">
+
+                            <i class="bi bi-bell me-2"></i>
+
+                            Notifications
+
+                        </h6>
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                        >
+
+                            <i class="bi bi-person-plus-fill text-primary me-2"></i>
+
+                            New student registered
+
+                        </a>
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                        >
+
+                            <i class="bi bi-calendar-check-fill text-success me-2"></i>
+
+                            Attendance marked
+
+                        </a>
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item"
+                            href="#"
+                        >
+
+                            <i class="bi bi-star-fill text-warning me-2"></i>
+
+                            New feedback received
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 ADMIN PROFILE
+            ================================================== -->
+
+            <div class="dropdown admin-profile-dropdown">
+
+
+                <button
+                    type="button"
+                    class="btn admin-profile-btn d-flex align-items-center gap-2"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+
+
+                    <div class="admin-navbar-avatar">
+
+                        {% if session.get("admin_photo") %}
+
+                            <img
+                                src="{{ url_for(
+                                    'static',
+                                    filename='uploads/admins/' ~ session.get('admin_photo')
+                                ) }}"
+                                alt="Administrator"
+                                class="admin-navbar-avatar-img"
+                            >
+
+                        {% else %}
+
+                            <i class="bi bi-person-fill"></i>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="admin-navbar-info d-none d-lg-block">
+
+                        <strong>
+
+                            {{ session.get(
+                                "admin_name",
+                                "Administrator"
+                            ) }}
+
+                        </strong>
+
+                        <small>
+                            System Administrator
+                        </small>
+
+                    </div>
+
+
+                    <i class="bi bi-chevron-down profile-arrow"></i>
+
+                </button>
+
+
+
+                <!-- =================================================
+                     DROPDOWN
+                ================================================== -->
+
+                <ul
+                    class="dropdown-menu dropdown-menu-end shadow admin-dropdown-menu"
+                >
+
+
+                    <li>
+
+                        <div class="dropdown-header">
+
+                            <div class="d-flex align-items-center">
+
+
+                                <div class="admin-dropdown-avatar">
+
+                                    {% if session.get("admin_photo") %}
+
+                                        <img
+                                            src="{{ url_for(
+                                                'static',
+                                                filename='uploads/admins/' ~ session.get('admin_photo')
+                                            ) }}"
+                                            alt="Administrator"
+                                        >
+
+                                    {% else %}
+
+                                        <i class="bi bi-person-fill"></i>
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <div class="ms-2">
+
+                                    <strong class="d-block">
+
+                                        {{ session.get(
+                                            "admin_name",
+                                            "Administrator"
+                                        ) }}
+
+                                    </strong>
+
+                                    <small class="text-muted">
+
+                                        Administrator
+
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </li>
+
+
+                    <li>
+
+                        <hr class="dropdown-divider">
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item"
+                            href="{{ url_for('admin.profile') }}"
+                        >
+
+                            <i class="bi bi-person-vcard me-2"></i>
+
+                            My Profile
+
+                        </a>
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item"
+                            href="{{ url_for('admin.change_password') }}"
+                        >
+
+                            <i class="bi bi-key-fill me-2"></i>
+
+                            Change Password
+
+                        </a>
+
+                    </li>
+
+
+                    <li>
+
+                        <hr class="dropdown-divider">
+
+                    </li>
+
+
+                    <li>
+
+                        <a
+                            class="dropdown-item text-danger"
+                            href="{{ url_for('auth.logout') }}"
+                        >
+
+                            <i class="bi bi-box-arrow-right me-2"></i>
+
+                            Logout
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     ADMIN NAVBAR JAVASCRIPT
+====================================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    /* =================================================
+       SIDEBAR TOGGLE
+    ================================================= */
+
+    const menuToggle =
+        document.getElementById("menuToggle");
+
+    const sidebar =
+        document.getElementById("adminSidebar");
+
+    const overlay =
+        document.getElementById("adminSidebarOverlay");
+
+
+    function openSidebar() {
+
+        if (sidebar) {
+
+            sidebar.classList.add("show");
+
+        }
+
+        if (overlay) {
+
+            overlay.classList.add("show");
+
+        }
+
+    }
+
+
+    function closeSidebar() {
+
+        if (sidebar) {
+
+            sidebar.classList.remove("show");
+
+        }
+
+        if (overlay) {
+
+            overlay.classList.remove("show");
+
+        }
+
+    }
+
+
+    if (menuToggle) {
+
+        menuToggle.addEventListener(
+            "click",
+            openSidebar
+        );
+
+    }
+
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            closeSidebar
+        );
+
+    }
+
+
+    /* =================================================
+       DATE + TIME
+    ================================================= */
+
+    function updateNavbarDateTime() {
+
+        const now = new Date();
+
+
+        const dateElement =
+            document.getElementById("navbarDate");
+
+        const timeElement =
+            document.getElementById("navbarTime");
+
+
+        if (dateElement) {
+
+            dateElement.textContent =
+                now.toLocaleDateString(
+                    "en-US",
+                    {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric"
+                    }
+                );
+
+        }
+
+
+        if (timeElement) {
+
+            timeElement.textContent =
+                now.toLocaleTimeString(
+                    "en-US",
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit"
+                    }
+                );
+
+        }
+
+    }
+
+
+    updateNavbarDateTime();
+
+
+    setInterval(
+        updateNavbarDateTime,
+        1000
+    );
+
+
+});
+
+</script>

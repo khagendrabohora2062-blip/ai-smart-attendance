@@ -1,0 +1,123 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Contact Messages
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold">Contact Messages</h2>
+            <small class="text-muted">Messages received from website visitors</small>
+        </div>
+
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+
+            <h5 class="mb-0">
+                All Contact Messages
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subject</th>
+                            <th>Message</th>
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% if messages %}
+
+                        {% for msg in messages %}
+
+                        <tr>
+
+                            <td>{{ msg[0] }}</td>
+
+                            <td>{{ msg[1] }}</td>
+
+                            <td>{{ msg[2] }}</td>
+
+                            <td>{{ msg[3] }}</td>
+
+                            <td>{{ msg[4] }}</td>
+
+                            <td>
+
+                                <a href="{{ url_for('admin.delete_contact_message', id=msg[0]) }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Delete this message?')">
+
+                                    <i class="bi bi-trash-fill"></i>
+
+                                    Delete
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <tr>
+
+                            <td colspan="6" class="text-center">
+
+                                No Contact Messages Found
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

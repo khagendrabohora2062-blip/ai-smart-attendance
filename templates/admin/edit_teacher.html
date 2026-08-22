@@ -1,0 +1,383 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Edit Teacher
+{% endblock %}
+
+
+{% block content %}
+
+
+<div class="container-fluid">
+
+<div class="row justify-content-center">
+
+
+<div class="col-lg-8">
+
+
+<div class="card shadow">
+
+
+<div class="card-header bg-warning">
+
+<h4 class="mb-0 text-dark">
+
+<i class="bi bi-pencil-square"></i>
+
+Edit Teacher
+
+</h4>
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+
+<form method="POST" enctype="multipart/form-data">
+
+
+
+<!-- PHOTO SECTION -->
+
+<div class="text-center mb-4">
+
+
+{% if teacher[6] and teacher[6] != 'default.png' %}
+
+
+<img
+id="previewImage"
+src="{{ url_for(
+'static',
+filename='uploads/' + teacher[6]
+)}}"
+width="130"
+height="130"
+class="rounded-circle shadow"
+style="object-fit:cover;">
+
+
+
+{% else %}
+
+
+<div
+id="previewBox"
+class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto"
+style="width:130px;height:130px;">
+
+
+<i class="bi bi-person-fill fs-1"></i>
+
+
+</div>
+
+
+{% endif %}
+
+
+
+<br>
+
+
+<label class="btn btn-primary mt-3">
+
+
+<i class="bi bi-camera-fill"></i>
+
+Change Photo
+
+
+<input
+type="file"
+name="photo"
+hidden
+accept=".png,.jpg,.jpeg,.webp"
+onchange="previewPhoto(event)">
+
+
+</label>
+
+
+
+
+{% if teacher[6] and teacher[6] != 'default.png' %}
+
+
+<a
+href="{{ url_for(
+'teachers.remove_photo',
+id=teacher[0]
+)}}"
+class="btn btn-danger mt-3"
+onclick="return confirm('Remove photo?')">
+
+
+<i class="bi bi-trash"></i>
+
+Remove Photo
+
+
+</a>
+
+
+{% endif %}
+
+
+</div>
+
+
+
+
+
+<hr>
+
+
+
+
+
+<div class="row">
+
+
+
+<div class="col-md-6 mb-3">
+
+
+<label>
+Teacher ID
+</label>
+
+
+<input
+type="text"
+name="teacher_id"
+class="form-control"
+value="{{ teacher[1] }}"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="col-md-6 mb-3">
+
+
+<label>
+Full Name
+</label>
+
+
+<input
+type="text"
+name="full_name"
+class="form-control"
+value="{{ teacher[2] }}"
+required>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="row">
+
+
+<div class="col-md-6 mb-3">
+
+
+<label>
+Email
+</label>
+
+
+<input
+type="email"
+name="email"
+class="form-control"
+value="{{ teacher[3] }}"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="col-md-6 mb-3">
+
+
+<label>
+Phone
+</label>
+
+
+<input
+type="text"
+name="phone"
+class="form-control"
+value="{{ teacher[4] }}">
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="mb-3">
+
+
+<label>
+Department
+</label>
+
+
+<input
+type="text"
+name="department"
+class="form-control"
+value="{{ teacher[5] }}"
+required>
+
+
+</div>
+
+
+
+
+
+
+
+<button
+type="submit"
+class="btn btn-success">
+
+
+<i class="bi bi-check-circle"></i>
+
+Update Teacher
+
+
+</button>
+
+
+
+
+
+<a
+href="{{ url_for('teachers.index') }}"
+class="btn btn-secondary">
+
+
+<i class="bi bi-arrow-left"></i>
+
+Back
+
+
+</a>
+
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<script>
+
+
+function previewPhoto(event){
+
+
+let file =
+event.target.files[0];
+
+
+if(file){
+
+
+let reader =
+new FileReader();
+
+
+
+reader.onload =
+function(e){
+
+
+let img =
+document.getElementById(
+"previewImage"
+);
+
+
+
+if(img){
+
+
+img.src=e.target.result;
+
+
+}
+
+
+
+};
+
+
+
+reader.readAsDataURL(file);
+
+
+}
+
+
+}
+
+
+
+</script>
+
+
+
+{% endblock %}

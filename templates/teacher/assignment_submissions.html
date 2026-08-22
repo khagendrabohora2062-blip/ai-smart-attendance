@@ -1,0 +1,1059 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Assignment Submissions - AI Smart Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =========================================================
+         HEADER
+    ========================================================== -->
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2 mb-2">
+
+                <a
+                    href="{{ url_for('teacher_assignment.index') }}"
+                    class="btn btn-sm btn-outline-secondary"
+                    title="Back"
+                >
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+
+                <h3 class="fw-bold mb-0">
+                    <i class="bi bi-people-fill text-primary me-2"></i>
+                    Assignment Submissions
+                </h3>
+
+            </div>
+
+            {% if assignment %}
+
+                <p class="text-muted mb-0">
+
+                    <strong>
+                        {{ assignment[3] }}
+                    </strong>
+
+                    {% if assignment[11] %}
+                        <span class="mx-1">•</span>
+                        {{ assignment[11] }}
+                    {% endif %}
+
+                    {% if assignment[12] %}
+                        <span class="mx-1">•</span>
+                        {{ assignment[12] }}
+                    {% endif %}
+
+                </p>
+
+            {% endif %}
+
+        </div>
+
+
+        <a
+            href="{{ url_for('teacher_assignment.index') }}"
+            class="btn btn-outline-primary"
+        >
+            <i class="bi bi-journal-text me-1"></i>
+            My Assignments
+        </a>
+
+    </div>
+
+
+    <!-- =========================================================
+         FLASH MESSAGES
+    ========================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }}
+                           alert-dismissible fade show shadow-sm"
+                    role="alert"
+                >
+
+                    <i class="bi bi-info-circle me-1"></i>
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =========================================================
+         ASSIGNMENT INFORMATION
+    ========================================================== -->
+
+    {% if assignment %}
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <!-- TITLE -->
+
+                <div class="col-md-4">
+
+                    <div class="info-box">
+
+                        <div class="info-icon">
+                            <i class="bi bi-journal-text"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="small text-muted">
+                                Assignment
+                            </div>
+
+                            <div class="fw-bold">
+                                {{ assignment[3] }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUBJECT -->
+
+                <div class="col-md-3">
+
+                    <div class="info-box">
+
+                        <div class="info-icon">
+                            <i class="bi bi-book"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="small text-muted">
+                                Subject
+                            </div>
+
+                            <div class="fw-bold">
+
+                                {{ assignment[11] }}
+
+                            </div>
+
+                            <div class="small text-muted">
+
+                                {{ assignment[12] }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TOTAL MARKS -->
+
+                <div class="col-md-2">
+
+                    <div class="info-box">
+
+                        <div class="info-icon">
+                            <i class="bi bi-award"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="small text-muted">
+                                Total Marks
+                            </div>
+
+                            <div class="fw-bold text-success">
+                                {{ assignment[9] }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SUBMISSIONS -->
+
+                <div class="col-md-3">
+
+                    <div class="info-box">
+
+                        <div class="info-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+
+                        <div>
+
+                            <div class="small text-muted">
+                                Total Submissions
+                            </div>
+
+                            <div class="fw-bold text-primary">
+                                {{ submissions|length }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- =========================================================
+         SUBMISSIONS CARD
+    ========================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white py-3">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-file-earmark-check text-primary me-2"></i>
+
+                        Student Submissions
+
+                    </h5>
+
+                    <div class="small text-muted">
+
+                        Review submitted answers and grade students.
+
+                    </div>
+
+                </div>
+
+
+                {% if submissions %}
+
+                    <span class="badge bg-primary px-3 py-2">
+
+                        {{ submissions|length }}
+
+                        Submission{% if submissions|length != 1 %}s{% endif %}
+
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+
+            {% if submissions %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+
+                            <tr>
+
+                                <th class="ps-4">
+                                    #
+                                </th>
+
+                                <th>
+                                    Student
+                                </th>
+
+                                <th>
+                                    Answer
+                                </th>
+
+                                <th>
+                                    Attachment
+                                </th>
+
+                                <th>
+                                    Submitted
+                                </th>
+
+                                <th>
+                                    Marks
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th class="text-end pe-4">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for submission in submissions %}
+
+                                <tr>
+
+                                    <!-- =================================================
+                                         SERIAL
+                                    ================================================== -->
+
+                                    <td class="ps-4">
+
+                                        <span class="fw-semibold text-muted">
+
+                                            {{ loop.index }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         STUDENT
+                                    ================================================== -->
+
+                                    <td>
+
+                                        <div class="d-flex align-items-center">
+
+                                            {% if submission[12] %}
+
+                                                <img
+                                                    src="{{ url_for(
+                                                        'static',
+                                                        filename='uploads/students/' ~ submission[12]
+                                                    ) }}"
+                                                    class="student-photo"
+                                                    alt="Student"
+                                                    onerror="this.style.display='none';"
+                                                >
+
+                                            {% else %}
+
+                                                <div class="student-avatar">
+
+                                                    <i class="bi bi-person"></i>
+
+                                                </div>
+
+                                            {% endif %}
+
+
+                                            <div class="ms-2">
+
+                                                <div class="fw-bold text-dark">
+
+                                                    {{ submission[10] }}
+
+                                                </div>
+
+                                                <div class="small text-muted">
+
+                                                    ID:
+                                                    {{ submission[9] }}
+
+                                                </div>
+
+                                                {% if submission[11] %}
+
+                                                    <div class="small text-muted">
+
+                                                        <i class="bi bi-envelope me-1"></i>
+
+                                                        {{ submission[11] }}
+
+                                                    </div>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ANSWER
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if submission[3] %}
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#answerModal{{ submission[0] }}"
+                                            >
+
+                                                <i class="bi bi-eye me-1"></i>
+
+                                                View Answer
+
+                                            </button>
+
+                                        {% else %}
+
+                                            <span class="text-muted small">
+
+                                                No written answer
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ATTACHMENT
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if submission[4] %}
+
+                                            <a
+                                                href="{{ url_for(
+                                                    'teacher_assignment.submission_file',
+                                                    submission_id=submission[0]
+                                                ) }}"
+                                                target="_blank"
+                                                class="btn btn-sm btn-outline-secondary"
+                                            >
+
+                                                <i class="bi bi-paperclip me-1"></i>
+
+                                                View File
+
+                                            </a>
+
+                                        {% else %}
+
+                                            <span class="text-muted small">
+
+                                                No file
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         SUBMITTED DATE
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if submission[5] %}
+
+                                            <div class="fw-semibold">
+
+                                                {{ submission[5].strftime('%Y-%m-%d') }}
+
+                                            </div>
+
+                                            <div class="small text-muted">
+
+                                                <i class="bi bi-clock me-1"></i>
+
+                                                {{ submission[5].strftime('%I:%M %p') }}
+
+                                            </div>
+
+                                        {% else %}
+
+                                            <span class="text-muted">
+
+                                                Not available
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         MARKS
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if submission[6] is not none %}
+
+                                            <span class="marks-badge">
+
+                                                {{ submission[6] }}
+
+                                                /
+
+                                                {{ assignment[9] }}
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-warning-subtle text-warning">
+
+                                                Not Graded
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         STATUS
+                                    ================================================== -->
+
+                                    <td>
+
+                                        {% if submission[8] == "Graded" %}
+
+                                            <span class="badge bg-success">
+
+                                                <i class="bi bi-check-circle me-1"></i>
+
+                                                Graded
+
+                                            </span>
+
+                                        {% elif submission[8] == "Returned" %}
+
+                                            <span class="badge bg-info">
+
+                                                <i class="bi bi-arrow-return-left me-1"></i>
+
+                                                Returned
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-warning text-dark">
+
+                                                <i class="bi bi-hourglass-split me-1"></i>
+
+                                                Submitted
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <!-- =================================================
+                                         ACTION
+                                    ================================================== -->
+
+                                    <td class="text-end pe-4">
+
+                                        <a
+                                            href="{{ url_for(
+                                                'teacher_assignment.grade_submission',
+                                                submission_id=submission[0]
+                                            ) }}"
+                                            class="btn btn-sm btn-primary"
+                                            title="Grade Submission"
+                                        >
+
+                                            <i class="bi bi-pencil-square me-1"></i>
+
+                                            Grade
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <!-- =====================================================
+                                     ANSWER MODAL
+                                ====================================================== -->
+
+                                {% if submission[3] %}
+
+                                <div
+                                    class="modal fade"
+                                    id="answerModal{{ submission[0] }}"
+                                    tabindex="-1"
+                                    aria-hidden="true"
+                                >
+
+                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+
+                                        <div class="modal-content border-0 shadow-lg">
+
+                                            <div class="modal-header">
+
+                                                <div>
+
+                                                    <h5 class="modal-title fw-bold">
+
+                                                        <i class="bi bi-file-text text-primary me-2"></i>
+
+                                                        Student Answer
+
+                                                    </h5>
+
+                                                    <div class="small text-muted">
+
+                                                        {{ submission[10] }}
+
+                                                        —
+                                                        {{ submission[9] }}
+
+                                                    </div>
+
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn-close"
+                                                    data-bs-dismiss="modal"
+                                                ></button>
+
+                                            </div>
+
+
+                                            <div class="modal-body">
+
+                                                <div class="answer-box">
+
+                                                    {{ submission[3] }}
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="modal-footer">
+
+                                                <a
+                                                    href="{{ url_for(
+                                                        'teacher_assignment.grade_submission',
+                                                        submission_id=submission[0]
+                                                    ) }}"
+                                                    class="btn btn-primary"
+                                                >
+
+                                                    <i class="bi bi-pencil-square me-1"></i>
+
+                                                    Grade Submission
+
+                                                </a>
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-secondary"
+                                                    data-bs-dismiss="modal"
+                                                >
+
+                                                    Close
+
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <!-- =====================================================
+                     NO SUBMISSIONS
+                ====================================================== -->
+
+                <div class="text-center py-5">
+
+                    <div class="empty-icon mb-3">
+
+                        <i class="bi bi-inbox"></i>
+
+                    </div>
+
+                    <h5 class="fw-bold">
+
+                        No Submissions Yet
+
+                    </h5>
+
+                    <p class="text-muted mb-4">
+
+                        No student has submitted this assignment yet.
+
+                    </p>
+
+                    <a
+                        href="{{ url_for('teacher_assignment.index') }}"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-arrow-left me-1"></i>
+
+                        Back to Assignments
+
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     PAGE STYLE
+============================================================== -->
+
+<style>
+
+    /* ---------------------------------------------------------
+       INFO BOX
+    --------------------------------------------------------- */
+
+    .info-box {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+
+        padding: 16px;
+
+        border: 1px solid #eef0f4;
+
+        border-radius: 12px;
+
+        background: #ffffff;
+
+        height: 100%;
+
+    }
+
+
+    .info-icon {
+
+        width: 44px;
+
+        height: 44px;
+
+        min-width: 44px;
+
+        border-radius: 10px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        background: #eef4ff;
+
+        color: #2161e0;
+
+        font-size: 20px;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       TABLE
+    --------------------------------------------------------- */
+
+    .table > :not(caption) > * > * {
+
+        padding-top: 15px;
+
+        padding-bottom: 15px;
+
+    }
+
+
+    .table tbody tr {
+
+        transition: all 0.2s ease;
+
+    }
+
+
+    .table tbody tr:hover {
+
+        background: #f8faff;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       STUDENT PHOTO
+    --------------------------------------------------------- */
+
+    .student-photo {
+
+        width: 44px;
+
+        height: 44px;
+
+        object-fit: cover;
+
+        border-radius: 50%;
+
+        border: 2px solid #e9ecef;
+
+    }
+
+
+    .student-avatar {
+
+        width: 44px;
+
+        height: 44px;
+
+        min-width: 44px;
+
+        border-radius: 50%;
+
+        background: #eef4ff;
+
+        color: #2161e0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 20px;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       MARKS
+    --------------------------------------------------------- */
+
+    .marks-badge {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        padding: 6px 10px;
+
+        border-radius: 8px;
+
+        background: #e8f7ee;
+
+        color: #198754;
+
+        font-weight: 700;
+
+        font-size: 13px;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       ANSWER
+    --------------------------------------------------------- */
+
+    .answer-box {
+
+        background: #f8f9fa;
+
+        border: 1px solid #e9ecef;
+
+        border-radius: 12px;
+
+        padding: 20px;
+
+        min-height: 180px;
+
+        max-height: 500px;
+
+        overflow-y: auto;
+
+        white-space: pre-wrap;
+
+        word-break: break-word;
+
+        line-height: 1.7;
+
+        color: #343a40;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       EMPTY STATE
+    --------------------------------------------------------- */
+
+    .empty-icon {
+
+        width: 75px;
+
+        height: 75px;
+
+        margin: auto;
+
+        border-radius: 50%;
+
+        background: #f1f3f5;
+
+        color: #adb5bd;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 35px;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       BADGES
+    --------------------------------------------------------- */
+
+    .badge {
+
+        font-weight: 600;
+
+    }
+
+
+    .bg-warning-subtle {
+
+        background-color: #fff3cd !important;
+
+    }
+
+
+    .text-warning {
+
+        color: #997404 !important;
+
+    }
+
+
+    /* ---------------------------------------------------------
+       MOBILE
+    --------------------------------------------------------- */
+
+    @media (max-width: 768px) {
+
+        .container-fluid {
+
+            padding-left: 12px !important;
+
+            padding-right: 12px !important;
+
+        }
+
+
+        .table {
+
+            min-width: 1100px;
+
+        }
+
+
+        .d-flex.justify-content-between.align-items-start.mb-4 {
+
+            flex-direction: column;
+
+            gap: 15px;
+
+        }
+
+
+        .d-flex.justify-content-between.align-items-start.mb-4 > a {
+
+            width: 100%;
+
+        }
+
+    }
+
+</style>
+
+{% endblock %}

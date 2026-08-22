@@ -1,0 +1,158 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Add Student
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-plus-fill"></i>
+                        Add New Student
+                    </h4>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST" enctype="multipart/form-data">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Student ID
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="student_id"
+                                    class="form-control"
+                                    placeholder="ST001"
+                                    required>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Full Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="full_name"
+                                    class="form-control"
+                                    placeholder="Enter Full Name"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Department
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="department"
+                                    class="form-control"
+                                    placeholder="Computer Engineering"
+                                    required>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+                                    Semester
+                                </label>
+
+                                <select
+                                    name="semester"
+                                    class="form-select"
+                                    required>
+
+                                    <option value="">Select Semester</option>
+                                    <option value="1st">1st Semester</option>
+                                    <option value="2nd">2nd Semester</option>
+                                    <option value="3rd">3rd Semester</option>
+                                    <option value="4th">4th Semester</option>
+                                    <option value="5th">5th Semester</option>
+                                    <option value="6th">6th Semester</option>
+                                    <option value="7th">7th Semester</option>
+                                    <option value="8th">8th Semester</option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Student Photo
+                            </label>
+
+                            <input
+                                type="file"
+                                name="photo"
+                                class="form-control"
+                                accept=".jpg,.jpeg,.png">
+
+                            <small class="text-muted">
+                                JPG, JPEG or PNG only
+                            </small>
+
+                        </div>
+
+                        <hr>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success">
+
+                            <i class="bi bi-check-circle-fill"></i>
+                            Save Student
+
+                        </button>
+
+                        <a
+                            href="{{ url_for('students.index') }}"
+                            class="btn btn-secondary">
+
+                            <i class="bi bi-arrow-left"></i>
+                            Back
+
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

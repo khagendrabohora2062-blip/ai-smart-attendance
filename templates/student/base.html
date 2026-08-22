@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}Student Portal{% endblock %}
+        - AI Smart Attendance
+    </title>
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f4f7fc;
+            color: #172033;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* =====================================================
+           LAYOUT
+        ===================================================== */
+
+        .student-layout {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* =====================================================
+           SIDEBAR
+        ===================================================== */
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #111827;
+            color: white;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .brand {
+            height: 90px;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+
+        .brand-logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: linear-gradient(135deg,#1677ff,#00b7ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            margin-right: 12px;
+            box-shadow: 0 8px 25px rgba(0,140,255,.25);
+        }
+
+        .brand-text h2 {
+            font-size: 17px;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .brand-text span {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        /* =====================================================
+           USER BOX
+        ===================================================== */
+
+        .sidebar-user {
+            padding: 18px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,.07);
+        }
+
+        .sidebar-user-photo {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,.8);
+            background: #e5e7eb;
+        }
+
+        .sidebar-user-info {
+            min-width: 0;
+        }
+
+        .sidebar-user-name {
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-id {
+            color: #9ca3af;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* =====================================================
+           MENU
+        ===================================================== */
+
+        .menu-title {
+            padding: 22px 24px 9px;
+            color: #718096;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .menu {
+            padding: 0 12px;
+        }
+
+        .menu-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 15px;
+            margin: 5px 0;
+            color: #aeb9d0;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: .25s ease;
+        }
+
+        .menu-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .menu-link:hover {
+            color: white;
+            background: rgba(255,255,255,.07);
+            transform: translateX(2px);
+        }
+
+        .menu-link.active {
+            color: white;
+            background: linear-gradient(
+                135deg,
+                #3655dc,
+                #4b3dd8
+            );
+            box-shadow: 0 8px 20px rgba(55,70,220,.25);
+        }
+
+        .menu-link.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 10px;
+            bottom: 10px;
+            width: 3px;
+            border-radius: 0 5px 5px 0;
+            background: white;
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,.07);
+        }
+
+        .logout-link {
+            color: #ff7078 !important;
+        }
+
+        .logout-link:hover {
+            background: rgba(255,70,80,.10) !important;
+        }
+
+        /* =====================================================
+           MAIN
+        ===================================================== */
+
+        .main-area {
+            width: calc(100% - 260px);
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+
+        /* =====================================================
+           TOPBAR
+        ===================================================== */
+
+        .topbar {
+            height: 78px;
+            background: white;
+            border-bottom: 1px solid #e7ebf2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .page-title h1 {
+            font-size: 23px;
+            font-weight: 800;
+            color: #15203a;
+        }
+
+        .page-title p {
+            color: #7d899e;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .student-id-badge {
+            height: 40px;
+            min-width: 62px;
+            padding: 0 13px;
+            border-radius: 12px;
+            background: #f1f3ff;
+            color: #4a42dd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .top-photo {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #e3e7ef;
+        }
+
+        /* =====================================================
+           CONTENT
+        ===================================================== */
+
+        .content {
+            padding: 28px;
+            max-width: 1500px;
+            margin: auto;
+        }
+
+        /* Flash Messages */
+
+        .flash-container {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 13px 16px;
+            border-radius: 11px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .flash-success {
+            background: #e9f9f1;
+            color: #087a49;
+            border: 1px solid #bcebd4;
+        }
+
+        .flash-danger {
+            background: #fff0f1;
+            color: #b4232c;
+            border: 1px solid #ffd0d4;
+        }
+
+        .flash-warning {
+            background: #fff8e8;
+            color: #956c00;
+            border: 1px solid #f4dda1;
+        }
+
+        .flash-info {
+            background: #edf6ff;
+            color: #1263a3;
+            border: 1px solid #c8e4ff;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 220px;
+            }
+
+            .main-area {
+                width: calc(100% - 220px);
+                margin-left: 220px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            .main-area {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .student-layout {
+                display: block;
+            }
+
+            .topbar {
+                padding: 0 15px;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .page-title h1 {
+                font-size: 18px;
+            }
+
+            .sidebar-bottom {
+                margin-top: 10px;
+            }
+        }
+
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<div class="student-layout">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <!-- BRAND -->
+        <div class="brand">
+
+            <div class="brand-logo">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+
+            <div class="brand-text">
+                <h2>AI Smart</h2>
+                <span>Attendance</span>
+            </div>
+
+        </div>
+
+
+        <!-- USER -->
+        <div class="sidebar-user">
+
+            {% if session.get('student_photo') %}
+
+                <img
+                    src="{{ url_for('static', filename='uploads/students/' ~ session.get('student_photo')) }}"
+                    class="sidebar-user-photo"
+                    onerror="this.src='https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569';"
+                >
+
+            {% else %}
+
+                <img
+                    src="https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569"
+                    class="sidebar-user-photo"
+                >
+
+            {% endif %}
+
+            <div class="sidebar-user-info">
+
+                <div class="sidebar-user-name">
+                    {{ session.get('student_name', 'Student') }}
+                </div>
+
+                <div class="sidebar-user-id">
+                    {{ session.get('student_id', '') }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MAIN MENU -->
+
+        <div class="menu-title">
+            Main Menu
+        </div>
+
+        <nav class="menu">
+
+            <a
+                href="{{ url_for('student_auth.dashboard') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.dashboard' %}active{% endif %}"
+            >
+                <i class="fa-solid fa-table-columns"></i>
+                <span>Dashboard</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('student_auth.attendance') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.attendance' %}active{% endif %}"
+            >
+                <i class="fa-regular fa-calendar-check"></i>
+                <span>Attendance</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('student_auth.subjects') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.subjects' %}active{% endif %}"
+            >
+                <i class="fa-solid fa-book-open"></i>
+                <span>My Subjects</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('student_auth.report') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.report' %}active{% endif %}"
+            >
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+
+        <!-- ACCOUNT -->
+
+        <div class="menu-title">
+            Account
+        </div>
+
+        <nav class="menu">
+
+            <a
+                href="{{ url_for('student_auth.profile') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.profile' %}active{% endif %}"
+            >
+                <i class="fa-regular fa-id-card"></i>
+                <span>My Profile</span>
+            </a>
+
+
+            <a
+                href="{{ url_for('student_auth.change_password') }}"
+                class="menu-link {% if request.endpoint == 'student_auth.change_password' %}active{% endif %}"
+            >
+                <i class="fa-solid fa-key"></i>
+                <span>Change Password</span>
+            </a>
+
+        </nav>
+
+
+        <!-- LOGOUT -->
+
+        <div class="sidebar-bottom">
+
+            <a
+                href="{{ url_for('student_auth.logout') }}"
+                class="menu-link logout-link"
+            >
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Logout</span>
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN AREA
+    ====================================================== -->
+
+    <main class="main-area">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div class="page-title">
+
+                <h1>
+                    {% block page_heading %}
+                        Student Portal
+                    {% endblock %}
+                </h1>
+
+                <p>
+                    {% block page_subtitle %}
+                        Manage your academic information
+                    {% endblock %}
+                </p>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div class="student-id-badge">
+                    <i class="fa-solid fa-id-badge"></i>
+
+                    {{ session.get('student_id', '---') }}
+
+                </div>
+
+
+                {% if session.get('student_photo') %}
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/students/' ~ session.get('student_photo')) }}"
+                        class="top-photo"
+                        onerror="this.src='https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569';"
+                    >
+
+                {% else %}
+
+                    <img
+                        src="https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569"
+                        class="top-photo"
+                    >
+
+                {% endif %}
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+
+        <section class="content">
+
+            <!-- FLASH -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    <div class="flash-container">
+
+                        {% for category, message in messages %}
+
+                            <div class="flash flash-{{ category }}">
+                                {{ message }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- PAGE CONTENT -->
+
+            {% block content %}{% endblock %}
+
+        </section>
+
+    </main>
+
+</div>
+
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

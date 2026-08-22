@@ -1,0 +1,375 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+My Routine - Student
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .student-routine-page {
+        padding: 24px;
+    }
+
+    .routine-header {
+        margin-bottom: 20px;
+    }
+
+    .routine-header h2 {
+        margin: 0;
+        font-size: 25px;
+        font-weight: 700;
+    }
+
+    .routine-header p {
+        margin: 5px 0 0;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .student-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .student-info-badge {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: #eef4ff;
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .routine-card {
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 5px 20px rgba(15,23,42,.07);
+        overflow: hidden;
+    }
+
+    .routine-card-header {
+        padding: 16px 18px;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .routine-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .routine-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .routine-table th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 13px 12px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .routine-table td {
+        padding: 13px 12px;
+        font-size: 12px;
+        color: #334155;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .routine-table tr:hover {
+        background: #f8fbff;
+    }
+
+    .day-badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 7px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .subject-code {
+        color: #2563eb;
+        font-weight: 700;
+    }
+
+    .subject-name {
+        color: #1e293b;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    .teacher-name {
+        color: #475569;
+        font-size: 12px;
+    }
+
+    .time-text {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .empty-routine {
+        padding: 55px 20px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .empty-routine i {
+        display: block;
+        font-size: 42px;
+        color: #94a3b8;
+        margin-bottom: 12px;
+    }
+
+    @media (max-width: 768px) {
+
+        .student-routine-page {
+            padding: 15px;
+        }
+    }
+
+</style>
+
+
+<div class="student-routine-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="routine-header">
+
+        <h2>
+
+            <i class="bi bi-calendar-week"></i>
+
+            My Class Routine
+
+        </h2>
+
+        <p>
+            Your class schedule based on your semester, department and section.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         STUDENT INFORMATION
+    ====================================================== -->
+
+    <div class="student-info">
+
+        <span class="student-info-badge">
+
+            <i class="bi bi-person-fill"></i>
+
+            {{ student_name }}
+
+        </span>
+
+
+        {% if semester is not none %}
+
+        <span class="student-info-badge">
+
+            <i class="bi bi-mortarboard-fill"></i>
+
+            Semester {{ semester }}
+
+        </span>
+
+        {% endif %}
+
+
+        {% if department %}
+
+        <span class="student-info-badge">
+
+            <i class="bi bi-building"></i>
+
+            {{ department }}
+
+        </span>
+
+        {% endif %}
+
+
+        {% if section %}
+
+        <span class="student-info-badge">
+
+            <i class="bi bi-people-fill"></i>
+
+            Section {{ section }}
+
+        </span>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         ROUTINE
+    ====================================================== -->
+
+    <div class="routine-card">
+
+        <div class="routine-card-header">
+
+            <i class="bi bi-calendar-week"></i>
+
+            Weekly Class Schedule
+
+        </div>
+
+
+        {% if routines %}
+
+        <div class="routine-table-wrapper">
+
+            <table class="routine-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Day
+                        </th>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Teacher
+                        </th>
+
+                        <th>
+                            Room
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for r in routines %}
+
+                    <tr>
+
+                        <td>
+
+                            <span class="day-badge">
+
+                                {{ r[4] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="time-text">
+
+                                {{ r[5] }}
+                                -
+                                {{ r[6] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <div class="subject-code">
+
+                                {{ r[8] or '-' }}
+
+                            </div>
+
+                            <div class="subject-name">
+
+                                {{ r[9] or 'Subject' }}
+
+                            </div>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="teacher-name">
+
+                                <i class="bi bi-person-fill"></i>
+
+                                {{ r[10] or 'Not assigned' }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            {{ r[7] or '-' }}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-routine">
+
+            <i class="bi bi-calendar-x"></i>
+
+            <strong>
+                No routine available
+            </strong>
+
+            <p>
+                Your class routine has not been added by the administrator yet.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

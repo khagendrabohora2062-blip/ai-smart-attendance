@@ -1,0 +1,139 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Browser Face Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="row">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h4 class="mb-0">
+                        <i class="bi bi-camera-video-fill"></i>
+                        Browser Face Attendance
+                    </h4>
+
+                </div>
+
+                <div class="card-body text-center">
+
+                    <video
+                        id="video"
+                        autoplay
+                        playsinline
+                        class="border rounded shadow"
+                        width="700"
+                        height="520">
+                    </video>
+
+                    <canvas
+                        id="canvas"
+                        width="700"
+                        height="520"
+                        style="display:none;">
+                    </canvas>
+
+                    <div class="mt-4">
+
+                        <button
+                            id="startBtn"
+                            class="btn btn-success">
+
+                            <i class="bi bi-play-fill"></i>
+
+                            Start Camera
+
+                        </button>
+
+                        <button
+                            id="stopBtn"
+                            class="btn btn-danger">
+
+                            <i class="bi bi-stop-fill"></i>
+
+                            Stop Camera
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-4">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-dark text-white">
+
+                    Live Attendance
+
+                </div>
+
+                <div class="card-body">
+
+                    <h5 id="studentName">
+
+                        Waiting...
+
+                    </h5>
+
+                    <hr>
+
+                    <p>
+
+                        Status :
+
+                        <span
+                            id="status"
+                            class="badge bg-secondary">
+
+                            Idle
+
+                        </span>
+
+                    </p>
+
+                    <p>
+
+                        Confidence :
+
+                        <span id="confidence">
+
+                            0%
+
+                        </span>
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const sessionId = {{ session_id }};
+
+</script>
+
+<script src="{{ url_for('static',
+filename='js/browser_face.js') }}"></script>
+
+{% endblock %}

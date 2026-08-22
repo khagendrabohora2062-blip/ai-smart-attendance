@@ -1,0 +1,112 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+{{ notice[1] }} - Notice
+{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <a
+        href="{{ url_for('student_notice.index') }}"
+        class="btn btn-outline-secondary mb-4"
+    >
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to Notices
+    </a>
+
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4 p-lg-5">
+
+            <div class="d-flex justify-content-between">
+
+                <span class="badge bg-primary">
+                    {{ notice[7] or "General" }}
+                </span>
+
+                <small class="text-muted">
+                    {{ notice[8] }}
+                </small>
+
+            </div>
+
+
+            <h2 class="fw-bold mt-3">
+                {{ notice[1] }}
+            </h2>
+
+
+            {% if notice[2] %}
+
+            <div class="notice-description mt-4">
+
+                {{ notice[2] }}
+
+            </div>
+
+            {% endif %}
+
+
+            {% if notice[3] %}
+
+            <div class="mt-4 text-center">
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='uploads/notices/' ~ notice[3]
+                    ) }}"
+                    class="img-fluid rounded shadow-sm"
+                    style="max-height:700px;"
+                    alt="{{ notice[1] }}"
+                >
+
+            </div>
+
+            {% endif %}
+
+
+            {% if notice[4] %}
+
+            <div class="mt-4">
+
+                <a
+                    href="{{ url_for(
+                        'static',
+                        filename='uploads/notices/pdf/' ~ notice[4]
+                    ) }}"
+                    target="_blank"
+                    class="btn btn-danger"
+                >
+
+                    <i class="bi bi-file-earmark-pdf me-2"></i>
+                    Open Official PDF
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+.notice-description {
+    white-space: pre-line;
+    line-height: 1.8;
+    font-size: 16px;
+    color: #475569;
+}
+
+</style>
+
+{% endblock %}

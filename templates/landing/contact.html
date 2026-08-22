@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Contact Us | AI Smart Attendance System</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/landing.css') }}">
+
+</head>
+
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+{% if messages %}
+
+<div class="container mt-4">
+
+    {% for category, message in messages %}
+
+    <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+        {{ message }}
+
+        <button
+            class="btn-close"
+            data-bs-dismiss="alert">
+        </button>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endif %}
+
+{% endwith %}
+
+<!-- Navbar -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+    <div class="container">
+
+        <a class="navbar-brand fw-bold"
+           href="/">
+
+            🤖 AI Smart Attendance
+
+        </a>
+
+        <a href="/"
+           class="btn btn-outline-light">
+
+            <i class="bi bi-house-fill"></i>
+            Home
+
+        </a>
+
+    </div>
+
+</nav>
+
+<!-- Header -->
+
+<section class="py-5 text-center bg-light">
+
+    <div class="container">
+
+        <h1 class="fw-bold">
+
+            Contact Us
+
+        </h1>
+
+        <p class="text-muted">
+
+            Have any questions, suggestions or feedback?
+            Feel free to contact us anytime.
+
+        </p>
+
+    </div>
+
+</section>
+
+<!-- Contact -->
+
+<section class="pb-5">
+
+<div class="container">
+
+<div class="row g-4">
+
+<!-- Contact Form -->
+
+<div class="col-lg-7">
+
+<div class="card shadow border-0">
+
+<div class="card-header bg-primary text-white">
+
+<h4 class="mb-0">
+
+<i class="bi bi-send-fill"></i>
+
+Send Message
+
+</h4>
+
+</div>
+
+<div class="card-body p-4">
+
+<form method="POST"
+      action="{{ url_for('home.contact') }}">
+
+<div class="mb-3">
+
+<label class="form-label">
+
+Full Name
+
+</label>
+
+<input
+type="text"
+name="name"
+class="form-control"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<label class="form-label">
+
+Email Address
+
+</label>
+
+<input
+type="email"
+name="email"
+class="form-control"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<label class="form-label">
+
+Subject
+
+</label>
+
+<input
+type="text"
+name="subject"
+class="form-control"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<label class="form-label">
+
+Message
+
+</label>
+
+<textarea
+name="message"
+rows="6"
+class="form-control"
+required></textarea>
+
+</div>
+
+<button class="btn btn-primary">
+
+<i class="bi bi-send-fill"></i>
+
+Send Message
+
+</button>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- Contact Info -->
+
+<div class="col-lg-5">
+
+<div class="card shadow border-0 h-100">
+
+<div class="card-header bg-dark text-white">
+
+<h4 class="mb-0">
+
+<i class="bi bi-person-lines-fill"></i>
+
+Contact Information
+
+</h4>
+
+</div>
+
+<div class="card-body">
+
+<p>
+
+<i class="bi bi-person-circle fs-5 text-primary"></i>
+
+<strong>Developer:</strong>
+
+Khagendra Bohora
+
+</p>
+
+<hr>
+
+<p>
+
+<i class="bi bi-telephone-fill text-success"></i>
+
+<strong>Phone:</strong>
+
+<a href="tel:+9779742217886"
+class="text-decoration-none">
+
++977 9742217886
+
+</a>
+
+</p>
+
+<p>
+
+<i class="bi bi-envelope-fill text-danger"></i>
+
+<strong>Email:</strong>
+
+<a href="mailto:khagendrabohora2062@gmail.com"
+class="text-decoration-none">
+
+khagendrabohora2062@gmail.com
+
+</a>
+
+</p>
+
+<p>
+
+<i class="bi bi-whatsapp text-success"></i>
+
+<strong>WhatsApp:</strong>
+
+<a href="https://wa.me/9779742217886"
+target="_blank"
+class="text-decoration-none">
+
+Chat on WhatsApp
+
+</a>
+
+</p>
+
+<p>
+
+<i class="bi bi-geo-alt-fill text-primary"></i>
+
+<strong>Location:</strong>
+
+Nepal
+
+</p>
+
+<p>
+
+<i class="bi bi-laptop-fill text-info"></i>
+
+<strong>Project:</strong>
+
+AI Smart Attendance System
+
+</p>
+
+<hr>
+
+<h5 class="mb-3">
+
+Technology Stack
+
+</h5>
+
+<span class="badge bg-primary">
+
+Python
+
+</span>
+
+<span class="badge bg-success">
+
+Flask
+
+</span>
+
+<span class="badge bg-warning text-dark">
+
+OpenCV
+
+</span>
+
+<span class="badge bg-danger">
+
+MySQL
+
+</span>
+
+<span class="badge bg-info text-dark">
+
+Bootstrap 5
+
+</span>
+
+<span class="badge bg-secondary">
+
+Face Recognition
+
+</span>
+
+<span class="badge bg-dark">
+
+QR Code
+
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<footer class="bg-black text-white py-4">
+
+<div class="container text-center">
+
+<h5>
+
+🤖 AI Smart Attendance System
+
+</h5>
+
+<p class="mb-1">
+
+Developed by
+
+<strong>
+
+Khagendra Bohora
+
+</strong>
+
+</p>
+
+<p class="mb-1">
+
+📞 +977 9742217886
+
+</p>
+
+<p>
+
+📧 khagendrabohora2062@gmail.com
+
+</p>
+
+<hr class="border-light">
+
+<p class="mb-0">
+
+© 2026 All Rights Reserved.
+
+</p>
+
+</div>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

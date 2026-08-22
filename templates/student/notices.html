@@ -1,0 +1,624 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Notices - AI Smart Attendance System
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="mb-4">
+
+        <h3 class="fw-bold">
+            <i class="bi bi-megaphone-fill me-2"></i>
+            Notices
+        </h3>
+
+        <p class="text-muted">
+            Important notices and official announcements
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         NOTICE LIST
+    ====================================================== -->
+
+    {% if notices %}
+
+    <div class="row g-4">
+
+        {% for notice in notices %}
+
+        <div class="col-lg-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+
+                <!-- =================================================
+                     NOTICE IMAGE
+                ================================================== -->
+
+                {% if notice[3] %}
+
+                <div
+                    class="notice-image-wrapper"
+                    onclick="openNoticeImage(
+                        '{{ url_for(
+                            'static',
+                            filename='uploads/notices/' ~ notice[3]
+                        ) }}'
+                    )"
+                >
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/notices/' ~ notice[3]
+                        ) }}"
+                        class="notice-image"
+                        alt="{{ notice[1] }}"
+                    >
+
+                    <div class="notice-image-overlay">
+
+                        <i class="bi bi-zoom-in"></i>
+
+                        Click to view
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- =================================================
+                     NOTICE BODY
+                ================================================== -->
+
+                <div class="card-body p-4">
+
+
+                    <!-- =================================================
+                         TYPE + DATE
+                    ================================================== -->
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                        <span class="badge bg-primary">
+
+                            <i class="bi bi-tag me-1"></i>
+
+                            {{ notice[7] or "General" }}
+
+                        </span>
+
+
+                        <small class="text-muted">
+
+                            <i class="bi bi-calendar3 me-1"></i>
+
+                            {{ notice[8] }}
+
+                        </small>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         TITLE
+                    ================================================== -->
+
+                    <h5 class="fw-bold mb-2">
+
+                        {{ notice[1] }}
+
+                    </h5>
+
+
+                    <!-- =================================================
+                         DESCRIPTION
+                    ================================================== -->
+
+                    {% if notice[2] %}
+
+                    <p class="text-muted notice-description">
+
+                        {{ notice[2] }}
+
+                    </p>
+
+                    {% else %}
+
+                    <p class="text-muted fst-italic">
+
+                        No additional description.
+
+                    </p>
+
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         TARGET INFORMATION
+                    ================================================== -->
+
+                    {% if notice[5] or notice[6] %}
+
+                    <div class="notice-target-info mb-3">
+
+                        {% if notice[5] %}
+
+                        <span class="badge bg-light text-dark border me-1">
+
+                            <i class="bi bi-mortarboard me-1"></i>
+
+                            {{ notice[5] }}
+
+                        </span>
+
+                        {% endif %}
+
+
+                        {% if notice[6] %}
+
+                        <span class="badge bg-light text-dark border">
+
+                            <i class="bi bi-building me-1"></i>
+
+                            {{ notice[6] }}
+
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endif %}
+
+
+                    <!-- =================================================
+                         ACTION BUTTONS
+                    ================================================== -->
+
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+
+
+                        <!-- =============================================
+                             VIEW NOTICE
+                        ============================================== -->
+
+                        <a
+                            href="{{ url_for(
+                                'student_notice.view',
+                                notice_id=notice[0]
+                            ) }}"
+                            class="btn btn-primary btn-sm"
+                        >
+
+                            <i class="bi bi-eye me-1"></i>
+
+                            View Notice
+
+                        </a>
+
+
+                        <!-- =============================================
+                             DOWNLOAD PHOTO
+                        ============================================== -->
+
+                        {% if notice[3] %}
+
+                        <a
+                            href="{{ url_for(
+                                'student_notice.download_image',
+                                notice_id=notice[0]
+                            ) }}"
+                            class="btn btn-outline-success btn-sm"
+                        >
+
+                            <i class="bi bi-image me-1"></i>
+
+                            Download Photo
+
+                        </a>
+
+                        {% endif %}
+
+
+                        <!-- =============================================
+                             DOWNLOAD PDF
+                        ============================================== -->
+
+                        {% if notice[4] %}
+
+                        <a
+                            href="{{ url_for(
+                                'student_notice.download_pdf',
+                                notice_id=notice[0]
+                            ) }}"
+                            class="btn btn-outline-danger btn-sm"
+                        >
+
+                            <i class="bi bi-file-earmark-pdf me-1"></i>
+
+                            Download PDF
+
+                        </a>
+
+                        {% endif %}
+
+
+                    </div>
+
+
+                    <!-- =================================================
+                         FILE STATUS
+                    ================================================== -->
+
+                    {% if notice[3] or notice[4] %}
+
+                    <div class="mt-3 pt-3 border-top">
+
+                        <small class="text-muted">
+
+                            <i class="bi bi-paperclip me-1"></i>
+
+                            Available files:
+
+                            {% if notice[3] %}
+
+                            <span class="text-success fw-semibold">
+
+                                Photo
+
+                            </span>
+
+                            {% endif %}
+
+
+                            {% if notice[3] and notice[4] %}
+
+                            <span class="mx-1">•</span>
+
+                            {% endif %}
+
+
+                            {% if notice[4] %}
+
+                            <span class="text-danger fw-semibold">
+
+                                PDF
+
+                            </span>
+
+                            {% endif %}
+
+                        </small>
+
+                    </div>
+
+                    {% endif %}
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- =====================================================
+         NO NOTICES
+    ====================================================== -->
+
+    {% else %}
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body text-center py-5">
+
+            <i
+                class="bi bi-bell-slash display-4 text-muted"
+            ></i>
+
+
+            <h5 class="mt-3">
+
+                No notices available
+
+            </h5>
+
+
+            <p class="text-muted mb-0">
+
+                There are no notices for your semester and department.
+
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+
+
+<!-- =========================================================
+     IMAGE MODAL
+========================================================= -->
+
+<div
+    class="modal fade"
+    id="noticeImageModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+
+        <div class="modal-content bg-dark border-0">
+
+
+            <!-- =================================================
+                 MODAL HEADER
+            ================================================== -->
+
+            <div class="modal-header border-0">
+
+                <h5 class="modal-title text-white">
+
+                    Notice Photo
+
+                </h5>
+
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL BODY
+            ================================================== -->
+
+            <div class="modal-body text-center">
+
+                <img
+                    id="noticeModalImage"
+                    src=""
+                    class="img-fluid rounded notice-modal-image"
+                    alt="Notice"
+                >
+
+            </div>
+
+
+            <!-- =================================================
+                 MODAL FOOTER
+            ================================================== -->
+
+            <div class="modal-footer border-0">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+
+                    Close
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     PAGE STYLE
+========================================================= -->
+
+<style>
+
+.notice-image-wrapper {
+
+    position: relative;
+
+    height: 260px;
+
+    overflow: hidden;
+
+    cursor: pointer;
+
+    background: #f8fafc;
+
+}
+
+
+.notice-image {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    transition: transform .25s ease;
+
+}
+
+
+.notice-image-wrapper:hover .notice-image {
+
+    transform: scale(1.03);
+
+}
+
+
+.notice-image-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    background: rgba(0, 0, 0, .45);
+
+    color: white;
+
+    font-weight: 600;
+
+    opacity: 0;
+
+    transition: opacity .2s ease;
+
+}
+
+
+.notice-image-wrapper:hover .notice-image-overlay {
+
+    opacity: 1;
+
+}
+
+
+.notice-description {
+
+    white-space: pre-line;
+
+    line-height: 1.7;
+
+}
+
+
+.notice-target-info {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 4px;
+
+}
+
+
+.notice-modal-image {
+
+    max-height: 75vh;
+
+    width: auto;
+
+    max-width: 100%;
+
+    object-fit: contain;
+
+}
+
+
+.card {
+
+    transition: transform .2s ease, box-shadow .2s ease;
+
+}
+
+
+.card:hover {
+
+    transform: translateY(-2px);
+
+}
+
+
+@media (max-width: 576px) {
+
+    .notice-image-wrapper {
+
+        height: 220px;
+
+    }
+
+    .card-body {
+
+        padding: 1.25rem !important;
+
+    }
+
+    .d-flex.gap-2 .btn {
+
+        flex: 1 1 auto;
+
+    }
+
+}
+
+</style>
+
+
+
+<!-- =========================================================
+     IMAGE MODAL SCRIPT
+========================================================= -->
+
+<script>
+
+function openNoticeImage(imageUrl) {
+
+    const imageElement =
+        document.getElementById(
+            "noticeModalImage"
+        );
+
+    imageElement.src = imageUrl;
+
+
+    const modalElement =
+        document.getElementById(
+            "noticeImageModal"
+        );
+
+
+    const modal =
+        new bootstrap.Modal(
+            modalElement
+        );
+
+
+    modal.show();
+
+}
+
+</script>
+
+{% endblock %}

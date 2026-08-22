@@ -1,0 +1,1304 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Teacher Dashboard - AI Smart
+{% endblock %}
+
+
+{% block css %}
+
+<style>
+
+/* =========================================================
+   TEACHER DASHBOARD - MAIN
+========================================================= */
+
+.teacher-dashboard {
+    width: 100%;
+    padding: 4px 2px 30px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.teacher-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.teacher-page-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    color: #172033;
+    letter-spacing: -0.3px;
+}
+
+.teacher-page-title i {
+    color: #2563eb;
+    margin-right: 8px;
+}
+
+.teacher-page-subtitle {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.teacher-page-subtitle strong {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+.statistics-row {
+    margin-bottom: 26px;
+}
+
+.teacher-stat-card {
+    min-height: 145px;
+    padding: 25px 24px;
+
+    border-radius: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    box-shadow:
+        0 5px 18px rgba(15, 23, 42, 0.07);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.teacher-stat-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 10px 28px rgba(15, 23, 42, 0.11);
+}
+
+
+.teacher-stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.teacher-stat-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.teacher-stat-content h2 {
+    margin: 0;
+
+    font-size: 32px;
+    line-height: 1.1;
+
+    font-weight: 800;
+    color: #172033;
+}
+
+
+/* =========================================================
+   STAT ICON
+========================================================= */
+
+.teacher-stat-icon {
+    width: 58px;
+    height: 58px;
+
+    border-radius: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+}
+
+
+/* BLUE */
+
+.teacher-stat-blue {
+    border-top: 4px solid #2563eb;
+}
+
+.teacher-stat-blue .teacher-stat-icon {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+
+/* GREEN */
+
+.teacher-stat-green {
+    border-top: 4px solid #16a34a;
+}
+
+.teacher-stat-green .teacher-stat-icon {
+    background: #ecfdf5;
+    color: #16a34a;
+}
+
+
+/* ORANGE */
+
+.teacher-stat-orange {
+    border-top: 4px solid #f59e0b;
+}
+
+.teacher-stat-orange .teacher-stat-icon {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+
+/* PURPLE */
+
+.teacher-stat-purple {
+    border-top: 4px solid #9333ea;
+}
+
+.teacher-stat-purple .teacher-stat-icon {
+    background: #faf5ff;
+    color: #9333ea;
+}
+
+
+/* =========================================================
+   CONTENT CARD
+========================================================= */
+
+.teacher-content-card {
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 16px;
+
+    margin-bottom: 26px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 5px 18px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.teacher-card-header {
+    min-height: 82px;
+
+    padding: 18px 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    background: #ffffff;
+}
+
+.teacher-card-header h4 {
+    margin: 0;
+
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #172033;
+}
+
+.teacher-card-header h4 i {
+    color: #2563eb;
+    margin-right: 8px;
+}
+
+.teacher-card-header small {
+    display: block;
+
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    color: #94a3b8;
+}
+
+
+/* =========================================================
+   REPORT BUTTON
+========================================================= */
+
+.teacher-primary-btn {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 11px 17px;
+
+    border-radius: 9px;
+
+    background: #eff6ff;
+
+    border: 1px solid #dbeafe;
+
+    color: #2563eb;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: all 0.2s ease;
+}
+
+.teacher-primary-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.teacher-table {
+    width: 100%;
+
+    margin: 0;
+
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.teacher-table thead th {
+
+    background: #f1f5f9;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.3px;
+
+    padding: 16px 18px;
+
+    border-bottom: 1px solid #dbe2ea;
+
+    white-space: nowrap;
+}
+
+.teacher-table tbody td {
+
+    padding: 17px 18px;
+
+    font-size: 14px;
+
+    color: #334155;
+
+    font-weight: 500;
+
+    vertical-align: middle;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    white-space: nowrap;
+}
+
+.teacher-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.teacher-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.teacher-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.teacher-table tbody td strong {
+    color: #172033;
+
+    font-size: 14px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   SESSION / CODE BADGE
+========================================================= */
+
+.teacher-code-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 46px;
+
+    padding: 6px 10px;
+
+    border-radius: 7px;
+
+    background: #eef2f7;
+
+    color: #334155;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    border: 1px solid #e2e8f0;
+}
+
+
+/* =========================================================
+   SUBJECT CODE
+========================================================= */
+
+.subject-code {
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    border-color: #dbeafe;
+}
+
+
+/* =========================================================
+   DATE BADGE
+========================================================= */
+
+.teacher-date {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 11px;
+
+    border-radius: 7px;
+
+    background: #ecfeff;
+
+    color: #0891b2;
+
+    border: 1px solid #a5f3fc;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+.teacher-date i {
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   START TIME
+========================================================= */
+
+.teacher-start-time {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 11px;
+
+    border-radius: 7px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    border: 1px solid #bfdbfe;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    min-width: 95px;
+
+    justify-content: center;
+}
+
+.teacher-start-time i {
+    color: #2563eb;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   END TIME
+========================================================= */
+
+.teacher-end-time {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding: 7px 11px;
+
+    border-radius: 7px;
+
+    background: #f1f5f9;
+
+    color: #475569;
+
+    border: 1px solid #cbd5e1;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    min-width: 95px;
+
+    justify-content: center;
+}
+
+.teacher-end-time i {
+    color: #64748b;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   OPEN STATUS
+========================================================= */
+
+.teacher-status-open {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    min-width: 88px;
+
+    padding: 7px 12px;
+
+    border-radius: 7px;
+
+    background: #dcfce7;
+
+    color: #15803d;
+
+    border: 1px solid #bbf7d0;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.3px;
+}
+
+.teacher-status-open i {
+    font-size: 8px;
+
+    color: #16a34a;
+}
+
+
+/* =========================================================
+   CLOSED STATUS
+========================================================= */
+
+.teacher-status-closed {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    min-width: 88px;
+
+    padding: 7px 12px;
+
+    border-radius: 7px;
+
+    background: #fee2e2;
+
+    color: #dc2626;
+
+    border: 1px solid #fecaca;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: 0.3px;
+}
+
+.teacher-status-closed i {
+    font-size: 11px;
+
+    color: #dc2626;
+}
+
+
+/* =========================================================
+   SUBJECT EMPTY STATE
+========================================================= */
+
+.teacher-empty-state {
+
+    min-height: 130px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    color: #94a3b8;
+
+    font-size: 14px;
+}
+
+.teacher-empty-state i {
+    font-size: 30px;
+    color: #f59e0b;
+}
+
+
+/* =========================================================
+   NO DATA
+========================================================= */
+
+.teacher-no-data {
+
+    text-align: center !important;
+
+    padding: 45px 20px !important;
+
+    color: #94a3b8 !important;
+
+    font-size: 14px !important;
+}
+
+.teacher-no-data i {
+
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 32px;
+
+    color: #cbd5e1;
+}
+
+
+/* =========================================================
+   SUBJECT CARD
+========================================================= */
+
+.subjects-card {
+    margin-bottom: 26px;
+}
+
+
+/* =========================================================
+   TABLE RESPONSIVE
+========================================================= */
+
+.table-responsive {
+    width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+.table-responsive::-webkit-scrollbar {
+    height: 7px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 991px) {
+
+    .teacher-page-title {
+        font-size: 23px;
+    }
+
+    .teacher-stat-card {
+        min-height: 135px;
+    }
+
+    .teacher-table thead th,
+    .teacher-table tbody td {
+        padding: 14px 15px;
+    }
+
+}
+
+
+@media (max-width: 576px) {
+
+    .teacher-dashboard {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .teacher-page-header {
+        margin-bottom: 18px;
+    }
+
+    .teacher-page-title {
+        font-size: 20px;
+    }
+
+    .teacher-page-subtitle {
+        font-size: 12px;
+    }
+
+    .teacher-stat-card {
+        min-height: 125px;
+
+        padding: 20px;
+    }
+
+    .teacher-stat-content h2 {
+        font-size: 28px;
+    }
+
+    .teacher-stat-icon {
+        width: 50px;
+        height: 50px;
+
+        font-size: 21px;
+    }
+
+    .teacher-card-header {
+        padding: 16px;
+
+        align-items: flex-start;
+
+        gap: 12px;
+
+        flex-direction: column;
+    }
+
+    .teacher-primary-btn {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL SCREEN TABLE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .teacher-table {
+        min-width: 850px;
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="teacher-dashboard">
+
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="teacher-page-header">
+
+        <div>
+
+            <h2 class="teacher-page-title">
+
+                <i class="bi bi-person-workspace"></i>
+
+                Teacher Dashboard
+
+            </h2>
+
+            <p class="teacher-page-subtitle">
+
+                Welcome,
+
+                <strong>
+                    {{ session.get('teacher_name', 'Teacher') }}
+                </strong>
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <div class="row g-4 statistics-row">
+
+
+        <!-- SUBJECTS -->
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+
+            <div class="teacher-stat-card teacher-stat-blue">
+
+                <div class="teacher-stat-content">
+
+                    <span class="teacher-stat-label">
+                        Subjects
+                    </span>
+
+                    <h2>
+                        {{ total_subjects }}
+                    </h2>
+
+                </div>
+
+                <div class="teacher-stat-icon">
+
+                    <i class="bi bi-book-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TOTAL SESSIONS -->
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+
+            <div class="teacher-stat-card teacher-stat-green">
+
+                <div class="teacher-stat-content">
+
+                    <span class="teacher-stat-label">
+                        Total Sessions
+                    </span>
+
+                    <h2>
+                        {{ total_sessions }}
+                    </h2>
+
+                </div>
+
+                <div class="teacher-stat-icon">
+
+                    <i class="bi bi-calendar-check-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TODAY'S SESSIONS -->
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+
+            <div class="teacher-stat-card teacher-stat-orange">
+
+                <div class="teacher-stat-content">
+
+                    <span class="teacher-stat-label">
+                        Today's Sessions
+                    </span>
+
+                    <h2>
+                        {{ today_sessions }}
+                    </h2>
+
+                </div>
+
+                <div class="teacher-stat-icon">
+
+                    <i class="bi bi-calendar-event-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- OPEN SESSIONS -->
+
+        <div class="col-xl-3 col-lg-6 col-md-6">
+
+            <div class="teacher-stat-card teacher-stat-purple">
+
+                <div class="teacher-stat-content">
+
+                    <span class="teacher-stat-label">
+                        Open Sessions
+                    </span>
+
+                    <h2>
+                        {{ open_sessions }}
+                    </h2>
+
+                </div>
+
+                <div class="teacher-stat-icon">
+
+                    <i class="bi bi-unlock-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MY SUBJECTS
+    ====================================================== -->
+
+    <div class="teacher-content-card subjects-card">
+
+
+        <!-- HEADER -->
+
+        <div class="teacher-card-header">
+
+            <div>
+
+                <h4>
+
+                    <i class="bi bi-book-half"></i>
+
+                    My Subjects
+
+                </h4>
+
+                <small>
+                    Subjects assigned to you
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        {% if subject_list %}
+
+        <div class="table-responsive">
+
+            <table class="table teacher-table mb-0">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Code
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Semester
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for subject in subject_list %}
+
+                    <tr>
+
+                        <td>
+
+                            <span class="teacher-code-badge subject-code">
+
+                                {{ subject[0] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td>
+
+                            <strong>
+                                {{ subject[1] }}
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="teacher-code-badge">
+
+                                {{ subject[2] }}
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {% else %}
+
+        <div class="teacher-empty-state">
+
+            <i class="bi bi-exclamation-circle"></i>
+
+            <span>
+                No subject assigned.
+            </span>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RECENT ATTENDANCE
+    ====================================================== -->
+
+    <div class="teacher-content-card">
+
+
+        <!-- HEADER -->
+
+        <div class="teacher-card-header">
+
+            <div>
+
+                <h4>
+
+                    <i class="bi bi-clock-history"></i>
+
+                    Recent Attendance Sessions
+
+                </h4>
+
+                <small>
+                    Your latest attendance sessions
+                </small>
+
+            </div>
+
+
+            <a
+                href="{{ url_for('teacher_attendance.reports') }}"
+                class="teacher-primary-btn"
+            >
+
+                <i class="bi bi-file-earmark-bar-graph"></i>
+
+                View Reports
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+
+
+        <!-- TABLE -->
+
+        <div class="table-responsive">
+
+            <table class="table teacher-table mb-0">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Session
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Start Time
+                        </th>
+
+                        <th>
+                            End Time
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+
+                    {% if recent_sessions %}
+
+
+                        {% for row in recent_sessions %}
+
+                        <tr>
+
+
+                            <!-- SESSION -->
+
+                            <td>
+
+                                <span class="teacher-code-badge">
+
+                                    #{{ row[0] }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <!-- SUBJECT -->
+
+                            <td>
+
+                                <strong>
+
+                                    {{ row[1] }}
+
+                                </strong>
+
+                            </td>
+
+
+
+                            <!-- DATE -->
+
+                            <td>
+
+                                <span class="teacher-date">
+
+                                    <i class="bi bi-calendar3"></i>
+
+                                    {{ row[2] }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <!-- START TIME -->
+
+                            <td>
+
+                                <span class="teacher-start-time">
+
+                                    <i class="bi bi-play-fill"></i>
+
+                                    {{ row[3] }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <!-- END TIME -->
+
+                            <td>
+
+                                <span class="teacher-end-time">
+
+                                    <i class="bi bi-stop-fill"></i>
+
+                                    {{ row[4] }}
+
+                                </span>
+
+                            </td>
+
+
+
+                            <!-- STATUS -->
+
+                            <td>
+
+                                {% if row[5] == "OPEN" %}
+
+                                    <span class="teacher-status-open">
+
+                                        <i class="bi bi-circle-fill"></i>
+
+                                        OPEN
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="teacher-status-closed">
+
+                                        <i class="bi bi-lock-fill"></i>
+
+                                        CLOSED
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                    {% else %}
+
+
+                        <tr>
+
+                            <td
+                                colspan="6"
+                                class="teacher-no-data"
+                            >
+
+                                <i class="bi bi-calendar-x"></i>
+
+                                No attendance sessions found.
+
+                            </td>
+
+                        </tr>
+
+
+                    {% endif %}
+
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+{% endblock %}

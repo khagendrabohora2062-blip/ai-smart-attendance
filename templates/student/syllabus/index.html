@@ -1,0 +1,502 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+    Student Syllabus | AI Smart Attendance System
+{% endblock %}
+
+{% block css %}
+
+<style>
+    /* =====================================================
+       SYLLABUS PAGE
+    ====================================================== */
+
+    .syllabus-page {
+        width: 100%;
+    }
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .syllabus-header {
+        background: linear-gradient(135deg, #1d4ed8, #2563eb);
+        color: #ffffff;
+        border-radius: 18px;
+        padding: 28px 30px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.15);
+    }
+
+    .syllabus-header h2 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 700;
+    }
+
+    .syllabus-header p {
+        margin: 8px 0 0;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .student-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 8px 13px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        font-size: 13px;
+    }
+
+    /* =====================================================
+       SUMMARY
+    ====================================================== */
+
+    .syllabus-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 18px;
+    }
+
+    .syllabus-summary h4 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 700;
+        color: #172554;
+    }
+
+    .syllabus-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    /* =====================================================
+       SYLLABUS CARD
+    ====================================================== */
+
+    .syllabus-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .syllabus-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        border-color: #bfdbfe;
+    }
+
+    .syllabus-card-body {
+        padding: 22px;
+    }
+
+    .subject-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+    }
+
+    .subject-info {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .subject-code {
+        display: inline-block;
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 5px 10px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 9px;
+    }
+
+    .subject-name {
+        margin: 0;
+        color: #172554;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.4;
+    }
+
+    .syllabus-title {
+        margin: 7px 0 0;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .syllabus-description {
+        margin-top: 15px;
+        padding: 13px 15px;
+        background: #f8fafc;
+        border-radius: 10px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    /* =====================================================
+       FILE INFO
+    ====================================================== */
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .file-info i {
+        color: #dc2626;
+        font-size: 18px;
+    }
+
+    /* =====================================================
+       BUTTONS
+    ====================================================== */
+
+    .syllabus-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 18px;
+        padding-top: 17px;
+        border-top: 1px solid #eef2f7;
+    }
+
+    .syllabus-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 40px;
+        padding: 8px 15px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .view-btn {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .view-btn:hover {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .download-btn {
+        background: #1d4ed8;
+        color: #ffffff;
+    }
+
+    .download-btn:hover {
+        background: #1e40af;
+        color: #ffffff;
+    }
+
+    /* =====================================================
+       EMPTY STATE
+    ====================================================== */
+
+    .empty-syllabus {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 55px 25px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 18px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+
+    .empty-syllabus h4 {
+        margin: 0;
+        color: #172554;
+        font-size: 19px;
+        font-weight: 700;
+    }
+
+    .empty-syllabus p {
+        margin: 9px auto 0;
+        max-width: 500px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    /* =====================================================
+       MOBILE
+    ====================================================== */
+
+    @media (max-width: 768px) {
+
+        .syllabus-header {
+            padding: 22px;
+            border-radius: 14px;
+        }
+
+        .syllabus-header h2 {
+            font-size: 22px;
+        }
+
+        .subject-top {
+            flex-direction: column;
+        }
+
+        .syllabus-summary {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .syllabus-card-body {
+            padding: 18px;
+        }
+
+        .syllabus-actions {
+            flex-direction: column;
+        }
+
+        .syllabus-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="syllabus-page">
+
+    <!-- =================================================
+         PAGE HEADER
+    ================================================== -->
+
+    <div class="syllabus-header">
+
+        <h2>
+            <i class="bi bi-book-half me-2"></i>
+            My Syllabus
+        </h2>
+
+        <p>
+            View and download syllabus documents for your
+            department and semester.
+        </p>
+
+        <div class="student-info">
+
+            <div class="info-badge">
+                <i class="bi bi-person-fill"></i>
+                {{ student[2] }}
+            </div>
+
+            <div class="info-badge">
+                <i class="bi bi-building"></i>
+                {{ student[4] }}
+            </div>
+
+            <div class="info-badge">
+                <i class="bi bi-mortarboard-fill"></i>
+                {{ student[5] }}
+            </div>
+
+            {% if student[6] %}
+            <div class="info-badge">
+                <i class="bi bi-people-fill"></i>
+                Section {{ student[6] }}
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SUMMARY
+    ================================================== -->
+
+    <div class="syllabus-summary">
+
+        <h4>
+            Available Syllabus
+        </h4>
+
+        <div class="syllabus-count">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+            {{ syllabuses|length }} Document{% if syllabuses|length != 1 %}s{% endif %}
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SYLLABUS LIST
+    ================================================== -->
+
+    {% if syllabuses %}
+
+        {% for syllabus in syllabuses %}
+
+        <div class="syllabus-card">
+
+            <div class="syllabus-card-body">
+
+                <div class="subject-top">
+
+                    <div class="subject-info">
+
+                        {% if syllabus[4] %}
+                        <span class="subject-code">
+                            {{ syllabus[4] }}
+                        </span>
+                        {% endif %}
+
+                        <h3 class="subject-name">
+                            {{ syllabus[5] or "Subject" }}
+                        </h3>
+
+                        <div class="syllabus-title">
+                            <i class="bi bi-file-text me-1"></i>
+                            {{ syllabus[6] or "Syllabus Document" }}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                {% if syllabus[7] %}
+
+                <div class="syllabus-description">
+                    <i class="bi bi-info-circle me-1"></i>
+                    {{ syllabus[7] }}
+                </div>
+
+                {% endif %}
+
+
+                <!-- FILE -->
+
+                <div class="file-info">
+
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                    <span>
+                        {{ syllabus[8] or "Syllabus PDF" }}
+                    </span>
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="syllabus-actions">
+
+                    <a
+                        href="{{ url_for(
+                            'student_syllabus.view',
+                            filename=syllabus[8]
+                        ) }}"
+                        target="_blank"
+                        class="syllabus-btn view-btn"
+                    >
+                        <i class="bi bi-eye-fill"></i>
+                        View PDF
+                    </a>
+
+
+                    <a
+                        href="{{ url_for(
+                            'student_syllabus.download',
+                            filename=syllabus[8]
+                        ) }}"
+                        class="syllabus-btn download-btn"
+                    >
+                        <i class="bi bi-download"></i>
+                        Download PDF
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <!-- =================================================
+             EMPTY STATE
+        ================================================== -->
+
+        <div class="empty-syllabus">
+
+            <div class="empty-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+
+            <h4>
+                No Syllabus Available
+            </h4>
+
+            <p>
+                There is currently no syllabus uploaded for
+                <strong>{{ student[4] }}</strong>
+                -
+                <strong>{{ student[5] }}</strong>.
+                Please check again later.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

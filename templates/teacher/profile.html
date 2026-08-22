@@ -1,0 +1,563 @@
+
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Teacher Profile - AI Smart
+{% endblock %}
+
+{% block content %}
+
+<div class="teacher-page">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="teacher-page-header">
+
+        <div>
+
+            <h2 class="teacher-page-title">
+                <i class="bi bi-person-circle"></i>
+                My Profile
+            </h2>
+
+            <p class="teacher-page-subtitle">
+                View and manage your teacher account information
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('teacher_auth.settings') }}"
+            class="teacher-primary-btn"
+        >
+
+            <i class="bi bi-gear-fill"></i>
+
+            Account Settings
+
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         PROFILE CARD
+    ====================================================== -->
+
+    <div class="teacher-profile-card">
+
+        <div class="teacher-profile-card-header">
+
+            <h5>
+                <i class="bi bi-person-vcard"></i>
+                Teacher Information
+            </h5>
+
+        </div>
+
+
+        <div class="teacher-profile-body">
+
+            <div class="row g-4 align-items-center">
+
+                <!-- =================================================
+                     PROFILE PHOTO
+                ================================================== -->
+
+                <div class="col-lg-4">
+
+                    <div class="teacher-profile-left">
+
+                        <div class="teacher-profile-photo-wrapper">
+
+                            {% if teacher[5] %}
+
+                                <img
+                                    src="{{ url_for(
+                                        'static',
+                                        filename='uploads/teachers/' ~ teacher[5]
+                                    ) }}"
+                                    alt="Teacher Profile Photo"
+                                    id="profilePreview"
+                                    class="teacher-profile-photo"
+                                >
+
+                            {% else %}
+
+                                <div
+                                    id="defaultProfileIcon"
+                                    class="teacher-default-photo"
+                                >
+
+                                    <i class="bi bi-person-fill"></i>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <button
+                                type="button"
+                                class="teacher-camera-btn"
+                                onclick="openPhotoPicker()"
+                                title="Change Profile Photo"
+                            >
+
+                                <i class="bi bi-camera-fill"></i>
+
+                            </button>
+
+                        </div>
+
+
+                        <h3 class="teacher-profile-name">
+                            {{ teacher[2] }}
+                        </h3>
+
+
+                        <span class="teacher-role-badge">
+
+                            <i class="bi bi-person-badge"></i>
+
+                            Teacher
+
+                        </span>
+
+
+                        <div class="teacher-department">
+
+                            <i class="bi bi-building"></i>
+
+                            {{ teacher[4] }}
+
+                        </div>
+
+
+                        <!-- PHOTO FORM -->
+
+                        <form
+                            method="POST"
+                            enctype="multipart/form-data"
+                            id="photoUploadForm"
+                            class="teacher-photo-form"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="upload"
+                            >
+
+
+                            <input
+                                type="file"
+                                name="profile_photo"
+                                id="profilePhotoInput"
+                                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                class="d-none"
+                                onchange="previewProfilePhoto(event)"
+                            >
+
+
+                            <div class="teacher-photo-buttons">
+
+                                <button
+                                    type="button"
+                                    class="teacher-outline-btn"
+                                    onclick="openPhotoPicker()"
+                                >
+
+                                    <i class="bi bi-image"></i>
+
+                                    Choose Photo
+
+                                </button>
+
+
+                                <button
+                                    type="submit"
+                                    class="teacher-primary-btn"
+                                    id="uploadPhotoBtn"
+                                >
+
+                                    {% if teacher[5] %}
+
+                                        <i class="bi bi-arrow-repeat"></i>
+                                        Change Photo
+
+                                    {% else %}
+
+                                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                                        Upload
+
+                                    {% endif %}
+
+                                </button>
+
+                            </div>
+
+
+                            <div
+                                id="selectedFileName"
+                                class="teacher-file-name"
+                            >
+
+                                JPG, JPEG, PNG or WEBP
+
+                            </div>
+
+                        </form>
+
+
+                        <!-- DELETE PHOTO -->
+
+                        {% if teacher[5] %}
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('teacher_auth.profile') }}"
+                            id="deletePhotoForm"
+                            onsubmit="return confirmDeletePhoto();"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="action"
+                                value="delete"
+                            >
+
+                            <button
+                                type="submit"
+                                class="teacher-delete-btn"
+                                id="deletePhotoBtn"
+                            >
+
+                                <i class="bi bi-trash3-fill"></i>
+
+                                Delete Photo
+
+                            </button>
+
+                        </form>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     PROFILE INFORMATION
+                ================================================== -->
+
+                <div class="col-lg-8">
+
+                    <div class="teacher-profile-details">
+
+                        <!-- Teacher ID -->
+
+                        <div class="teacher-form-group">
+
+                            <label>
+                                <i class="bi bi-person-vcard"></i>
+                                Teacher ID
+                            </label>
+
+                            <input
+                                type="text"
+                                class="teacher-form-control"
+                                value="{{ teacher[1] }}"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- Full Name -->
+
+                        <div class="teacher-form-group">
+
+                            <label>
+                                <i class="bi bi-person"></i>
+                                Full Name
+                            </label>
+
+                            <input
+                                type="text"
+                                class="teacher-form-control"
+                                value="{{ teacher[2] }}"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- Email -->
+
+                        <div class="teacher-form-group">
+
+                            <label>
+                                <i class="bi bi-envelope"></i>
+                                Email Address
+                            </label>
+
+                            <input
+                                type="email"
+                                class="teacher-form-control"
+                                value="{{ teacher[3] }}"
+                                readonly
+                            >
+
+                        </div>
+
+
+                        <!-- Department -->
+
+                        <div class="teacher-form-group">
+
+                            <label>
+                                <i class="bi bi-building"></i>
+                                Department
+                            </label>
+
+                            <input
+                                type="text"
+                                class="teacher-form-control"
+                                value="{{ teacher[4] }}"
+                                readonly
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACCOUNT INFORMATION
+    ====================================================== -->
+
+    <div class="row g-3 mt-1">
+
+        <!-- Account Status -->
+
+        <div class="col-md-6">
+
+            <div class="teacher-info-card">
+
+                <div class="teacher-info-icon teacher-info-green">
+
+                    <i class="bi bi-shield-check"></i>
+
+                </div>
+
+                <div>
+
+                    <h6>
+                        Account Status
+                    </h6>
+
+                    <span class="teacher-active-badge">
+                        Active
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- User Role -->
+
+        <div class="col-md-6">
+
+            <div class="teacher-info-card">
+
+                <div class="teacher-info-icon teacher-info-blue">
+
+                    <i class="bi bi-person-check"></i>
+
+                </div>
+
+                <div>
+
+                    <h6>
+                        User Role
+                    </h6>
+
+                    <span class="teacher-role-text">
+                        Teacher
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACCOUNT SETTINGS
+    ====================================================== -->
+
+    <div class="teacher-settings-card mt-3">
+
+        <div>
+
+            <h5>
+                Account Settings
+            </h5>
+
+            <p>
+                Manage your email, password and profile
+            </p>
+
+        </div>
+
+
+        <div class="teacher-settings-actions">
+
+            <a
+                href="{{ url_for('teacher_auth.settings') }}"
+                class="teacher-primary-btn"
+            >
+
+                <i class="bi bi-sliders"></i>
+
+                Control Panel
+
+            </a>
+
+
+            <a
+                href="{{ url_for('teacher_auth.logout') }}"
+                class="teacher-danger-btn"
+            >
+
+                <i class="bi bi-box-arrow-right"></i>
+
+                Logout
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     PROFILE PHOTO JAVASCRIPT
+====================================================== -->
+
+<script>
+
+function openPhotoPicker() {
+
+    const input = document.getElementById("profilePhotoInput");
+
+    if (input) {
+        input.click();
+    }
+
+}
+
+
+function previewProfilePhoto(event) {
+
+    const file = event.target.files[0];
+
+    if (!file) {
+        return;
+    }
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+
+        alert("Please select JPG, JPEG, PNG or WEBP image.");
+
+        event.target.value = "";
+
+        return;
+    }
+
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+
+        const oldPhoto =
+            document.getElementById("profilePreview");
+
+        const defaultIcon =
+            document.getElementById("defaultProfileIcon");
+
+
+        if (oldPhoto) {
+
+            oldPhoto.src = e.target.result;
+
+        }
+        else if (defaultIcon) {
+
+            const img = document.createElement("img");
+
+            img.id = "profilePreview";
+
+            img.className = "teacher-profile-photo";
+
+            img.src = e.target.result;
+
+            defaultIcon.replaceWith(img);
+
+        }
+
+
+        const fileName =
+            document.getElementById("selectedFileName");
+
+        if (fileName) {
+
+            fileName.innerText =
+                file.name;
+
+        }
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+
+function confirmDeletePhoto() {
+
+    return confirm(
+        "Are you sure you want to delete your profile photo?"
+    );
+
+}
+
+</script>
+
+{% endblock %}

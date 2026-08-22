@@ -1,0 +1,936 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Teacher Control Panel
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ============================================================
+     FLASH MESSAGES
+============================================================ -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm mb-3"
+                 role="alert">
+
+                {% if category == "success" %}
+
+                    <i class="bi bi-check-circle-fill me-2"></i>
+
+                {% elif category == "danger" %}
+
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+                {% elif category == "warning" %}
+
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+
+                {% else %}
+
+                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                {% endif %}
+
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+
+<!-- ============================================================
+     PAGE HEADER
+============================================================ -->
+
+<div class="row mb-4">
+
+    <div class="col-12">
+
+        <div class="glass-card">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                <div>
+
+                    <h2 class="fw-bold mb-2">
+
+                        <i class="bi bi-sliders text-primary me-2"></i>
+
+                        Teacher Control Panel
+
+                    </h2>
+
+                    <p class="text-muted mb-0">
+
+                        Manage attendance sessions and monitor attendance status.
+
+                    </p>
+
+                </div>
+
+
+                <div class="text-end">
+
+                    <span class="badge bg-primary px-3 py-2">
+
+                        <i class="bi bi-person-workspace me-1"></i>
+
+                        {{ session.get("teacher_name", "Teacher") }}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     SESSION STATISTICS
+============================================================ -->
+
+<div class="row g-3 mb-4">
+
+    <!-- Total Sessions -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <small class="text-muted">
+                        Total Sessions
+                    </small>
+
+                    <h3 class="fw-bold mb-0">
+
+                        {{ total_sessions|default(0) }}
+
+                    </h3>
+
+                </div>
+
+                <i class="bi bi-calendar-check-fill text-primary fs-1"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Open Sessions -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <small class="text-muted">
+                        Open Sessions
+                    </small>
+
+                    <h3 class="fw-bold text-success mb-0">
+
+                        {{ open_sessions|default(0) }}
+
+                    </h3>
+
+                </div>
+
+                <i class="bi bi-unlock-fill text-success fs-1"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Today's Sessions -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <small class="text-muted">
+                        Today's Sessions
+                    </small>
+
+                    <h3 class="fw-bold text-warning mb-0">
+
+                        {{ today_sessions|default(0) }}
+
+                    </h3>
+
+                </div>
+
+                <i class="bi bi-calendar-event-fill text-warning fs-1"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Attendance -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="card border-0 shadow-sm h-100">
+
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <small class="text-muted">
+                        Today's Attendance
+                    </small>
+
+                    <h3 class="fw-bold text-info mb-0">
+
+                        {{ today_attendance|default(0) }}
+
+                    </h3>
+
+                </div>
+
+                <i class="bi bi-people-fill text-info fs-1"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     OPEN NEW SESSION
+============================================================ -->
+
+<div class="row mb-4">
+
+    <div class="col-lg-7">
+
+        <div class="glass-card h-100">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+
+                <div>
+
+                    <h4 class="fw-bold mb-1">
+
+                        <i class="bi bi-play-circle-fill text-success me-2"></i>
+
+                        Open Attendance Session
+
+                    </h4>
+
+                    <p class="text-muted mb-0">
+
+                        Start a new attendance session for your subject.
+
+                    </p>
+
+                </div>
+
+                <span class="badge bg-success">
+
+                    READY
+
+                </span>
+
+            </div>
+
+
+            <form method="POST"
+                  action="{{ url_for('teacher_attendance.open_session_page') }}"
+
+
+                <!-- Subject -->
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+
+                        <i class="bi bi-book-fill me-1"></i>
+
+                        Select Subject
+
+                    </label>
+
+                    <select name="subject_id"
+                            class="form-select"
+                            required>
+
+                        <option value="">
+
+                            Select Subject 
+
+                        </option>
+
+                        {% for subject in subject_list|default([]) %}
+
+                            <option value="{{ subject[0] }}">
+
+                                {{ subject[1] }}
+
+                                {% if subject|length > 2 %}
+
+                                    - {{ subject[2] }}
+
+                                {% endif %}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- Start Time -->
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+
+                                <i class="bi bi-clock-fill me-1"></i>
+
+                                Start Time
+
+                            </label>
+
+                            <input
+                                type="time"
+                                name="start_time"
+                                class="form-control"
+                                required>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- End Time -->
+
+                    <div class="col-md-6">
+
+                        <div class="mb-3">
+
+                            <label class="form-label fw-semibold">
+
+                                <i class="bi bi-clock-history me-1"></i>
+
+                                End Time
+
+                            </label>
+
+                            <input
+                                type="time"
+                                name="end_time"
+                                class="form-control"
+                                required>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Open Button -->
+
+                <button
+                    type="submit"
+                    class="btn btn-success w-100">
+
+                    <i class="bi bi-unlock-fill me-2"></i>
+
+                    OPEN SESSION
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ========================================================
+         ATTENDANCE RULE
+    ========================================================= -->
+
+    <div class="col-lg-5">
+
+        <div class="glass-card h-100">
+
+            <h5 class="fw-bold mb-4">
+
+                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+
+                Attendance Rules
+
+            </h5>
+
+
+            <div class="d-flex align-items-center mb-3">
+
+                <span class="badge bg-success me-3 p-2">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                </span>
+
+                <div>
+
+                    <strong>Present</strong>
+
+                    <div class="small text-muted">
+
+                        Student attends on time.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            
+
+
+            <div class="d-flex align-items-center mb-3">
+
+                <span class="badge bg-danger me-3 p-2">
+
+                    <i class="bi bi-x-circle-fill"></i>
+
+                </span>
+
+                <div>
+
+                    <strong>Absent</strong>
+
+                    <div class="small text-muted">
+
+                        Automatically marked when session is closed.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <hr>
+
+
+            <div class="alert alert-info mb-0">
+
+                <i class="bi bi-lightbulb-fill me-2"></i>
+
+                <strong>Tip:</strong>
+
+                Close the session after attendance is completed.
+                Students without an attendance record will be marked
+                <strong>Absent</strong> automatically.
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     CURRENT OPEN SESSIONS
+============================================================ -->
+
+<div class="glass-card mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+
+            <h4 class="fw-bold mb-1">
+
+                <i class="bi bi-broadcast-pin text-success me-2"></i>
+
+                Currently Open Sessions
+
+            </h4>
+
+            <p class="text-muted mb-0">
+
+                Active attendance sessions are shown here.
+
+            </p>
+
+        </div>
+
+        <span class="badge bg-success">
+
+            LIVE
+
+        </span>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-dark">
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Subject</th>
+
+                    <th>Date</th>
+
+                    <th>Start</th>
+
+                    <th>End</th>
+
+                    <th>Status</th>
+
+                    <th class="text-center">
+
+                        Action
+
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% if open_session_list %}
+
+                    {% for row in open_session_list %}
+
+                        <tr>
+
+                            <td>
+
+                                <span class="badge bg-dark">
+
+                                    {{ row[0] }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+
+                                    {{ row[1] }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                {{ row[2] }}
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="badge bg-info">
+
+                                    {{ row[3] }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="badge bg-secondary">
+
+                                    {{ row[4] }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="badge bg-success">
+
+                                    <i class="bi bi-unlock-fill me-1"></i>
+
+                                    OPEN
+
+                                </span>
+
+                            </td>
+
+
+                            <td class="text-center">
+
+                                <a
+                                    href="{{ url_for(
+                                        'teacher_attendance.close_session',
+                                        session_id=row[0]
+                                    ) }}"
+                                    class="btn btn-danger btn-sm"
+                                    onclick="return confirm(
+                                        'Close this attendance session? Students without attendance will be marked Absent.'
+                                    );">
+
+                                    <i class="bi bi-lock-fill me-1"></i>
+
+                                    CLOSE SESSION
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="7"
+                            class="text-center py-5">
+
+                            <i class="bi bi-calendar-x display-5 text-muted"></i>
+
+                            <h6 class="mt-3 text-muted">
+
+                                No Open Session
+
+                            </h6>
+
+                            <p class="text-muted mb-0">
+
+                                Open a session using the form above.
+
+                            </p>
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+
+<!-- ============================================================
+     RECENT SESSIONS
+============================================================ -->
+
+<div class="glass-card">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+
+            <h4 class="fw-bold mb-1">
+
+                <i class="bi bi-clock-history text-primary me-2"></i>
+
+                Recent Sessions
+
+            </h4>
+
+            <p class="text-muted mb-0">
+
+                Recently created attendance sessions.
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('teacher_attendance.index') }}"
+            class="btn btn-outline-primary btn-sm">
+
+            <i class="bi bi-calendar-check me-1"></i>
+
+            View All
+
+        </a>
+
+    </div>
+
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle mb-0">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Subject</th>
+
+                    <th>Date</th>
+
+                    <th>Start</th>
+
+                    <th>End</th>
+
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% if recent_sessions %}
+
+                    {% for row in recent_sessions %}
+
+                        <tr>
+
+                            <td>
+
+                                <span class="badge bg-dark">
+
+                                    {{ row[0] }}
+
+                                </span>
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+
+                                    {{ row[1] }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+
+                                {{ row[2] }}
+
+                            </td>
+
+
+                            <td>
+
+                                {{ row[3] }}
+
+                            </td>
+
+
+                            <td>
+
+                                {{ row[4] }}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if row[5] == "OPEN" %}
+
+                                    <span class="badge bg-success">
+
+                                        <i class="bi bi-unlock-fill me-1"></i>
+
+                                        OPEN
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">
+
+                                        <i class="bi bi-lock-fill me-1"></i>
+
+                                        CLOSED
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6"
+                            class="text-center py-4 text-muted">
+
+                            No recent sessions found.
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /*
+     * Automatically set current time
+     * in the start-time field.
+     */
+
+    const startTime =
+        document.querySelector('input[name="start_time"]');
+
+    const endTime =
+        document.querySelector('input[name="end_time"]');
+
+
+    if (startTime && !startTime.value) {
+
+        const now = new Date();
+
+        const hours =
+            String(now.getHours()).padStart(2, "0");
+
+        const minutes =
+            String(now.getMinutes()).padStart(2, "0");
+
+        startTime.value =
+            `${hours}:${minutes}`;
+
+    }
+
+
+    /*
+     * Set default end time = start time + 1 hour
+     */
+
+    if (endTime && !endTime.value && startTime) {
+
+        startTime.addEventListener("change", function () {
+
+            if (!startTime.value) {
+                return;
+            }
+
+            const parts =
+                startTime.value.split(":");
+
+            let hours =
+                parseInt(parts[0]);
+
+            const minutes =
+                parts[1];
+
+            hours =
+                (hours + 1) % 24;
+
+            endTime.value =
+                `${String(hours).padStart(2, "0")}:${minutes}`;
+
+        });
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

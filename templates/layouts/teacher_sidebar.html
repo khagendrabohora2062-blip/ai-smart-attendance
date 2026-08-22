@@ -1,0 +1,1556 @@
+<!-- ============================================================
+     TEACHER SIDEBAR
+     AI SMART ATTENDANCE SYSTEM
+     File:
+     templates/layouts/teacher_sidebar.html
+============================================================= -->
+
+<aside
+    class="sidebar teacher-sidebar"
+    id="teacherSidebar"
+    aria-label="Teacher Navigation">
+
+    <!-- ========================================================
+         BRAND
+    ========================================================= -->
+
+    <div class="sidebar-brand">
+
+        <div class="brand-icon">
+            <i class="bi bi-camera-video-fill"></i>
+        </div>
+
+        <div class="brand-text">
+
+            <div class="brand-title">
+                AI Smart
+            </div>
+
+            <div class="brand-subtitle">
+                Attendance System
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         TEACHER PROFILE
+    ========================================================= -->
+
+    <div class="teacher-profile-section">
+
+        <a
+            href="{{ url_for('teacher_auth.profile') }}"
+            class="teacher-profile-link"
+            title="My Profile">
+
+            {% if session.get("teacher_profile_photo") %}
+
+                <img
+                    src="{{ url_for(
+                        'static',
+                        filename='uploads/teachers/' ~ session.get('teacher_profile_photo')
+                    ) }}"
+                    alt="Teacher Profile"
+                    class="teacher-profile-image"
+                    onerror="
+                        this.style.display='none';
+                        this.nextElementSibling.style.display='flex';
+                    "
+                >
+
+                <div
+                    class="teacher-profile-image teacher-default-image"
+                    style="display:none;">
+
+                    <i class="bi bi-person-fill"></i>
+
+                </div>
+
+            {% else %}
+
+                <div class="teacher-profile-image teacher-default-image">
+
+                    <i class="bi bi-person-fill"></i>
+
+                </div>
+
+            {% endif %}
+
+        </a>
+
+
+        <div class="teacher-name">
+
+            {{ session.get(
+                "teacher_name",
+                "Teacher"
+            ) }}
+
+        </div>
+
+
+        <div class="teacher-department">
+
+            <i class="bi bi-building me-1"></i>
+
+            {{ session.get(
+                "teacher_department",
+                "Department"
+            ) }}
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================
+         NAVIGATION
+         ONLY THIS AREA SCROLLS
+    ========================================================= -->
+
+    <nav
+        class="teacher-navigation"
+        id="teacherNavigation">
+
+
+        <!-- ====================================================
+             DASHBOARD
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_auth.dashboard') }}"
+            class="teacher-nav-link
+            {% if request.endpoint == 'teacher_auth.dashboard' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-speedometer2"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Dashboard
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             ATTENDANCE
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_attendance.index') }}"
+            class="teacher-nav-link
+            {% if request.endpoint and
+                  request.endpoint.startswith('teacher_attendance.')
+                  and request.endpoint != 'teacher_attendance.reports' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-calendar-check"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Attendance
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             REPORTS
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_attendance.reports') }}"
+            class="teacher-nav-link
+            {% if request.endpoint == 'teacher_attendance.reports' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-bar-chart-line-fill"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Reports
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             ROUTINE
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_routine.index') }}"
+            class="teacher-nav-link
+            {% if request.endpoint and
+                  request.endpoint.startswith('teacher_routine.') %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-calendar3"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Routine
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             ASSIGNMENTS
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_assignment.index') }}"
+            class="teacher-nav-link
+            {% if request.endpoint and
+                  request.endpoint.startswith('teacher_assignment.') %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-journal-text"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Assignments
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             CONTROL PANEL
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_auth.control_panel') }}"
+            class="teacher-nav-link
+            {% if request.endpoint == 'teacher_auth.control_panel' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-sliders"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Control Panel
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             DIVIDER
+        ==================================================== -->
+
+        <div class="teacher-nav-divider"></div>
+
+
+        <!-- ====================================================
+             MY PROFILE
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_auth.profile') }}"
+            class="teacher-nav-link
+            {% if request.endpoint == 'teacher_auth.profile' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-person-vcard"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                My Profile
+            </span>
+
+        </a>
+
+
+        <!-- ====================================================
+             SETTINGS
+        ==================================================== -->
+
+        <a
+            href="{{ url_for('teacher_auth.settings') }}"
+            class="teacher-nav-link
+            {% if request.endpoint == 'teacher_auth.settings' %}
+                active
+            {% endif %}">
+
+            <span class="teacher-nav-icon">
+                <i class="bi bi-gear-fill"></i>
+            </span>
+
+            <span class="teacher-nav-text">
+                Settings
+            </span>
+
+        </a>
+
+
+    </nav>
+
+
+    <!-- ========================================================
+         SIDEBAR BOTTOM
+         LOGOUT ALWAYS VISIBLE
+    ========================================================= -->
+
+    <div class="teacher-sidebar-bottom">
+
+        <a
+            href="{{ url_for('teacher_auth.logout') }}"
+            class="teacher-logout-link"
+            onclick="return confirm('Are you sure you want to logout?');"
+            aria-label="Logout">
+
+            <span class="teacher-logout-icon">
+                <i class="bi bi-box-arrow-right"></i>
+            </span>
+
+            <span class="teacher-logout-text">
+                Logout
+            </span>
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- ============================================================
+     MOBILE OVERLAY
+============================================================= -->
+
+<div
+    class="teacher-sidebar-overlay"
+    id="teacherSidebarOverlay">
+</div>
+
+
+<!-- ============================================================
+     TEACHER SIDEBAR CSS
+============================================================= -->
+
+<style>
+
+/* ============================================================
+   GLOBAL
+============================================================ */
+
+.teacher-sidebar,
+.teacher-sidebar *,
+.teacher-sidebar-overlay {
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+
+.teacher-sidebar {
+
+    width: 250px;
+
+    height: 100vh;
+    height: 100dvh;
+
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    z-index: 1200;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            #111d38 0%,
+            #172650 50%,
+            #15254c 100%
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        4px 0 20px rgba(0, 0, 0, 0.12);
+
+    transition:
+        transform 0.30s ease;
+}
+
+
+/* ============================================================
+   BRAND
+============================================================ */
+
+.sidebar-brand {
+
+    min-height: 86px;
+
+    padding: 18px 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.10);
+
+    flex: 0 0 auto;
+}
+
+
+.brand-icon {
+
+    width: 34px;
+    height: 34px;
+
+    min-width: 34px;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #20b8f2,
+            #1677ff
+        );
+
+    color: #ffffff;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 19px;
+
+    flex-shrink: 0;
+
+    box-shadow:
+        0 5px 15px rgba(32,184,242,0.22);
+}
+
+
+.brand-text {
+    min-width: 0;
+}
+
+
+.brand-title {
+
+    font-size: 20px;
+
+    line-height: 22px;
+
+    font-weight: 700;
+
+    color: #ffffff;
+}
+
+
+.brand-subtitle {
+
+    margin-top: 2px;
+
+    font-size: 10px;
+
+    color:
+        rgba(255,255,255,0.68);
+
+    letter-spacing: 0.2px;
+}
+
+
+/* ============================================================
+   TEACHER PROFILE
+============================================================ */
+
+.teacher-profile-section {
+
+    padding:
+        18px 15px 20px;
+
+    text-align: center;
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.10);
+
+    flex: 0 0 auto;
+}
+
+
+.teacher-profile-link {
+
+    display: block;
+
+    width: fit-content;
+
+    margin: 0 auto;
+
+    text-decoration: none;
+}
+
+
+.teacher-profile-image {
+
+    width: 70px;
+    height: 70px;
+
+    min-width: 70px;
+    min-height: 70px;
+
+    margin: 0 auto;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+        3px solid rgba(255,255,255,0.92);
+
+    background: #33415f;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,0.28);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.teacher-profile-link:hover
+.teacher-profile-image {
+
+    transform: scale(1.04);
+
+    box-shadow:
+        0 7px 22px rgba(0,0,0,0.38);
+}
+
+
+.teacher-default-image {
+
+    background:
+        linear-gradient(
+            145deg,
+            #3a4969,
+            #253452
+        );
+}
+
+
+.teacher-default-image i {
+
+    color: #ffffff;
+
+    font-size: 38px;
+}
+
+
+.teacher-name {
+
+    margin-top: 11px;
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    line-height: 20px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+.teacher-department {
+
+    margin-top: 5px;
+
+    color:
+        rgba(255,255,255,0.66);
+
+    font-size: 11px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+
+.teacher-navigation {
+
+    flex: 1 1 auto;
+
+    min-height: 0;
+
+    width: 100%;
+
+    padding: 16px 10px;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        rgba(255,255,255,0.20)
+        transparent;
+}
+
+
+/* ============================================================
+   SCROLLBAR
+============================================================ */
+
+.teacher-navigation::-webkit-scrollbar {
+    width: 5px;
+}
+
+
+.teacher-navigation::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+.teacher-navigation::-webkit-scrollbar-thumb {
+
+    background:
+        rgba(255,255,255,0.20);
+
+    border-radius: 10px;
+}
+
+
+.teacher-navigation::-webkit-scrollbar-thumb:hover {
+
+    background:
+        rgba(255,255,255,0.32);
+}
+
+
+/* ============================================================
+   NAVIGATION LINK
+============================================================ */
+
+.teacher-nav-link {
+
+    position: relative;
+
+    width: 100%;
+
+    min-height: 46px;
+
+    margin-bottom: 5px;
+
+    padding: 10px 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    border-radius: 8px;
+
+    color:
+        rgba(255,255,255,0.78);
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    flex-shrink: 0;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+    -webkit-tap-highlight-color: transparent;
+
+    touch-action: manipulation;
+}
+
+
+.teacher-nav-link:hover {
+
+    color: #ffffff;
+
+    background:
+        rgba(255,255,255,0.08);
+
+    transform:
+        translateX(2px);
+
+    text-decoration: none;
+}
+
+
+.teacher-nav-link:active {
+
+    transform:
+        scale(0.98);
+}
+
+
+/* ============================================================
+   ACTIVE
+============================================================ */
+
+.teacher-nav-link.active {
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2867e9,
+            #2161e0
+        );
+
+    box-shadow:
+        0 5px 15px
+        rgba(30,96,225,0.25);
+}
+
+
+.teacher-nav-link.active
+.teacher-nav-icon {
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   ICON
+============================================================ */
+
+.teacher-nav-icon {
+
+    width: 21px;
+
+    min-width: 21px;
+
+    height: 21px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 17px;
+
+    color: inherit;
+
+    flex-shrink: 0;
+}
+
+
+.teacher-nav-text {
+
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   ROUTINE ICON
+============================================================ */
+
+.teacher-nav-link
+.bi-calendar3 {
+
+    color:
+        rgba(255,255,255,0.78);
+}
+
+
+.teacher-nav-link:hover
+.bi-calendar3 {
+
+    color: #ffffff;
+}
+
+
+.teacher-nav-link.active
+.bi-calendar3 {
+
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   DIVIDER
+============================================================ */
+
+.teacher-nav-divider {
+
+    height: 1px;
+
+    margin:
+        13px 4px;
+
+    background:
+        rgba(255,255,255,0.09);
+
+    flex-shrink: 0;
+}
+
+
+/* ============================================================
+   SIDEBAR BOTTOM
+   LOGOUT ALWAYS VISIBLE
+============================================================ */
+
+.teacher-sidebar-bottom {
+
+    flex: 0 0 auto;
+
+    width: 100%;
+
+    padding:
+        10px 12px 16px;
+
+    background:
+        #15254c;
+
+    border-top:
+        1px solid rgba(255,255,255,0.08);
+
+    position: relative;
+
+    z-index: 5;
+}
+
+
+/* ============================================================
+   LOGOUT
+   STUDENT SIDEBAR STYLE
+============================================================ */
+
+.teacher-logout-link {
+
+    position: relative;
+
+    width: 100%;
+
+    min-height: 46px;
+
+    padding:
+        10px 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    border-radius: 8px;
+
+    background:
+        rgba(255,255,255,0.055);
+
+    color:
+        rgba(255,255,255,0.80);
+
+    text-decoration: none;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    transition:
+        background 0.20s ease,
+        color 0.20s ease,
+        transform 0.20s ease,
+        box-shadow 0.20s ease;
+
+    -webkit-tap-highlight-color: transparent;
+
+    touch-action: manipulation;
+}
+
+
+/* LOGOUT ICON */
+
+.teacher-logout-icon {
+
+    width: 21px;
+
+    min-width: 21px;
+
+    height: 21px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 17px;
+
+    color: inherit;
+
+    flex-shrink: 0;
+}
+
+
+/* LOGOUT TEXT */
+
+.teacher-logout-text {
+
+    flex: 1;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* LOGOUT HOVER */
+
+.teacher-logout-link:hover {
+
+    color: #ffffff;
+
+    background:
+        rgba(233,52,69,0.95);
+
+    transform:
+        translateX(2px);
+
+    box-shadow:
+        0 5px 15px
+        rgba(233,52,69,0.20);
+
+    text-decoration: none;
+}
+
+
+/* LOGOUT ACTIVE */
+
+.teacher-logout-link:active {
+
+    transform:
+        scale(0.98);
+}
+
+
+/* LOGOUT FOCUS */
+
+.teacher-logout-link:focus-visible {
+
+    outline:
+        2px solid rgba(255,255,255,0.85);
+
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   MOBILE OVERLAY
+============================================================ */
+
+.teacher-sidebar-overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1150;
+
+    background:
+        rgba(15,23,42,0.55);
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.30s ease,
+        visibility 0.30s ease;
+
+    backdrop-filter: blur(2px);
+
+    -webkit-backdrop-filter: blur(2px);
+}
+
+
+.teacher-sidebar-overlay.show {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    pointer-events: auto;
+}
+
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 991px) {
+
+    .teacher-sidebar {
+
+        width: 250px;
+
+        min-width: 250px;
+
+        transform:
+            translateX(-105%);
+
+        box-shadow:
+            12px 0 35px
+            rgba(0,0,0,0.25);
+    }
+
+
+    .teacher-sidebar.show {
+
+        transform:
+            translateX(0);
+    }
+
+}
+
+
+/* ============================================================
+   SMALL MOBILE
+============================================================ */
+
+@media (max-width: 576px) {
+
+    .teacher-sidebar {
+
+        width: 235px;
+
+        min-width: 235px;
+    }
+
+
+    .sidebar-brand {
+
+        padding-left: 13px;
+
+        padding-right: 13px;
+    }
+
+
+    .teacher-profile-section {
+
+        padding:
+            15px 12px 17px;
+    }
+
+
+    .teacher-navigation {
+
+        padding:
+            12px 9px;
+    }
+
+
+    .teacher-sidebar-bottom {
+
+        padding:
+            9px 10px 13px;
+    }
+
+
+    .teacher-nav-link {
+
+        min-height: 45px;
+
+        padding:
+            9px 12px;
+    }
+
+
+    .teacher-logout-link {
+
+        min-height: 45px;
+
+        padding:
+            9px 12px;
+
+        border-radius: 8px;
+    }
+
+}
+
+
+/* ============================================================
+   BODY LOCK WHEN MOBILE MENU OPEN
+============================================================ */
+
+body.teacher-menu-open {
+
+    overflow: hidden !important;
+}
+
+
+/* ============================================================
+   DESKTOP OVERLAY OFF
+============================================================ */
+
+@media (min-width: 992px) {
+
+    .teacher-sidebar-overlay {
+
+        display: none !important;
+    }
+
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .teacher-sidebar,
+    .teacher-sidebar-overlay,
+    .teacher-nav-link,
+    .teacher-logout-link,
+    .teacher-profile-image {
+
+        transition: none !important;
+    }
+
+}
+
+</style>
+
+
+<!-- ============================================================
+     TEACHER SIDEBAR JAVASCRIPT
+============================================================= -->
+
+<script>
+
+(function () {
+
+    "use strict";
+
+
+    /* ========================================================
+       INITIALIZE
+    ========================================================= */
+
+    function initTeacherSidebar() {
+
+        const sidebar =
+            document.getElementById(
+                "teacherSidebar"
+            );
+
+        const overlay =
+            document.getElementById(
+                "teacherSidebarOverlay"
+            );
+
+        const menuButton =
+            document.getElementById(
+                "teacherMenuToggle"
+            );
+
+
+        if (!sidebar || !overlay) {
+
+            return;
+
+        }
+
+
+        /* ====================================================
+           OPEN SIDEBAR
+        ==================================================== */
+
+        function openSidebar() {
+
+            if (window.innerWidth > 991) {
+
+                return;
+
+            }
+
+
+            sidebar.classList.add("show");
+
+            overlay.classList.add("show");
+
+            document.body.classList.add(
+                "teacher-menu-open"
+            );
+
+
+            if (menuButton) {
+
+                menuButton.setAttribute(
+                    "aria-expanded",
+                    "true"
+                );
+
+                menuButton.setAttribute(
+                    "aria-label",
+                    "Close menu"
+                );
+
+            }
+
+        }
+
+
+        /* ====================================================
+           CLOSE SIDEBAR
+        ==================================================== */
+
+        function closeSidebar() {
+
+            sidebar.classList.remove("show");
+
+            overlay.classList.remove("show");
+
+            document.body.classList.remove(
+                "teacher-menu-open"
+            );
+
+
+            if (menuButton) {
+
+                menuButton.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+
+                menuButton.setAttribute(
+                    "aria-label",
+                    "Open menu"
+                );
+
+            }
+
+        }
+
+
+        /* ====================================================
+           MENU BUTTON
+        ==================================================== */
+
+        if (menuButton) {
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            menuButton.setAttribute(
+                "aria-label",
+                "Open menu"
+            );
+
+
+            menuButton.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    if (
+                        sidebar.classList.contains(
+                            "show"
+                        )
+                    ) {
+
+                        closeSidebar();
+
+                    } else {
+
+                        openSidebar();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* ====================================================
+           OVERLAY CLICK
+        ==================================================== */
+
+        overlay.addEventListener(
+            "click",
+            function () {
+
+                closeSidebar();
+
+            }
+        );
+
+
+        /* ====================================================
+           NAVIGATION LINKS
+        ==================================================== */
+
+        const menuLinks =
+            sidebar.querySelectorAll(
+                "a.teacher-nav-link"
+            );
+
+
+        menuLinks.forEach(
+            function (link) {
+
+                link.addEventListener(
+                    "click",
+                    function () {
+
+                        if (
+                            window.innerWidth <= 991
+                        ) {
+
+                            closeSidebar();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        /* ====================================================
+           LOGOUT
+        ==================================================== */
+
+        const logoutButton =
+            sidebar.querySelector(
+                ".teacher-logout-link"
+            );
+
+
+        if (logoutButton) {
+
+            logoutButton.addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        window.innerWidth <= 991
+                    ) {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* ====================================================
+           ESC KEY
+        ==================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape" &&
+                    sidebar.classList.contains(
+                        "show"
+                    )
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* ====================================================
+           RESIZE
+        ==================================================== */
+
+        window.addEventListener(
+            "resize",
+            function () {
+
+                if (
+                    window.innerWidth > 991
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* ====================================================
+           SWIPE LEFT TO CLOSE
+        ==================================================== */
+
+        let touchStartX = 0;
+
+        let touchEndX = 0;
+
+
+        sidebar.addEventListener(
+            "touchstart",
+            function (event) {
+
+                if (
+                    event.touches &&
+                    event.touches.length > 0
+                ) {
+
+                    touchStartX =
+                        event.touches[0].clientX;
+
+                }
+
+            },
+            {
+                passive: true
+            }
+        );
+
+
+        sidebar.addEventListener(
+            "touchend",
+            function (event) {
+
+                if (
+                    event.changedTouches &&
+                    event.changedTouches.length > 0
+                ) {
+
+                    touchEndX =
+                        event.changedTouches[0].clientX;
+
+                }
+
+
+                const swipeDistance =
+                    touchEndX - touchStartX;
+
+
+                if (
+                    window.innerWidth <= 991 &&
+                    swipeDistance < -70
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            },
+            {
+                passive: true
+            }
+        );
+
+    }
+
+
+    /* ========================================================
+       RUN AFTER DOM READY
+    ========================================================= */
+
+    if (
+        document.readyState === "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initTeacherSidebar
+        );
+
+    } else {
+
+        initTeacherSidebar();
+
+    }
+
+})();
+
+</script>

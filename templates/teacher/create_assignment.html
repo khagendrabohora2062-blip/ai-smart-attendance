@@ -1,0 +1,1302 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Create Assignment - AI Smart Attendance
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+/* =========================================================
+   ASSIGNMENT PAGE
+========================================================= */
+
+.assignment-page {
+    padding: 10px 5px 35px;
+}
+
+
+/* =========================================================
+   SIDEBAR — CONSISTENT TEACHER PORTAL
+========================================================= */
+
+.teacher-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    min-height: 46px;
+    padding: 0 15px;
+
+    margin: 5px 10px;
+
+    border-radius: 8px;
+
+    color: #d9deeb !important;
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition: all 0.2s ease;
+}
+
+.teacher-menu-item i {
+    width: 20px;
+    min-width: 20px;
+
+    text-align: center;
+
+    font-size: 17px;
+
+    color: #d9deeb !important;
+
+    transition: all 0.2s ease;
+}
+
+.teacher-menu-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: #ffffff !important;
+}
+
+.teacher-menu-item:hover i {
+    color: #ffffff !important;
+}
+
+
+/* ACTIVE BUTTON */
+
+.teacher-menu-item.active {
+    background: rgba(255,255,255,0.10) !important;
+    color: #ffffff !important;
+
+    font-weight: 600;
+}
+
+.teacher-menu-item.active i {
+    color: #ffffff !important;
+}
+
+
+/* Assignment active state */
+
+.teacher-menu-item[href*="teacher_assignment"].active {
+    background: rgba(255,255,255,0.10) !important;
+    color: #ffffff !important;
+}
+
+.teacher-menu-item[href*="teacher_assignment"].active i {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   SIDEBAR SPACING
+========================================================= */
+
+.teacher-menu {
+    padding-top: 10px;
+}
+
+.teacher-menu-divider {
+    margin: 20px 14px;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.assignment-page-header {
+    background: #ffffff;
+    border: 1px solid #e9edf3;
+    border-radius: 16px;
+
+    padding: 22px 25px;
+    margin-bottom: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.035);
+}
+
+.assignment-page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.assignment-page-icon {
+    width: 52px;
+    height: 52px;
+
+    border-radius: 13px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef5ff;
+    color: #0d6efd;
+
+    font-size: 23px;
+}
+
+.assignment-page-header h4 {
+    margin: 0;
+
+    color: #202938;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.assignment-page-header p {
+    margin: 4px 0 0;
+
+    color: #8a93a2;
+
+    font-size: 12px;
+}
+
+.assignment-back-btn {
+    border-radius: 9px;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    padding: 9px 15px;
+}
+
+
+/* =========================================================
+   MAIN FORM CARD
+========================================================= */
+
+.assignment-form-card {
+    background: #ffffff;
+
+    border: 1px solid #e9edf3;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,0.035);
+
+    overflow: hidden;
+}
+
+.assignment-form-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid #edf0f4;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+}
+
+.assignment-form-header-icon {
+    width: 43px;
+    height: 43px;
+
+    border-radius: 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f0f6ff;
+    color: #0d6efd;
+
+    font-size: 19px;
+}
+
+.assignment-form-header h5 {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 700;
+
+    color: #202938;
+}
+
+.assignment-form-header p {
+    margin: 3px 0 0;
+
+    color: #8a93a2;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   FORM BODY
+========================================================= */
+
+.assignment-form-body {
+    padding: 25px;
+}
+
+.assignment-form-group {
+    margin-bottom: 20px;
+}
+
+.assignment-form-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #4b5565;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.assignment-required {
+    color: #dc3545;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.assignment-input,
+.assignment-select,
+.assignment-textarea {
+    width: 100%;
+
+    border: 1px solid #dfe4ec;
+
+    border-radius: 9px;
+
+    color: #202938;
+    background: #ffffff;
+
+    font-size: 13px;
+
+    transition: 0.2s ease;
+}
+
+.assignment-input,
+.assignment-select {
+    min-height: 44px;
+
+    padding: 8px 12px;
+}
+
+.assignment-textarea {
+    min-height: 125px;
+
+    padding: 12px;
+
+    resize: vertical;
+}
+
+.assignment-input:focus,
+.assignment-select:focus,
+.assignment-textarea:focus {
+    outline: none;
+
+    border-color: #0d6efd;
+
+    box-shadow:
+        0 0 0 3px rgba(13,110,253,0.08);
+}
+
+
+/* =========================================================
+   INPUT ICON
+========================================================= */
+
+.assignment-input-wrapper {
+    position: relative;
+}
+
+.assignment-input-wrapper i {
+    position: absolute;
+
+    left: 13px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #8993a2;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+.assignment-input-wrapper .assignment-input {
+    padding-left: 38px;
+}
+
+
+/* =========================================================
+   HELP TEXT
+========================================================= */
+
+.assignment-help {
+    margin-top: 5px;
+
+    color: #929baa;
+
+    font-size: 10px;
+}
+
+.assignment-help i {
+    color: #0d6efd;
+}
+
+
+/* =========================================================
+   DESCRIPTION COUNTER
+========================================================= */
+
+.assignment-counter {
+    margin-top: 4px;
+
+    text-align: right;
+
+    color: #9aa2ae;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   ATTACHMENT
+========================================================= */
+
+.assignment-upload {
+    border: 1.5px dashed #d7dde7;
+
+    border-radius: 12px;
+
+    padding: 22px;
+
+    text-align: center;
+
+    background: #fafbfd;
+
+    transition: 0.2s ease;
+}
+
+.assignment-upload:hover {
+    border-color: #0d6efd;
+
+    background: #f7faff;
+}
+
+.assignment-upload-icon {
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 10px;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef5ff;
+    color: #0d6efd;
+
+    font-size: 22px;
+}
+
+.assignment-upload-title {
+    color: #4b5565;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.assignment-upload-text {
+    margin-top: 3px;
+
+    color: #969eaa;
+
+    font-size: 10px;
+}
+
+.assignment-upload input {
+    margin-top: 13px;
+
+    font-size: 12px;
+}
+
+.assignment-selected-file {
+    margin-top: 8px;
+
+    color: #7c8796;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   INFORMATION BOX
+========================================================= */
+
+.assignment-info-box {
+    background: #f8faff;
+
+    border: 1px solid #e5edfa;
+
+    border-radius: 11px;
+
+    padding: 15px 17px;
+
+    margin-top: 8px;
+}
+
+.assignment-info-title {
+    color: #465365;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    margin-bottom: 9px;
+}
+
+.assignment-info-title i {
+    color: #0d6efd;
+}
+
+.assignment-info-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 6px;
+
+    color: #7c8795;
+
+    font-size: 10px;
+}
+
+.assignment-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.assignment-info-item i {
+    color: #0d6efd;
+}
+
+
+/* =========================================================
+   FORM FOOTER
+========================================================= */
+
+.assignment-form-footer {
+    border-top: 1px solid #edf0f4;
+
+    padding: 17px 25px;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    gap: 9px;
+
+    background: #fcfcfd;
+}
+
+.assignment-btn {
+    min-height: 40px;
+
+    padding: 0 17px;
+
+    border-radius: 8px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.assignment-publish-btn {
+    border: none;
+
+    color: #ffffff;
+
+    background: #0d6efd;
+
+    transition: 0.2s ease;
+}
+
+.assignment-publish-btn:hover {
+    color: #ffffff;
+
+    background: #0b5ed7;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 15px rgba(13,110,253,0.20);
+}
+
+
+/* =========================================================
+   ALERT
+========================================================= */
+
+.assignment-page .alert {
+    border-radius: 10px;
+
+    border: none;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .assignment-page {
+        padding: 5px 0 25px;
+    }
+
+    .assignment-page-header {
+        padding: 18px;
+
+        align-items: flex-start;
+    }
+
+    .assignment-page-header-left {
+        gap: 10px;
+    }
+
+    .assignment-page-icon {
+        width: 45px;
+        height: 45px;
+
+        font-size: 19px;
+    }
+
+    .assignment-page-header h4 {
+        font-size: 17px;
+    }
+
+    .assignment-back-btn {
+        padding: 7px 10px;
+    }
+
+    .assignment-form-body {
+        padding: 18px;
+    }
+
+    .assignment-form-footer {
+        padding: 15px 18px;
+
+        flex-direction: column;
+    }
+
+    .assignment-form-footer .assignment-btn {
+        width: 100%;
+    }
+
+}
+
+</style>
+
+<div class="assignment-page">
+
+```
+<!-- =====================================================
+     PAGE HEADER
+===================================================== -->
+
+<div class="assignment-page-header">
+
+    <div class="assignment-page-header-left">
+
+        <div class="assignment-page-icon">
+
+            <i class="bi bi-journal-plus"></i>
+
+        </div>
+
+        <div>
+
+            <h4>
+                Create Assignment
+            </h4>
+
+            <p>
+                Create and publish an assignment for your students
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <a
+        href="{{ url_for('teacher_assignment.index') }}"
+        class="btn btn-outline-secondary assignment-back-btn">
+
+        <i class="bi bi-arrow-left me-1"></i>
+
+        Back
+
+    </a>
+
+</div>
+
+
+<!-- =====================================================
+     FLASH MESSAGE
+===================================================== -->
+
+{% with messages =
+    get_flashed_messages(
+        with_categories=true
+    )
+%}
+
+    {% if messages %}
+
+        {% for category, message in messages %}
+
+            <div
+                class="alert alert-{{ category }}
+                       alert-dismissible fade show mb-3">
+
+                {% if category == "success" %}
+
+                    <i class="bi bi-check-circle-fill me-2"></i>
+
+                {% elif category == "danger" %}
+
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+                {% elif category == "warning" %}
+
+                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+
+                {% else %}
+
+                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                {% endif %}
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =====================================================
+     FORM CARD
+===================================================== -->
+
+<div class="assignment-form-card">
+
+
+    <div class="assignment-form-header">
+
+        <div class="assignment-form-header-icon">
+
+            <i class="bi bi-pencil-square"></i>
+
+        </div>
+
+        <div>
+
+            <h5>
+                Assignment Details
+            </h5>
+
+            <p>
+                Enter the assignment information below
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         FORM
+    ================================================= -->
+
+    <form
+        method="POST"
+        action="{{ url_for('teacher_assignment.create') }}"
+        enctype="multipart/form-data"
+        id="assignmentForm">
+
+        <div class="assignment-form-body">
+
+
+            <!-- SUBJECT -->
+
+            <div class="assignment-form-group">
+
+                <label
+                    for="subject_id"
+                    class="assignment-form-label">
+
+                    Subject
+
+                    <span class="assignment-required">*</span>
+
+                </label>
+
+
+                <select
+                    name="subject_id"
+                    id="subject_id"
+                    class="assignment-select"
+                    required>
+
+                    <option value="">
+                        -- Select Subject --
+                    </option>
+
+                    {% for subject in subjects %}
+
+                        <option value="{{ subject.id }}">
+
+                            {{ subject.subject_code }}
+                            -
+                            {{ subject.subject_name }}
+
+                            {% if subject.semester %}
+                                (Semester {{ subject.semester }})
+                            {% endif %}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+
+                {% if subjects %}
+
+                    <div class="assignment-help">
+
+                        <i class="bi bi-info-circle me-1"></i>
+
+                        Only subjects assigned to you are shown.
+
+                    </div>
+
+                {% else %}
+
+                    <div class="text-danger assignment-help">
+
+                        <i class="bi bi-exclamation-circle me-1"></i>
+
+                        No subjects are assigned to your account.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- TITLE -->
+
+            <div class="assignment-form-group">
+
+                <label
+                    for="title"
+                    class="assignment-form-label">
+
+                    Assignment Title
+
+                    <span class="assignment-required">*</span>
+
+                </label>
+
+
+                <div class="assignment-input-wrapper">
+
+                    <i class="bi bi-card-heading"></i>
+
+                    <input
+                        type="text"
+                        name="title"
+                        id="title"
+                        class="assignment-input"
+                        maxlength="255"
+                        placeholder="Enter assignment title"
+                        required>
+
+                </div>
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="assignment-form-group">
+
+                <label
+                    for="description"
+                    class="assignment-form-label">
+
+                    Description / Instructions
+
+                </label>
+
+
+                <textarea
+                    name="description"
+                    id="description"
+                    class="assignment-textarea"
+                    maxlength="5000"
+                    placeholder="Write assignment instructions, questions, requirements or submission guidelines..."></textarea>
+
+
+                <div class="assignment-counter">
+
+                    <span id="descriptionCount">0</span>
+                    / 5000
+
+                </div>
+
+            </div>
+
+
+            <!-- DATE / TIME / MARKS -->
+
+            <div class="row g-3">
+
+
+                <div class="col-md-5">
+
+                    <div class="assignment-form-group">
+
+                        <label
+                            for="due_date"
+                            class="assignment-form-label">
+
+                            Due Date
+
+                            <span class="assignment-required">*</span>
+
+                        </label>
+
+
+                        <div class="assignment-input-wrapper">
+
+                            <i class="bi bi-calendar-event"></i>
+
+                            <input
+                                type="date"
+                                name="due_date"
+                                id="due_date"
+                                class="assignment-input"
+                                required>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-4">
+
+                    <div class="assignment-form-group">
+
+                        <label
+                            for="due_time"
+                            class="assignment-form-label">
+
+                            Due Time
+
+                        </label>
+
+
+                        <div class="assignment-input-wrapper">
+
+                            <i class="bi bi-clock"></i>
+
+                            <input
+                                type="time"
+                                name="due_time"
+                                id="due_time"
+                                class="assignment-input">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="col-md-3">
+
+                    <div class="assignment-form-group">
+
+                        <label
+                            for="total_marks"
+                            class="assignment-form-label">
+
+                            Total Marks
+
+                        </label>
+
+
+                        <div class="assignment-input-wrapper">
+
+                            <i class="bi bi-award"></i>
+
+                            <input
+                                type="number"
+                                name="total_marks"
+                                id="total_marks"
+                                class="assignment-input"
+                                value="100"
+                                min="1"
+                                max="1000">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ATTACHMENT -->
+
+            <div class="assignment-form-group">
+
+                <label class="assignment-form-label">
+
+                    Assignment Attachment
+
+                </label>
+
+
+                <div class="assignment-upload">
+
+                    <div class="assignment-upload-icon">
+
+                        <i class="bi bi-cloud-arrow-up"></i>
+
+                    </div>
+
+
+                    <div class="assignment-upload-title">
+
+                        Upload Assignment File
+
+                    </div>
+
+
+                    <div class="assignment-upload-text">
+
+                        PDF, DOC, DOCX, TXT, JPG or PNG
+
+                    </div>
+
+
+                    <input
+                        type="file"
+                        name="attachment"
+                        id="attachment"
+                        class="form-control"
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png">
+
+
+                    <div
+                        id="selectedFile"
+                        class="assignment-selected-file">
+
+                        No file selected
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- INFORMATION -->
+
+            <div class="assignment-info-box">
+
+                <div class="assignment-info-title">
+
+                    <i class="bi bi-info-circle-fill me-1"></i>
+
+                    Before Publishing
+
+                </div>
+
+
+                <div class="assignment-info-item">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                    Make sure the correct subject is selected.
+
+                </div>
+
+
+                <div class="assignment-info-item">
+
+                    <i class="bi bi-calendar-check"></i>
+
+                    Check the due date and time carefully.
+
+                </div>
+
+
+                <div class="assignment-info-item">
+
+                    <i class="bi bi-file-earmark-text"></i>
+
+                    Students will be able to view the assignment.
+
+                </div>
+
+
+                <div class="assignment-info-item">
+
+                    <i class="bi bi-paperclip"></i>
+
+                    Attachment is optional.
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="assignment-form-footer">
+
+            <a
+                href="{{ url_for('teacher_assignment.index') }}"
+                class="btn btn-outline-secondary assignment-btn">
+
+                <i class="bi bi-x-lg me-1"></i>
+
+                Cancel
+
+            </a>
+
+
+            <button
+                type="submit"
+                id="publishButton"
+                class="btn assignment-btn assignment-publish-btn">
+
+                <i class="bi bi-send-fill me-1"></i>
+
+                Publish Assignment
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* DATE */
+
+    const dueDate =
+        document.getElementById("due_date");
+
+    if (dueDate) {
+
+        const today =
+            new Date()
+                .toISOString()
+                .split("T")[0];
+
+        dueDate.min = today;
+    }
+
+
+    /* DESCRIPTION COUNTER */
+
+    const description =
+        document.getElementById("description");
+
+    const descriptionCount =
+        document.getElementById("descriptionCount");
+
+    if (description && descriptionCount) {
+
+        description.addEventListener(
+            "input",
+            function () {
+
+                descriptionCount.textContent =
+                    description.value.length;
+
+            }
+        );
+    }
+
+
+    /* FILE NAME */
+
+    const attachment =
+        document.getElementById("attachment");
+
+    const selectedFile =
+        document.getElementById("selectedFile");
+
+    if (attachment && selectedFile) {
+
+        attachment.addEventListener(
+            "change",
+            function () {
+
+                if (attachment.files.length > 0) {
+
+                    const file =
+                        attachment.files[0];
+
+                    selectedFile.innerHTML =
+                        '<i class="bi bi-file-earmark-check-fill text-success me-1"></i> '
+                        + file.name;
+
+                } else {
+
+                    selectedFile.textContent =
+                        "No file selected";
+                }
+            }
+        );
+    }
+
+
+    /* FORM VALIDATION */
+
+    const form =
+        document.getElementById("assignmentForm");
+
+    const publishButton =
+        document.getElementById("publishButton");
+
+    if (form) {
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                const subject =
+                    document.getElementById(
+                        "subject_id"
+                    ).value;
+
+                const title =
+                    document.getElementById(
+                        "title"
+                    ).value.trim();
+
+                const date =
+                    document.getElementById(
+                        "due_date"
+                    ).value;
+
+
+                if (!subject) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Please select a subject."
+                    );
+
+                    return;
+                }
+
+
+                if (!title) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Please enter assignment title."
+                    );
+
+                    document
+                        .getElementById("title")
+                        .focus();
+
+                    return;
+                }
+
+
+                if (!date) {
+
+                    event.preventDefault();
+
+                    alert(
+                        "Please select the due date."
+                    );
+
+                    return;
+                }
+
+
+                if (publishButton) {
+
+                    publishButton.disabled = true;
+
+                    publishButton.innerHTML =
+                        '<span class="spinner-border spinner-border-sm me-2"></span>'
+                        + 'Publishing...';
+                }
+
+            }
+        );
+    }
+
+});
+
+</script>
+
+{% endblock %}

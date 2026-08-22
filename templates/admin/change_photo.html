@@ -1,0 +1,164 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Change Profile Photo
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button class="btn-close"
+                            data-bs-dismiss="alert"></button>
+
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-6">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h4 class="mb-0">
+
+                        <i class="bi bi-camera-fill"></i>
+
+                        Change Student Profile Photo
+
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST"
+                          enctype="multipart/form-data">
+
+                        <div class="text-center mb-4">
+
+                            <img id="preview"
+
+                                 {% if photo %}
+
+<img
+    id="preview"
+    src="{{ url_for('static', filename='uploads/students/' ~ photo) }}"
+    width="180"
+    height="180"
+    class="rounded-circle border shadow"
+    style="object-fit:cover;">
+
+{% else %}
+
+<img
+    id="preview"
+    src="{{ url_for('static', filename='images/default-user.png') }}"
+    width="180"
+    height="180"
+    class="rounded-circle border shadow"
+    style="object-fit:cover;">
+
+{% endif %}
+
+                                 width="180"
+
+                                 height="180"
+
+                                 class="rounded-circle border shadow"
+
+                                 style="object-fit:cover;">
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Select New Photo
+
+                            </label>
+
+                            <input
+
+                                type="file"
+
+                                name="photo"
+
+                                id="photo"
+
+                                class="form-control"
+
+                                accept=".jpg,.jpeg,.png"
+
+                                required>
+
+                        </div>
+
+                        <div class="d-grid gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-success">
+
+                                <i class="bi bi-upload"></i>
+
+                                Update Photo
+
+                            </button>
+
+                            <a href="{{ url_for('students.index') }}"
+                               class="btn btn-secondary">
+
+                                <i class="bi bi-arrow-left"></i>
+
+                                Cancel
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document
+.getElementById("photo")
+.onchange = function(e){
+
+    const file = e.target.files[0];
+
+    if(file){
+
+        document
+        .getElementById("preview")
+        .src = URL.createObjectURL(file);
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

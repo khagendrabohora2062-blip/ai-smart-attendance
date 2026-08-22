@@ -1,0 +1,2993 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Smart Attendance System</title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+
+    <!-- =====================================================
+         BOOTSTRAP ICONS
+    ====================================================== -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+
+    <!-- =====================================================
+         LANDING CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/landing.css') }}">
+
+
+    <!-- =====================================================
+         EXTRA LANDING CSS
+    ====================================================== -->
+
+    <style>
+
+        /* =====================================================
+           GLOBAL
+        ====================================================== */
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+
+        /* =====================================================
+           LOGIN PORTAL
+        ====================================================== */
+
+        .login-portal-section {
+            padding: 90px 0;
+        }
+
+        .login-portal-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
+            padding: 35px;
+            height: 100%;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+        }
+
+        .login-portal-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(13,110,253,0.7);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+
+        .login-portal-icon {
+            width: 75px;
+            height: 75px;
+            margin: 0 auto 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            background: rgba(13,110,253,0.15);
+        }
+
+        .student-login-card {
+            border-color: rgba(25,135,84,0.35);
+        }
+
+        .student-login-card:hover {
+            border-color: rgba(25,135,84,0.8);
+        }
+
+        .teacher-login-card {
+            border-color: rgba(13,202,240,0.35);
+        }
+
+        .teacher-login-card:hover {
+            border-color: rgba(13,202,240,0.8);
+        }
+
+        .admin-login-card {
+            border-color: rgba(13,110,253,0.35);
+        }
+
+        .admin-login-card:hover {
+            border-color: rgba(13,110,253,0.8);
+        }
+
+
+        /* =====================================================
+           LOGIN TABLE
+        ====================================================== */
+
+        .login-table-wrapper {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .login-table {
+            margin-bottom: 0;
+        }
+
+        .login-table th,
+        .login-table td {
+            padding: 18px 20px;
+            vertical-align: middle;
+        }
+
+        .login-table thead th {
+            background: rgba(13,110,253,0.15);
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .login-table tbody td {
+            color: rgba(255,255,255,0.85);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .login-role-icon {
+            width: 42px;
+            height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-right: 10px;
+        }
+
+        .student-role-icon {
+            background: rgba(25,135,84,0.15);
+            color: #20c997;
+        }
+
+        .teacher-role-icon {
+            background: rgba(13,202,240,0.15);
+            color: #0dcaf0;
+        }
+
+        .admin-role-icon {
+            background: rgba(13,110,253,0.15);
+            color: #0d6efd;
+        }
+
+
+        /* =====================================================
+           STUDENT BADGE
+        ====================================================== */
+
+        .student-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            border-radius: 50px;
+            background: rgba(25,135,84,0.15);
+            color: #20c997;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           NAVBAR
+        ====================================================== */
+
+        .custom-navbar {
+            padding: 12px 0;
+            z-index: 9999;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .logo-icon {
+            font-size: 25px;
+        }
+
+        .navbar-nav {
+            gap: 3px;
+        }
+
+        .navbar-nav .nav-link {
+            padding: 9px 11px !important;
+            border-radius: 10px;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link.active {
+            background: rgba(13,110,253,0.15);
+        }
+
+        .navbar-nav .nav-link i {
+            margin-right: 4px;
+        }
+
+        .navbar-login {
+            display: flex;
+            align-items: center;
+        }
+
+        .login-btn {
+            border-radius: 10px;
+            padding: 9px 17px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           CONTACT NAV ITEM
+        ====================================================== */
+
+        .contact-nav-link {
+            color: #ffffff !important;
+        }
+
+        .contact-nav-link:hover {
+            background: rgba(13,202,240,0.12) !important;
+            color: #0dcaf0 !important;
+        }
+
+
+        /* =====================================================
+           FEEDBACK MODAL
+        ====================================================== */
+
+        .feedback-modal-content {
+            background: rgba(10,15,30,0.98);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
+            color: #fff;
+            backdrop-filter: blur(18px);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.55);
+        }
+
+        .feedback-modal-content .modal-header {
+            padding: 30px 30px 15px;
+        }
+
+        .feedback-modal-content .modal-body {
+            padding: 15px 30px 30px;
+        }
+
+        .feedback-modal-content .form-label {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .feedback-modal-content .form-control,
+        .feedback-modal-content .form-select {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px 15px;
+        }
+
+        .feedback-modal-content .form-control::placeholder {
+            color: rgba(255,255,255,0.45);
+        }
+
+        .feedback-modal-content .form-control:focus,
+        .feedback-modal-content .form-select:focus {
+            background: rgba(255,255,255,0.09);
+            color: #fff;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.2);
+        }
+
+        .feedback-modal-content .form-select option {
+            background: #111827;
+            color: #fff;
+        }
+
+        .feedback-modal-content .btn {
+            border-radius: 10px;
+        }
+
+
+        /* =====================================================
+           TESTIMONIALS
+        ====================================================== */
+
+        .testimonial-card {
+            height: 100%;
+            text-align: center;
+            padding: 35px 25px;
+            border-radius: 22px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.10);
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(13,110,253,0.55);
+            box-shadow: 0 18px 45px rgba(0,0,0,0.25);
+        }
+
+        .testimonial-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.15);
+        }
+
+
+        /* =====================================================
+           FOOTER CONTACT
+        ====================================================== */
+
+        .footer-contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .footer-contact-item i {
+            margin-top: 4px;
+            color: #0dcaf0;
+        }
+
+
+        /* =====================================================
+           SOCIAL MEDIA
+        ====================================================== */
+
+        .social-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            color: #ffffff;
+            text-decoration: none;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.10);
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-4px);
+            background: rgba(13,110,253,0.15);
+            border-color: rgba(13,110,253,0.55);
+            color: #0dcaf0;
+        }
+
+        .social-links a i {
+            margin: 0 !important;
+        }
+
+
+        /* =====================================================
+           MOBILE NAVBAR
+        ====================================================== */
+
+        @media (max-width: 1199px) {
+
+            .navbar-nav .nav-link {
+                font-size: 13px;
+                padding: 8px 8px !important;
+            }
+
+            .logo-text {
+                font-size: 17px;
+            }
+
+            .login-btn {
+                padding: 8px 13px;
+                font-size: 13px;
+            }
+        }
+
+
+        @media (max-width: 991px) {
+
+            .custom-navbar {
+                padding: 10px 15px;
+            }
+
+            .navbar-collapse {
+                margin-top: 12px;
+                padding: 15px;
+                border-radius: 16px;
+                background: rgba(10,15,30,0.97);
+                border: 1px solid rgba(255,255,255,0.1);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.35);
+            }
+
+            .navbar-nav {
+                width: 100%;
+                gap: 4px;
+            }
+
+            .navbar-nav .nav-item {
+                width: 100%;
+            }
+
+            .navbar-nav .nav-link {
+                width: 100%;
+                padding: 12px 14px !important;
+                border-radius: 10px;
+                font-size: 14px;
+            }
+
+            .navbar-nav .nav-link:hover {
+                background: rgba(13,110,253,0.15);
+                transform: none;
+            }
+
+            .navbar-login {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .navbar-login .login-btn {
+                width: 100%;
+                display: block;
+                text-align: center;
+                padding: 12px;
+            }
+
+            .hero-section {
+                padding-top: 120px !important;
+                text-align: center;
+            }
+
+            .hero-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .hero-buttons .btn {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            .hero-image {
+                margin-top: 50px;
+                max-width: 90%;
+            }
+        }
+
+
+        @media (max-width: 767px) {
+
+            .login-portal-section {
+                padding: 60px 0;
+            }
+
+            .login-portal-card {
+                padding: 25px 20px;
+            }
+
+            .login-table-wrapper {
+                overflow-x: auto;
+            }
+
+            .login-table {
+                min-width: 700px;
+            }
+
+            .footer-section {
+                text-align: center;
+            }
+
+            .footer-section ul {
+                padding-left: 0;
+            }
+
+            .footer-contact-item {
+                justify-content: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+
+        @media (max-width: 575px) {
+
+            .custom-navbar {
+                padding: 8px 10px;
+            }
+
+            .logo-text {
+                font-size: 15px;
+            }
+
+            .logo-icon {
+                font-size: 21px;
+            }
+
+            .navbar-toggler {
+                padding: 5px 8px;
+                border-radius: 8px;
+            }
+
+            .navbar-collapse {
+                margin-top: 10px;
+                padding: 12px;
+            }
+
+            .navbar-nav .nav-link {
+                font-size: 14px;
+                padding: 11px 12px !important;
+            }
+
+            .hero-title {
+                font-size: 38px !important;
+                line-height: 1.2;
+            }
+
+            .hero-description {
+                font-size: 14px;
+                line-height: 1.7;
+            }
+
+            .hero-buttons {
+                margin-top: 30px !important;
+            }
+
+            .hero-buttons .btn {
+                font-size: 14px;
+                padding: 11px 15px;
+            }
+
+            .mini-stat h2 {
+                font-size: 24px;
+            }
+
+            .mini-stat p {
+                font-size: 12px;
+            }
+
+            .display-4 {
+                font-size: 2rem !important;
+            }
+
+            .lead {
+                font-size: 0.95rem;
+            }
+
+            .container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .glass-card {
+                padding: 25px 15px;
+            }
+
+            .tech-card {
+                min-height: 150px;
+            }
+
+            .testimonial-card {
+                padding: 25px 18px;
+            }
+
+            .feedback-modal-content {
+                border-radius: 18px;
+            }
+
+            .feedback-modal-content .modal-header {
+                padding: 22px 20px 10px;
+            }
+
+            .feedback-modal-content .modal-body {
+                padding: 10px 20px 22px;
+            }
+
+            .social-links a {
+                width: 40px;
+                height: 40px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVBAR
+====================================================== -->
+
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar fixed-top">
+
+    <div class="container">
+
+        <!-- LOGO -->
+
+        <a
+            class="navbar-brand logo-text d-flex align-items-center"
+            href="#home">
+
+            <span class="logo-icon me-2">
+                🤖
+            </span>
+
+            <span>
+                AI Smart Attendance
+            </span>
+
+        </a>
+
+
+        <!-- MOBILE TOGGLE -->
+
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+
+            <span class="navbar-toggler-icon"></span>
+
+        </button>
+
+
+        <!-- NAVIGATION -->
+
+        <div
+            class="collapse navbar-collapse"
+            id="mainNavbar">
+
+
+            <!-- MENU -->
+
+            <ul class="navbar-nav mx-auto align-items-lg-center">
+
+
+                <!-- HOME -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link active"
+                        href="#home">
+
+                        <i class="bi bi-house-door-fill"></i>
+                        Home
+
+                    </a>
+
+                </li>
+
+
+                <!-- FEATURES -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="#features">
+
+                        <i class="bi bi-stars"></i>
+                        Features
+
+                    </a>
+
+                </li>
+
+
+                <!-- ABOUT -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="#about">
+
+                        <i class="bi bi-info-circle-fill"></i>
+                        About
+
+                    </a>
+
+                </li>
+
+
+                <!-- WORKFLOW -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="#workflow">
+
+                        <i class="bi bi-diagram-3-fill"></i>
+                        Workflow
+
+                    </a>
+
+                </li>
+
+
+                <!-- TECHNOLOGY -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="#technology">
+
+                        <i class="bi bi-cpu-fill"></i>
+                        Technology
+
+                    </a>
+
+                </li>
+
+
+                <!-- CONTACT -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link contact-nav-link"
+                        href="/contact">
+
+                        <i class="bi bi-envelope-fill"></i>
+                        Contact Us
+
+                    </a>
+
+                </li>
+
+
+                <!-- FEEDBACK -->
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="#"
+                        data-bs-toggle="modal"
+                        data-bs-target="#feedbackModal">
+
+                        <i class="bi bi-chat-square-text-fill"></i>
+                        Feedback
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+
+            <!-- LOGIN -->
+
+            <div class="navbar-login">
+
+                <a
+                    href="/login"
+                    class="btn btn-primary login-btn">
+
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Login
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     HERO
+====================================================== -->
+
+<section
+    id="home"
+    class="hero-section">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+
+            <!-- HERO TEXT -->
+
+            <div class="col-lg-6">
+
+                <span class="hero-badge">
+                    AI Powered Attendance System
+                </span>
+
+                <h1 class="hero-title mt-4">
+
+                    Smart Attendance
+                    <br>
+
+                    Using
+
+                    <span class="gradient-text">
+                        Artificial Intelligence
+                    </span>
+
+                </h1>
+
+                <p class="hero-description mt-4">
+
+                    A complete attendance management platform
+                    powered by Artificial Intelligence,
+                    Face Recognition,
+                    QR Code Technology,
+                    Flask and MySQL.
+                    Designed for schools,
+                    colleges and universities.
+
+                </p>
+
+
+                <!-- HERO BUTTONS -->
+
+                <div class="hero-buttons mt-5">
+
+                    <a
+                        href="/login"
+                        class="btn btn-primary btn-lg">
+
+                        <i class="bi bi-shield-lock-fill"></i>
+                        Admin Login
+
+                    </a>
+
+
+                    <a
+                        href="/teacher/login"
+                        class="btn btn-outline-light btn-lg">
+
+                        <i class="bi bi-person-workspace"></i>
+                        Teacher Login
+
+                    </a>
+
+
+                    <a
+                        href="/student/login"
+                        class="btn btn-success btn-lg">
+
+                        <i class="bi bi-person-badge-fill"></i>
+                        Student Login
+
+                    </a>
+
+
+                    <a
+                        href="#features"
+                        class="btn btn-success btn-lg">
+
+                        <i class="bi bi-arrow-down-circle"></i>
+                        Explore
+
+                    </a>
+
+                </div>
+
+
+                <!-- MINI STATISTICS -->
+
+                <div class="row mt-5">
+
+                    <div class="col-6 col-md-3">
+
+                        <div class="mini-stat">
+
+                            <h2>
+                                {{ total_students }}
+                            </h2>
+
+                            <p>
+                                Students
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-6 col-md-3">
+
+                        <div class="mini-stat">
+
+                            <h2>
+                                {{ total_teachers }}
+                            </h2>
+
+                            <p>
+                                Teachers
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-6 col-md-3">
+
+                        <div class="mini-stat">
+
+                            <h2>
+                                {{ total_subjects }}
+                            </h2>
+
+                            <p>
+                                Subjects
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="col-6 col-md-3">
+
+                        <div class="mini-stat">
+
+                            <h2>
+                                {{ today_attendance }}
+                            </h2>
+
+                            <p>
+                                Today
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- HERO IMAGE -->
+
+            <div class="col-lg-6 text-center">
+
+                <img
+                    src="{{ url_for('static', filename='images/hero.png') }}"
+                    class="img-fluid hero-image"
+                    alt="AI Smart Attendance System">
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     LOGIN PORTAL
+====================================================== -->
+
+<section
+    id="portal"
+    class="login-portal-section">
+
+    <div class="container">
+
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                SYSTEM ACCESS
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                Choose Your Login
+            </h2>
+
+            <p class="lead text-light mt-3">
+
+                Select your role to access the
+                AI Smart Attendance System.
+
+            </p>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <!-- ADMIN -->
+
+            <div class="col-lg-4 col-md-6">
+
+                <div
+                    class="login-portal-card admin-login-card text-center">
+
+                    <div class="login-portal-icon text-primary">
+
+                        <i class="bi bi-shield-lock-fill"></i>
+
+                    </div>
+
+                    <h3>
+                        Admin
+                    </h3>
+
+                    <p class="text-light">
+
+                        Manage the complete attendance system,
+                        students, teachers, subjects and reports.
+
+                    </p>
+
+                    <a
+                        href="/login"
+                        class="btn btn-primary w-100 mt-3">
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Admin Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- TEACHER -->
+
+            <div class="col-lg-4 col-md-6">
+
+                <div
+                    class="login-portal-card teacher-login-card text-center">
+
+                    <div class="login-portal-icon text-info">
+
+                        <i class="bi bi-person-workspace"></i>
+
+                    </div>
+
+                    <h3>
+                        Teacher
+                    </h3>
+
+                    <p class="text-light">
+
+                        Open attendance sessions,
+                        use Face/QR attendance and
+                        manage attendance reports.
+
+                    </p>
+
+                    <a
+                        href="/teacher/login"
+                        class="btn btn-info text-dark w-100 mt-3">
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Teacher Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- STUDENT -->
+
+            <div class="col-lg-4 col-md-6 mx-auto">
+
+                <div
+                    class="login-portal-card student-login-card text-center">
+
+                    <div class="login-portal-icon text-success">
+
+                        <i class="bi bi-person-badge-fill"></i>
+
+                    </div>
+
+                    <h3>
+                        Student
+                    </h3>
+
+                    <span class="student-badge mb-3">
+
+                        <i class="bi bi-mortarboard-fill"></i>
+                        Student Portal
+
+                    </span>
+
+                    <p class="text-light">
+
+                        Students can securely login
+                        to view their attendance,
+                        subjects and personal information.
+
+                    </p>
+
+                    <a
+                        href="/student/login"
+                        class="btn btn-success w-100 mt-3">
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Student Login
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOGIN TABLE -->
+
+        <div class="mt-5">
+
+            <div class="login-table-wrapper">
+
+                <div class="table-responsive">
+
+                    <table class="table login-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Role</th>
+
+                                <th>Access</th>
+
+                                <th>Main Features</th>
+
+                                <th class="text-center">
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+
+                            <!-- ADMIN -->
+
+                            <tr>
+
+                                <td>
+
+                                    <span
+                                        class="login-role-icon admin-role-icon">
+
+                                        <i class="bi bi-shield-lock-fill"></i>
+
+                                    </span>
+
+                                    <strong>
+                                        Admin
+                                    </strong>
+
+                                </td>
+
+                                <td>
+                                    Full System Access
+                                </td>
+
+                                <td>
+                                    Students,
+                                    Teachers,
+                                    Subjects,
+                                    Attendance,
+                                    Reports
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a
+                                        href="/login"
+                                        class="btn btn-primary btn-sm">
+
+                                        Login
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                            <!-- TEACHER -->
+
+                            <tr>
+
+                                <td>
+
+                                    <span
+                                        class="login-role-icon teacher-role-icon">
+
+                                        <i class="bi bi-person-workspace"></i>
+
+                                    </span>
+
+                                    <strong>
+                                        Teacher
+                                    </strong>
+
+                                </td>
+
+                                <td>
+                                    Teacher Dashboard
+                                </td>
+
+                                <td>
+                                    Attendance Session,
+                                    Face Recognition,
+                                    QR,
+                                    Reports
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a
+                                        href="/teacher/login"
+                                        class="btn btn-info btn-sm text-dark">
+
+                                        Login
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                            <!-- STUDENT -->
+
+                            <tr>
+
+                                <td>
+
+                                    <span
+                                        class="login-role-icon student-role-icon">
+
+                                        <i class="bi bi-person-badge-fill"></i>
+
+                                    </span>
+
+                                    <strong>
+                                        Student
+                                    </strong>
+
+                                </td>
+
+                                <td>
+                                    Student Dashboard
+                                </td>
+
+                                <td>
+                                    Attendance,
+                                    Subjects,
+                                    Profile,
+                                    Personal Records
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a
+                                        href="/student/login"
+                                        class="btn btn-success btn-sm">
+
+                                        Login
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FEATURES
+====================================================== -->
+
+<section
+    id="features"
+    class="py-5">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                WHY CHOOSE US
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                Smarter Attendance with AI
+            </h2>
+
+            <p class="lead text-light mt-3">
+
+                Replace traditional attendance systems with
+                Artificial Intelligence,
+                Face Recognition and QR Code technology.
+
+            </p>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-camera-video-fill"></i>
+                    </div>
+
+                    <h4>
+                        AI Face Recognition
+                    </h4>
+
+                    <p>
+                        Automatically recognizes registered
+                        students within seconds using
+                        OpenCV Face Recognition technology.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-qr-code-scan"></i>
+                    </div>
+
+                    <h4>
+                        QR Attendance
+                    </h4>
+
+                    <p>
+                        Students can mark attendance
+                        instantly using secure QR codes.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+
+                    <h4>
+                        Real Time Dashboard
+                    </h4>
+
+                    <p>
+                        Monitor attendance,
+                        students,
+                        teachers
+                        and reports in real time.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+
+                    <h4>
+                        Highly Secure
+                    </h4>
+
+                    <p>
+                        Duplicate attendance prevention
+                        with AI verification and
+                        database validation.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                    </div>
+
+                    <h4>
+                        Analytics
+                    </h4>
+
+                    <p>
+                        Generate daily,
+                        weekly,
+                        monthly attendance reports
+                        with graphical analytics.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <div class="feature-card">
+
+                    <div class="feature-icon">
+                        <i class="bi bi-cloud-check-fill"></i>
+                    </div>
+
+                    <h4>
+                        Cloud Ready
+                    </h4>
+
+                    <p>
+                        Hosting ready architecture using
+                        Flask,
+                        MySQL and modern web technologies.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     ABOUT
+====================================================== -->
+
+<section
+    id="about"
+    class="py-5 bg-dark">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+
+            <div class="col-lg-6">
+
+                <img
+                    src="{{ url_for('static', filename='images/dashboard.png') }}"
+                    class="img-fluid dashboard-preview"
+                    alt="Dashboard Preview">
+
+            </div>
+
+
+            <div class="col-lg-6">
+
+                <span class="hero-badge">
+                    ABOUT SYSTEM
+                </span>
+
+                <h2 class="display-4 fw-bold mt-4">
+                    Professional Attendance Management
+                </h2>
+
+                <p class="mt-4">
+
+                    AI Smart Attendance System combines
+                    Artificial Intelligence,
+                    Face Recognition,
+                    QR Code,
+                    Flask and MySQL
+                    to automate attendance with high accuracy.
+
+                </p>
+
+
+                <div class="row mt-5">
+
+                    <div class="col-6">
+
+                        <h3 class="text-info">
+                            100%
+                        </h3>
+
+                        <p>
+                            Paperless Attendance
+                        </p>
+
+                    </div>
+
+
+                    <div class="col-6">
+
+                        <h3 class="text-success">
+                            24/7
+                        </h3>
+
+                        <p>
+                            Available
+                        </p>
+
+                    </div>
+
+
+                    <div class="col-6 mt-4">
+
+                        <h3 class="text-warning">
+                            AI
+                        </h3>
+
+                        <p>
+                            Face Detection
+                        </p>
+
+                    </div>
+
+
+                    <div class="col-6 mt-4">
+
+                        <h3 class="text-danger">
+                            QR
+                        </h3>
+
+                        <p>
+                            Attendance
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     WORKFLOW
+====================================================== -->
+
+<section
+    id="workflow"
+    class="py-5">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                SYSTEM WORKFLOW
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                How It Works
+            </h2>
+
+            <p class="lead text-light">
+                Attendance is completed in four
+                simple intelligent steps.
+            </p>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="step-card text-center">
+
+                    <div class="step-number">
+                        1
+                    </div>
+
+                    <i class="bi bi-person-plus-fill display-3 text-primary"></i>
+
+                    <h4 class="mt-4">
+                        Register
+                    </h4>
+
+                    <p>
+                        Register students and teachers
+                        into the system.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="step-card text-center">
+
+                    <div class="step-number">
+                        2
+                    </div>
+
+                    <i class="bi bi-camera-video-fill display-3 text-success"></i>
+
+                    <h4 class="mt-4">
+                        Detect
+                    </h4>
+
+                    <p>
+                        AI recognizes faces or scans
+                        QR Code instantly.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="step-card text-center">
+
+                    <div class="step-number">
+                        3
+                    </div>
+
+                    <i class="bi bi-database-check display-3 text-warning"></i>
+
+                    <h4 class="mt-4">
+                        Store
+                    </h4>
+
+                    <p>
+                        Attendance is saved automatically
+                        inside MySQL.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="step-card text-center">
+
+                    <div class="step-number">
+                        4
+                    </div>
+
+                    <i class="bi bi-bar-chart-fill display-3 text-danger"></i>
+
+                    <h4 class="mt-4">
+                        Reports
+                    </h4>
+
+                    <p>
+                        Generate reports and analytics
+                        instantly.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     LIVE STATISTICS
+====================================================== -->
+
+<section class="py-5 bg-dark">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                LIVE SYSTEM STATUS
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                Real Time Statistics
+            </h2>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="glass-card text-center">
+
+                    <i class="bi bi-people-fill display-3 text-primary"></i>
+
+                    <h1 class="counter">
+                        {{ total_students }}
+                    </h1>
+
+                    <p>
+                        Registered Students
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="glass-card text-center">
+
+                    <i class="bi bi-person-workspace display-3 text-success"></i>
+
+                    <h1 class="counter">
+                        {{ total_teachers }}
+                    </h1>
+
+                    <p>
+                        Teachers
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="glass-card text-center">
+
+                    <i class="bi bi-book-half display-3 text-warning"></i>
+
+                    <h1 class="counter">
+                        {{ total_subjects }}
+                    </h1>
+
+                    <p>
+                        Subjects
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="glass-card text-center">
+
+                    <i class="bi bi-calendar-check-fill display-3 text-danger"></i>
+
+                    <h1 class="counter">
+                        {{ today_attendance }}
+                    </h1>
+
+                    <p>
+                        Today's Attendance
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     TECHNOLOGY
+====================================================== -->
+
+<section
+    id="technology"
+    class="py-5">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                TECHNOLOGY
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                Powered By Modern Technologies
+            </h2>
+
+            <p class="lead text-light">
+                Built using reliable and modern
+                open-source technologies.
+            </p>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-filetype-py display-3 text-warning"></i>
+
+                    <h5 class="mt-3">
+                        Python
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-window display-3 text-primary"></i>
+
+                    <h5 class="mt-3">
+                        Flask
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-camera-fill display-3 text-success"></i>
+
+                    <h5 class="mt-3">
+                        OpenCV
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-database-fill display-3 text-info"></i>
+
+                    <h5 class="mt-3">
+                        MySQL
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-bootstrap-fill display-3"></i>
+
+                    <h5 class="mt-3">
+                        Bootstrap
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-2 col-md-4 col-6">
+
+                <div class="tech-card">
+
+                    <i class="bi bi-cpu-fill display-3 text-danger"></i>
+
+                    <h5 class="mt-3">
+                        Artificial Intelligence
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     DASHBOARD PREVIEW
+====================================================== -->
+
+<section class="py-5 bg-dark">
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+
+            <div class="col-lg-6">
+
+                <span class="hero-badge">
+                    ADMIN DASHBOARD
+                </span>
+
+                <h2 class="display-4 fw-bold mt-4">
+                    Powerful Management Dashboard
+                </h2>
+
+                <p class="mt-4 text-light">
+
+                    Manage students, teachers, subjects,
+                    attendance, QR attendance,
+                    Face Recognition, reports and analytics
+                    from one modern dashboard.
+
+                </p>
+
+
+                <ul class="list-unstyled mt-4">
+
+                    <li class="mb-3">
+                        ✅ Face Recognition Attendance
+                    </li>
+
+                    <li class="mb-3">
+                        ✅ QR Code Attendance
+                    </li>
+
+                    <li class="mb-3">
+                        ✅ Student Management
+                    </li>
+
+                    <li class="mb-3">
+                        ✅ Teacher Management
+                    </li>
+
+                    <li class="mb-3">
+                        ✅ Attendance Reports
+                    </li>
+
+                    <li class="mb-3">
+                        ✅ Analytics Dashboard
+                    </li>
+
+                </ul>
+
+
+                <a
+                    href="/login"
+                    class="btn btn-primary btn-lg mt-3">
+
+                    Open Dashboard
+
+                </a>
+
+            </div>
+
+
+            <div class="col-lg-6 text-center mt-5 mt-lg-0">
+
+                <img
+                    src="{{ url_for('static', filename='images/dashboard.png') }}"
+                    class="dashboard-preview img-fluid"
+                    alt="Dashboard">
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     REAL USER TESTIMONIALS
+====================================================== -->
+
+{% if feedbacks %}
+
+<section class="py-5">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                USER FEEDBACK
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                What Our Users Say
+            </h2>
+
+            <p class="lead text-light mt-3">
+                Real feedback from users of AI Smart Attendance System.
+            </p>
+
+        </div>
+
+
+        <div class="row g-4 justify-content-center">
+
+
+            {% for feedback in feedbacks %}
+
+            <div class="col-lg-4 col-md-6">
+
+                <div class="testimonial-card h-100">
+
+                    <div
+                        class="testimonial-img d-flex align-items-center justify-content-center mx-auto">
+
+                        <i class="bi bi-person-fill"></i>
+
+                    </div>
+
+
+                    <h4 class="mt-4">
+                        {{ feedback[0] }}
+                    </h4>
+
+
+                    <div class="mt-2">
+
+                        {% set rating = feedback[1]|int %}
+
+                        {% for i in range(1, 6) %}
+
+                            {% if i <= rating %}
+
+                                <i
+                                    class="bi bi-star-fill text-warning">
+                                </i>
+
+                            {% else %}
+
+                                <i
+                                    class="bi bi-star text-secondary">
+                                </i>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <p class="mt-3">
+                        "{{ feedback[2] }}"
+                    </p>
+
+
+                    {% if feedback[3] %}
+
+                    <small class="text-light opacity-50">
+
+                        <i class="bi bi-calendar3 me-1"></i>
+
+                        {{ feedback[3].strftime('%d %b %Y') }}
+
+                    </small>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endif %}
+
+
+
+<!-- =====================================================
+     FAQ
+====================================================== -->
+
+<section class="py-5 bg-dark">
+
+    <div class="container">
+
+        <div class="text-center mb-5">
+
+            <span class="hero-badge">
+                FAQ
+            </span>
+
+            <h2 class="display-4 fw-bold mt-4">
+                Frequently Asked Questions
+            </h2>
+
+        </div>
+
+
+        <div
+            class="accordion accordion-flush"
+            id="faq">
+
+
+            <!-- FAQ 1 -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#faq1">
+
+                        How does Face Recognition work?
+
+                    </button>
+
+                </h2>
+
+
+                <div
+                    id="faq1"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#faq">
+
+                    <div class="accordion-body">
+
+                        The system detects registered students
+                        using OpenCV Face Recognition.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FAQ 2 -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#faq2">
+
+                        Can QR Attendance be used?
+
+                    </button>
+
+                </h2>
+
+
+                <div
+                    id="faq2"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#faq">
+
+                    <div class="accordion-body">
+
+                        Yes.
+                        Every student receives a unique
+                        QR Code to mark attendance.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FAQ 3 -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#faq3">
+
+                        Can reports be exported?
+
+                    </button>
+
+                </h2>
+
+
+                <div
+                    id="faq3"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#faq">
+
+                    <div class="accordion-body">
+
+                        Yes.
+                        Attendance reports can be exported
+                        to PDF and Excel.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CALL TO ACTION
+====================================================== -->
+
+<section class="py-5 text-center">
+
+    <div class="container">
+
+        <span class="hero-badge">
+            GET STARTED
+        </span>
+
+        <h2 class="display-4 fw-bold mt-4">
+            Ready to Modernize Your Attendance System?
+        </h2>
+
+        <p class="lead text-light mt-4">
+
+            Experience AI-powered attendance with
+            Face Recognition,
+            QR Code technology and real-time analytics.
+
+        </p>
+
+
+        <div class="mt-5">
+
+            <a
+                href="/login"
+                class="btn btn-primary btn-lg me-2 mb-2">
+
+                <i class="bi bi-shield-lock-fill"></i>
+                Admin Login
+
+            </a>
+
+
+            <a
+                href="/teacher/login"
+                class="btn btn-outline-light btn-lg me-2 mb-2">
+
+                <i class="bi bi-person-workspace"></i>
+                Teacher Login
+
+            </a>
+
+
+            <a
+                href="/student/login"
+                class="btn btn-success btn-lg mb-2">
+
+                <i class="bi bi-person-badge-fill"></i>
+                Student Login
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     FEEDBACK MODAL
+====================================================== -->
+
+<div
+    class="modal fade"
+    id="feedbackModal"
+    tabindex="-1"
+    aria-labelledby="feedbackModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+
+        <div class="modal-content feedback-modal-content">
+
+
+            <!-- MODAL HEADER -->
+
+            <div class="modal-header border-0">
+
+                <div>
+
+                    <span class="hero-badge">
+                        USER FEEDBACK
+                    </span>
+
+                    <h3
+                        class="modal-title fw-bold mt-3"
+                        id="feedbackModalLabel">
+
+                        Share Your Experience
+
+                    </h3>
+
+                    <p class="text-light mb-0 mt-2">
+
+                        Your feedback helps us improve
+                        AI Smart Attendance System.
+
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                    aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <!-- MODAL BODY -->
+
+            <div class="modal-body">
+
+                <form
+                    method="POST"
+                    action="{{ url_for('feedback.submit_feedback') }}">
+
+
+                    <!-- NAME -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            <i class="bi bi-person-fill me-1"></i>
+                            Name
+
+                        </label>
+
+                        <input
+                            type="text"
+                            name="name"
+                            class="form-control"
+                            placeholder="Enter your name"
+                            required>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            <i class="bi bi-envelope-fill me-1"></i>
+                            Email
+
+                        </label>
+
+                        <input
+                            type="email"
+                            name="email"
+                            class="form-control"
+                            placeholder="Enter your email">
+
+                    </div>
+
+
+                    <!-- RATING -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            <i class="bi bi-star-fill me-1"></i>
+                            Rating
+
+                        </label>
+
+                        <select
+                            name="rating"
+                            class="form-select"
+                            required>
+
+                            <option value="5">
+                                ⭐⭐⭐⭐⭐ Excellent
+                            </option>
+
+                            <option value="4">
+                                ⭐⭐⭐⭐ Very Good
+                            </option>
+
+                            <option value="3">
+                                ⭐⭐⭐ Good
+                            </option>
+
+                            <option value="2">
+                                ⭐⭐ Average
+                            </option>
+
+                            <option value="1">
+                                ⭐ Poor
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            <i class="bi bi-chat-left-text-fill me-1"></i>
+                            Message
+
+                        </label>
+
+                        <textarea
+                            name="message"
+                            rows="5"
+                            class="form-control"
+                            placeholder="Write your feedback..."
+                            required></textarea>
+
+                    </div>
+
+
+                    <!-- BUTTONS -->
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancel
+
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary">
+
+                            <i class="bi bi-send-fill me-1"></i>
+                            Submit Feedback
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     FOOTER
+====================================================== -->
+
+<footer class="footer-section">
+
+    <div class="container">
+
+        <div class="row gy-4">
+
+
+            <!-- ABOUT -->
+
+            <div class="col-lg-4">
+
+                <h3>
+                    🤖 AI Smart Attendance
+                </h3>
+
+                <p class="mt-4">
+
+                    A complete attendance management solution
+                    powered by Artificial Intelligence,
+                    Face Recognition,
+                    QR Code,
+                    Flask and MySQL.
+
+                </p>
+
+            </div>
+
+
+            <!-- QUICK LINKS -->
+
+            <div class="col-lg-4">
+
+                <h4>
+                    Quick Links
+                </h4>
+
+                <ul class="list-unstyled mt-4">
+
+                    <li class="mb-2">
+
+                        <a href="#home">
+                            Home
+                        </a>
+
+                    </li>
+
+                    <li class="mb-2">
+
+                        <a href="#features">
+                            Features
+                        </a>
+
+                    </li>
+
+                    <li class="mb-2">
+
+                        <a href="#portal">
+                            Login Portal
+                        </a>
+
+                    </li>
+
+                    <li class="mb-2">
+
+                        <a href="#about">
+                            About
+                        </a>
+
+                    </li>
+
+                    <li class="mb-2">
+
+                        <a href="#workflow">
+                            Workflow
+                        </a>
+
+                    </li>
+
+                    <li class="mb-2">
+
+                        <a href="#technology">
+                            Technology
+                        </a>
+
+                    </li>
+
+
+                    <!-- CONTACT -->
+
+                    <li class="mb-2">
+
+                        <a href="/contact">
+
+                            <i class="bi bi-envelope-fill me-1"></i>
+                            Contact Us
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- FEEDBACK -->
+
+                    <li class="mb-2">
+
+                        <a
+                            href="#"
+                            data-bs-toggle="modal"
+                            data-bs-target="#feedbackModal">
+
+                            <i class="bi bi-chat-square-text-fill me-1"></i>
+                            Feedback
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <!-- CONTACT -->
+
+            <div class="col-lg-4">
+
+                <h4>
+                    Contact Us
+                </h4>
+
+                <p class="mt-4 footer-contact-item">
+
+                    <i class="bi bi-envelope-fill"></i>
+
+                    <span>
+                        khagendrabohora2062@gmail.com
+                    </span>
+
+                </p>
+
+                <p class="footer-contact-item">
+
+                    <i class="bi bi-telephone-fill"></i>
+
+                    <span>
+                        +977 9742217886
+                    </span>
+
+                </p>
+
+                <p class="footer-contact-item">
+
+                    <i class="bi bi-geo-alt-fill"></i>
+
+                    <span>
+                        Nepal
+                    </span>
+
+                </p>
+
+
+                <!-- =================================================
+                     SOCIAL MEDIA LINKS
+                ================================================== -->
+
+                <div class="mt-4 social-links">
+
+
+                    <!-- FACEBOOK -->
+
+                    <a
+                        href="https://www.facebook.com/khagendra.bohora.108307"
+                        class="me-3"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Facebook"
+                        title="Facebook">
+
+                        <i class="bi bi-facebook fs-4"></i>
+
+                    </a>
+
+
+                    <!-- GITHUB -->
+
+                    <a
+                        href="https://github.com/khagendrabohora2062-blip"
+                        class="me-3"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="GitHub"
+                        title="GitHub">
+
+                        <i class="bi bi-github fs-4"></i>
+
+                    </a>
+
+
+                    <!-- LINKEDIN -->
+
+                    <a
+                        href="https://www.linkedin.com/in/khagendra-bohora-54a185430/"
+                        class="me-3"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="LinkedIn"
+                        title="LinkedIn">
+
+                        <i class="bi bi-linkedin fs-4"></i>
+
+                    </a>
+
+
+                    <!-- YOUTUBE -->
+
+                    <a
+                        href="https://www.youtube.com/@KHAGENDRABOHORA-t9r"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="YouTube"
+                        title="YouTube">
+
+                        <i class="bi bi-youtube fs-4"></i>
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <hr class="my-5">
+
+
+        <div class="text-center">
+
+            <p class="mb-2">
+
+                © 2026 AI Smart Attendance System
+
+            </p>
+
+            <p>
+
+                Designed & Developed By
+
+                <strong>
+                    Khagendra Bohora
+                </strong>
+
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+
+<!-- =====================================================
+     BACK TO TOP
+====================================================== -->
+
+<button
+    id="backToTop"
+    class="btn btn-primary"
+    aria-label="Back to top">
+
+    <i class="bi bi-arrow-up"></i>
+
+</button>
+
+
+
+<!-- =====================================================
+     BOOTSTRAP JS
+====================================================== -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+
+<!-- =====================================================
+     LANDING JS
+====================================================== -->
+
+<script
+    src="{{ url_for('static', filename='js/landing.js') }}">
+</script>
+
+
+
+<!-- =====================================================
+     MOBILE NAVBAR AUTO CLOSE
+====================================================== -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const navLinks = document.querySelectorAll(
+        "#mainNavbar .nav-link"
+    );
+
+    const navbarCollapse =
+        document.getElementById("mainNavbar");
+
+
+    navLinks.forEach(function (link) {
+
+        link.addEventListener("click", function () {
+
+            if (window.innerWidth < 992) {
+
+                const bsCollapse =
+                    bootstrap.Collapse.getInstance(
+                        navbarCollapse
+                    );
+
+                if (bsCollapse) {
+
+                    bsCollapse.hide();
+
+                } else {
+
+                    new bootstrap.Collapse(
+                        navbarCollapse,
+                        {
+                            toggle: false
+                        }
+                    ).hide();
+
+                }
+
+            }
+
+        });
+
+    });
+
+});
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        My Subjects - AI Smart Attendance
+    </title>
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Student CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/student.css') }}?v=20260819">
+
+    <style>
+
+
+        /* =====================================================
+           SHARED STUDENT LAYOUT FIX
+        ===================================================== */
+
+        .student-main.subjects-page {
+            margin-left: 260px !important;
+            width: calc(100% - 260px) !important;
+            min-height: 100vh;
+            box-sizing: border-box;
+            padding: 20px 24px 40px;
+        }
+
+        @media (max-width: 768px) {
+            .student-main.subjects-page {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 15px;
+            }
+        }
+
+        /* =====================================================
+           SUBJECT PAGE
+        ===================================================== */
+
+        .subjects-page {
+            padding-bottom: 40px;
+        }
+
+        /* =====================================================
+           PAGE HEADER
+        ===================================================== */
+
+        .subjects-header {
+
+            background: linear-gradient(
+                135deg,
+                #0d6efd,
+                #6610f2
+            );
+
+            border-radius: 20px;
+
+            padding: 30px;
+
+            color: white;
+
+            margin-bottom: 25px;
+
+            box-shadow:
+                0 12px 30px rgba(13, 110, 253, 0.20);
+        }
+
+        .subjects-header h2 {
+
+            font-weight: 700;
+
+            margin-top: 8px;
+
+            margin-bottom: 7px;
+        }
+
+        .subjects-header p {
+
+            margin: 0;
+
+            opacity: 0.85;
+
+            font-size: 14px;
+        }
+
+        .subjects-header-icon {
+
+            width: 75px;
+            height: 75px;
+
+            border-radius: 20px;
+
+            background:
+                rgba(255,255,255,0.15);
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 34px;
+        }
+
+        /* =====================================================
+           SUMMARY
+        ===================================================== */
+
+        .subject-summary {
+
+            background: white;
+
+            border: 1px solid #edf0f5;
+
+            border-radius: 18px;
+
+            padding: 22px;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.05);
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            height: 100%;
+        }
+
+        .subject-summary-icon {
+
+            width: 55px;
+            height: 55px;
+
+            border-radius: 15px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-size: 23px;
+        }
+
+        .subject-summary-icon.blue {
+            background: #e8f1ff;
+            color: #0d6efd;
+        }
+
+        .subject-summary-icon.green {
+            background: #e8f8f0;
+            color: #198754;
+        }
+
+        .subject-summary-icon.red {
+            background: #fdeaea;
+            color: #dc3545;
+        }
+
+        .subject-summary-icon.purple {
+            background: #f0e9ff;
+            color: #6f42c1;
+        }
+
+        .subject-summary span {
+
+            color: #7d8795;
+
+            font-size: 13px;
+        }
+
+        .subject-summary h3 {
+
+            margin: 3px 0 0;
+
+            font-weight: 700;
+
+            color: #202938;
+        }
+
+        /* =====================================================
+           SEARCH CARD
+        ===================================================== */
+
+        .subject-filter-card {
+
+            background: white;
+
+            border: 1px solid #edf0f5;
+
+            border-radius: 18px;
+
+            padding: 22px;
+
+            margin-top: 25px;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.05);
+        }
+
+        .subject-filter-card label {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #5f6878;
+
+            margin-bottom: 7px;
+        }
+
+        .subject-filter-card input {
+
+            min-height: 44px;
+
+            border-radius: 10px;
+
+            border: 1px solid #dfe4ec;
+        }
+
+        .subject-filter-card input:focus {
+
+            border-color: #0d6efd;
+
+            box-shadow:
+                0 0 0 3px rgba(13,110,253,0.10);
+        }
+
+        /* =====================================================
+           SUBJECT TABLE
+        ===================================================== */
+
+        .subjects-table-card {
+
+            background: white;
+
+            border: 1px solid #edf0f5;
+
+            border-radius: 18px;
+
+            margin-top: 25px;
+
+            overflow: hidden;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.05);
+        }
+
+        .subjects-table-header {
+
+            padding: 22px 25px;
+
+            border-bottom: 1px solid #edf0f5;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .subjects-table-header h5 {
+
+            margin: 0;
+
+            font-weight: 700;
+
+            color: #202938;
+        }
+
+        .subjects-table-header span {
+
+            display: block;
+
+            color: #8a93a2;
+
+            font-size: 13px;
+
+            margin-top: 4px;
+        }
+
+        .subjects-table {
+
+            margin: 0;
+        }
+
+        .subjects-table thead th {
+
+            background: #f8f9fc;
+
+            color: #687386;
+
+            font-size: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.4px;
+
+            font-weight: 600;
+
+            padding: 16px 18px;
+
+            border: none;
+
+            white-space: nowrap;
+        }
+
+        .subjects-table tbody td {
+
+            padding: 18px;
+
+            vertical-align: middle;
+
+            border-color: #f0f2f6;
+
+            color: #3f4858;
+
+            font-size: 14px;
+        }
+
+        .subjects-table tbody tr {
+
+            transition: 0.2s ease;
+        }
+
+        .subjects-table tbody tr:hover {
+
+            background: #f8fbff;
+        }
+
+        /* =====================================================
+           SUBJECT CODE
+        ===================================================== */
+
+        .subject-code-box {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 7px 11px;
+
+            border-radius: 8px;
+
+            background: #e8f1ff;
+
+            color: #0d6efd;
+
+            font-weight: 700;
+
+            font-size: 12px;
+        }
+
+        .subject-name {
+
+            font-weight: 600;
+
+            color: #202938;
+        }
+
+        /* =====================================================
+           TEACHER
+        ===================================================== */
+
+        .teacher-box {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            min-width: 170px;
+        }
+
+        .teacher-icon {
+
+            width: 38px;
+
+            height: 38px;
+
+            border-radius: 50%;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #e8f1ff;
+
+            color: #0d6efd;
+
+            font-size: 16px;
+
+            flex-shrink: 0;
+        }
+
+        .teacher-info {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 2px;
+        }
+
+        .teacher-label {
+
+            font-size: 10px;
+
+            color: #8a93a2;
+
+            text-transform: uppercase;
+
+            font-weight: 600;
+
+            letter-spacing: 0.4px;
+        }
+
+        .teacher-name {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #202938;
+
+            white-space: nowrap;
+        }
+
+        /* =====================================================
+           SEMESTER BADGE
+        ===================================================== */
+
+        .semester-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            background: #f0e9ff;
+
+            color: #6f42c1;
+
+            padding: 7px 10px;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+
+            font-weight: 600;
+
+            white-space: nowrap;
+        }
+
+        /* =====================================================
+           ATTENDANCE
+        ===================================================== */
+
+        .attendance-progress {
+
+            min-width: 150px;
+        }
+
+        .attendance-progress-top {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 6px;
+        }
+
+        .attendance-progress-top strong {
+
+            font-size: 13px;
+
+            color: #202938;
+        }
+
+        .attendance-progress .progress {
+
+            height: 7px;
+
+            border-radius: 20px;
+
+            background: #edf0f5;
+        }
+
+        .attendance-progress .progress-bar {
+
+            border-radius: 20px;
+        }
+
+        /* =====================================================
+           COUNT BADGES
+        ===================================================== */
+
+        .count-badge {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            min-width: 35px;
+
+            padding: 6px 9px;
+
+            border-radius: 8px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+        .count-badge.present {
+
+            background: #e8f8f0;
+
+            color: #198754;
+        }
+
+        .count-badge.absent {
+
+            background: #fdeaea;
+
+            color: #dc3545;
+        }
+
+        .count-badge.total {
+
+            background: #e8f1ff;
+
+            color: #0d6efd;
+        }
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .subjects-empty {
+
+            text-align: center;
+
+            padding: 70px 20px;
+
+            color: #8a93a2;
+        }
+
+        .subjects-empty i {
+
+            font-size: 55px;
+
+            opacity: 0.45;
+        }
+
+        .subjects-empty h5 {
+
+            margin-top: 18px;
+
+            color: #4b5565;
+
+            font-weight: 600;
+        }
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media (max-width: 768px) {
+
+            .subjects-header {
+
+                padding: 22px;
+            }
+
+            .subjects-header-icon {
+
+                width: 60px;
+
+                height: 60px;
+
+                font-size: 28px;
+            }
+
+            .subjects-table {
+
+                min-width: 1050px;
+            }
+
+            .subjects-table-header {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 10px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SHARED STUDENT SIDEBAR
+===================================================== -->
+
+{% include 'layouts/student_sidebar.html' %}
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<div class="student-main subjects-page">
+
+
+    <!-- =================================================
+         TOPBAR
+    ================================================= -->
+
+    <div class="student-topbar">
+
+        <div>
+
+            <h4>
+                My Subjects
+            </h4>
+
+            <p>
+                View your enrolled subjects and attendance performance
+            </p>
+
+        </div>
+
+
+        <div class="topbar-right">
+
+            <div class="student-id-box">
+
+                <i class="bi bi-person-badge-fill"></i>
+
+                {{ session.get('student_id') }}
+
+            </div>
+
+
+            <div class="top-profile">
+
+                {% if session.get('student_photo') %}
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/students/' + session.get('student_photo')
+                        ) }}"
+                        alt="Profile">
+
+                {% else %}
+
+                    <i class="bi bi-person-circle"></i>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         FLASH
+    ================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert">
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =================================================
+         HEADER
+    ================================================= -->
+
+    <div class="subjects-header">
+
+        <div class="row align-items-center">
+
+            <div class="col">
+
+                <span class="small opacity-75">
+                    STUDENT ACADEMIC PORTAL
+                </span>
+
+                <h2>
+                    My Subjects 📚
+                </h2>
+
+                <p>
+                    View your subjects, assigned teachers and
+                    attendance performance for each subject.
+                </p>
+
+            </div>
+
+
+            <div class="col-auto">
+
+                <div class="subjects-header-icon">
+
+                    <i class="bi bi-journal-bookmark-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SUMMARY
+    ================================================= -->
+
+    {% set subject_count = subjects|length %}
+
+    {% set total_classes = subjects
+        |sum(attribute='total')
+    %}
+
+    {% set total_present = subjects
+        |sum(attribute='present')
+    %}
+
+    {% set total_absent = subjects
+        |sum(attribute='absent')
+    %}
+
+
+    <div class="row g-4">
+
+        <!-- TOTAL SUBJECTS -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="subject-summary">
+
+                <div class="subject-summary-icon blue">
+
+                    <i class="bi bi-book-fill"></i>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Subjects
+                    </span>
+
+                    <h3>
+                        {{ subject_count }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL CLASSES -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="subject-summary">
+
+                <div class="subject-summary-icon purple">
+
+                    <i class="bi bi-calendar3"></i>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Classes
+                    </span>
+
+                    <h3>
+                        {{ total_classes }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRESENT -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="subject-summary">
+
+                <div class="subject-summary-icon green">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Present
+                    </span>
+
+                    <h3>
+                        {{ total_present }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ABSENT -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="subject-summary">
+
+                <div class="subject-summary-icon red">
+
+                    <i class="bi bi-x-circle-fill"></i>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Total Absent
+                    </span>
+
+                    <h3>
+                        {{ total_absent }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         SEARCH
+    ================================================= -->
+
+    <div class="subject-filter-card">
+
+        <div class="row align-items-end g-3">
+
+            <div class="col-lg-8">
+
+                <label>
+                    Search Subject or Teacher
+                </label>
+
+                <div class="input-group">
+
+                    <span class="input-group-text bg-white">
+
+                        <i class="bi bi-search text-primary"></i>
+
+                    </span>
+
+                    <input
+                        type="text"
+                        id="subjectSearch"
+                        class="form-control"
+                        placeholder="Search by subject code, subject name or teacher name...">
+
+                </div>
+
+            </div>
+
+
+            <div class="col-lg-4">
+
+                <button
+                    type="button"
+                    id="resetSearch"
+                    class="btn btn-outline-secondary w-100">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                    Reset Search
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         TABLE
+    ================================================= -->
+
+    <div class="subjects-table-card">
+
+        <div class="subjects-table-header">
+
+            <div>
+
+                <h5>
+                    Subject List
+                </h5>
+
+                <span>
+                    Your semester-wise subjects, teachers and attendance
+                </span>
+
+            </div>
+
+
+            <a
+                href="{{ url_for('student_auth.dashboard') }}"
+                class="btn btn-outline-primary btn-sm">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Dashboard
+
+            </a>
+
+        </div>
+
+
+        <div class="table-responsive">
+
+            <table
+                class="table subjects-table"
+                id="subjectsTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            #
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Teacher
+                        </th>
+
+                        <th>
+                            Semester
+                        </th>
+
+                        <th>
+                            Total Classes
+                        </th>
+
+                        <th>
+                            Present
+                        </th>
+
+                        <th>
+                            Absent
+                        </th>
+
+                        <th>
+                            Attendance
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% if subjects %}
+
+                        {% for subject in subjects %}
+
+                            <tr
+                                data-search="
+                                    {{ subject.code|lower }}
+                                    {{ subject.name|lower }}
+                                    {{ subject.teacher_name|lower }}
+                                ">
+
+                                <!-- NUMBER -->
+
+                                <td>
+
+                                    <strong>
+                                        {{ loop.index }}
+                                    </strong>
+
+                                </td>
+
+
+                                <!-- SUBJECT -->
+
+                                <td>
+
+                                    <div class="subject-code-box">
+
+                                        {{ subject.code }}
+
+                                    </div>
+
+                                    <div class="subject-name mt-2">
+
+                                        {{ subject.name }}
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- TEACHER -->
+
+                                <td>
+
+                                    <div class="teacher-box">
+
+                                        <div class="teacher-icon">
+
+                                            <i class="bi bi-person-workspace"></i>
+
+                                        </div>
+
+                                        <div class="teacher-info">
+
+                                            <span class="teacher-label">
+                                                Teacher
+                                            </span>
+
+                                            <span class="teacher-name">
+
+                                                {{ subject.teacher_name }}
+
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- SEMESTER -->
+
+                                <td>
+
+                                    <span class="semester-badge">
+
+                                        <i class="bi bi-mortarboard-fill"></i>
+
+                                        Semester {{ subject.semester }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- TOTAL -->
+
+                                <td>
+
+                                    <span class="count-badge total">
+
+                                        {{ subject.total }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- PRESENT -->
+
+                                <td>
+
+                                    <span class="count-badge present">
+
+                                        {{ subject.present }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ABSENT -->
+
+                                <td>
+
+                                    <span class="count-badge absent">
+
+                                        {{ subject.absent }}
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ATTENDANCE -->
+
+                                <td>
+
+                                    <div class="attendance-progress">
+
+                                        <div class="attendance-progress-top">
+
+                                            <strong>
+                                                {{ subject.percentage }}%
+                                            </strong>
+
+                                            {% if subject.percentage >= 75 %}
+
+                                                <small class="text-success">
+                                                    Good
+                                                </small>
+
+                                            {% elif subject.percentage >= 50 %}
+
+                                                <small class="text-warning">
+                                                    Average
+                                                </small>
+
+                                            {% else %}
+
+                                                <small class="text-danger">
+                                                    Low
+                                                </small>
+
+                                            {% endif %}
+
+                                        </div>
+
+
+                                        <div class="progress">
+
+                                            <div
+                                                class="progress-bar
+                                                {% if subject.percentage >= 75 %}
+                                                    bg-success
+                                                {% elif subject.percentage >= 50 %}
+                                                    bg-warning
+                                                {% else %}
+                                                    bg-danger
+                                                {% endif %}"
+                                                style="width: {{ subject.percentage }}%">
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+
+                        <!-- NO SEARCH RESULT -->
+
+                        <tr
+                            id="noSubjectResult"
+                            style="display:none;">
+
+                            <td colspan="8">
+
+                                <div class="subjects-empty">
+
+                                    <i class="bi bi-search"></i>
+
+                                    <h5>
+                                        No Subject Found
+                                    </h5>
+
+                                    <p>
+                                        Try searching with another subject
+                                        code, subject name or teacher name.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+
+                    {% else %}
+
+                        <tr>
+
+                            <td colspan="8">
+
+                                <div class="subjects-empty">
+
+                                    <i class="bi bi-journal-x"></i>
+
+                                    <h5>
+                                        No Subjects Found
+                                    </h5>
+
+                                    <p>
+                                        No subjects are currently available
+                                        for your semester.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endif %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================= -->
+
+    <div class="student-footer mt-4">
+
+        <span>
+            © 2026 AI Smart Attendance System
+        </span>
+
+        <span>
+            Student Portal
+        </span>
+
+    </div>
+
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const searchInput =
+            document.getElementById(
+                "subjectSearch"
+            );
+
+        const resetButton =
+            document.getElementById(
+                "resetSearch"
+            );
+
+        const table =
+            document.getElementById(
+                "subjectsTable"
+            );
+
+        const noResult =
+            document.getElementById(
+                "noSubjectResult"
+            );
+
+
+        if (!searchInput || !table) {
+            return;
+        }
+
+
+        function searchSubjects() {
+
+            const search =
+                searchInput.value
+                    .toLowerCase()
+                    .trim();
+
+
+            const rows =
+                table.querySelectorAll(
+                    "tbody tr[data-search]"
+                );
+
+
+            let visibleCount = 0;
+
+
+            rows.forEach(
+                function (row) {
+
+                    const text =
+                        row.dataset.search || "";
+
+
+                    if (
+                        !search ||
+                        text.includes(search)
+                    ) {
+
+                        row.style.display = "";
+
+                        visibleCount++;
+
+                    } else {
+
+                        row.style.display = "none";
+
+                    }
+
+                }
+            );
+
+
+            if (noResult) {
+
+                noResult.style.display =
+                    visibleCount === 0
+                    ? ""
+                    : "none";
+
+            }
+
+        }
+
+
+        searchInput.addEventListener(
+            "input",
+            searchSubjects
+        );
+
+
+        if (resetButton) {
+
+            resetButton.addEventListener(
+                "click",
+                function () {
+
+                    searchInput.value = "";
+
+                    searchSubjects();
+
+                }
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+</body>
+
+</html>

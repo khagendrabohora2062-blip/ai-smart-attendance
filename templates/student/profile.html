@@ -1,0 +1,1081 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Profile - AI Smart Attendance{% endblock %}
+
+{% block content %}
+
+<div class="student-page">
+
+    <!-- PAGE HEADER -->
+    <div class="student-page-header">
+        <div>
+            <h1>My Profile</h1>
+            <p>View and update your student profile information.</p>
+        </div>
+
+        <div class="student-page-header-icon">
+            <i class="bi bi-person-circle"></i>
+        </div>
+    </div>
+
+
+    <!-- PROFILE CARD -->
+    <div class="profile-container">
+
+        <!-- LEFT PROFILE CARD -->
+        <div class="profile-summary-card">
+
+            <div class="profile-large-avatar">
+
+                {% if student and student[8] %}
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/students/' + student[8]
+                        ) }}"
+                        alt="Profile Photo">
+
+                {% else %}
+
+                    <i class="bi bi-person-fill"></i>
+
+                {% endif %}
+
+            </div>
+
+            <h2>
+                {{ student[2] }}
+            </h2>
+
+            <p class="student-id">
+                {{ student[1] }}
+            </p>
+
+            <div class="profile-status">
+                <span class="status-dot"></span>
+                Active Student
+            </div>
+
+            <div class="profile-summary-info">
+
+                <div>
+                    <i class="bi bi-building"></i>
+
+                    <span>
+                        {{ student[5] or 'Not Available' }}
+                    </span>
+                </div>
+
+                <div>
+                    <i class="bi bi-mortarboard-fill"></i>
+
+                    <span>
+                        Semester {{ student[6] or 'N/A' }}
+                    </span>
+                </div>
+
+                <div>
+                    <i class="bi bi-people-fill"></i>
+
+                    <span>
+                        Section {{ student[7] or 'N/A' }}
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT EDIT PROFILE -->
+        <div class="profile-edit-card">
+
+            <div class="profile-card-header">
+
+                <div>
+                    <h3>Personal Information</h3>
+
+                    <p>
+                        Update your personal information below.
+                    </p>
+                </div>
+
+                <i class="bi bi-person-vcard-fill"></i>
+
+            </div>
+
+
+            <form
+                method="POST"
+                enctype="multipart/form-data"
+                class="profile-form">
+
+                <!-- FULL NAME -->
+                <div class="form-group">
+
+                    <label for="full_name">
+                        Full Name
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-person"></i>
+
+                        <input
+                            type="text"
+                            id="full_name"
+                            name="full_name"
+                            value="{{ student[2] or '' }}"
+                            placeholder="Enter your full name"
+                            required>
+
+                    </div>
+
+                </div>
+
+
+                <!-- STUDENT ID -->
+                <div class="form-group">
+
+                    <label>
+                        Student ID
+                    </label>
+
+                    <div class="input-wrapper disabled-input">
+
+                        <i class="bi bi-person-badge"></i>
+
+                        <input
+                            type="text"
+                            value="{{ student[1] or '' }}"
+                            disabled>
+
+                    </div>
+
+                    <small>
+                        Student ID cannot be changed.
+                    </small>
+
+                </div>
+
+
+                <!-- EMAIL -->
+                <div class="form-group">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-envelope"></i>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ student[3] or '' }}"
+                            placeholder="Enter your email">
+
+                    </div>
+
+                </div>
+
+
+                <!-- PHONE -->
+                <div class="form-group">
+
+                    <label for="phone">
+                        Phone Number
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="bi bi-telephone"></i>
+
+                        <input
+                            type="text"
+                            id="phone"
+                            name="phone"
+                            value="{{ student[4] or '' }}"
+                            placeholder="Enter your phone number">
+
+                    </div>
+
+                </div>
+
+
+                <!-- DEPARTMENT -->
+                <div class="form-group">
+
+                    <label>
+                        Department
+                    </label>
+
+                    <div class="input-wrapper disabled-input">
+
+                        <i class="bi bi-building"></i>
+
+                        <input
+                            type="text"
+                            value="{{ student[5] or '' }}"
+                            disabled>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SEMESTER -->
+                <div class="form-group">
+
+                    <label>
+                        Semester
+                    </label>
+
+                    <div class="input-wrapper disabled-input">
+
+                        <i class="bi bi-book"></i>
+
+                        <input
+                            type="text"
+                            value="Semester {{ student[6] or 'N/A' }}"
+                            disabled>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PHOTO -->
+                <div class="form-group photo-upload-group">
+
+                    <label for="photo">
+                        Profile Photo
+                    </label>
+
+                    <div class="photo-upload-box">
+
+                        <div class="photo-preview">
+
+                            {% if student[8] %}
+
+                                <img
+                                    id="profilePreview"
+                                    src="{{ url_for(
+                                        'static',
+                                        filename='uploads/students/' + student[8]
+                                    ) }}"
+                                    alt="Profile">
+
+                            {% else %}
+
+                                <div
+                                    id="profilePreviewPlaceholder"
+                                    class="photo-placeholder">
+
+                                    <i class="bi bi-person-fill"></i>
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="photo-upload-content">
+
+                            <strong>
+                                Change Profile Photo
+                            </strong>
+
+                            <span>
+                                JPG, JPEG, PNG or WEBP
+                            </span>
+
+                            <label
+                                for="photo"
+                                class="upload-button">
+
+                                <i class="bi bi-upload"></i>
+                                Choose Photo
+
+                            </label>
+
+                            <input
+                                type="file"
+                                id="photo"
+                                name="photo"
+                                accept=".jpg,.jpeg,.png,.webp"
+                                hidden>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BUTTONS -->
+                <div class="profile-form-actions">
+
+                    <button
+                        type="submit"
+                        class="save-profile-btn">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        Save Changes
+
+                    </button>
+
+                    <a
+                        href="{{ url_for('student_auth.dashboard') }}"
+                        class="cancel-profile-btn">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.student-page {
+    padding: 28px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.student-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 24px;
+}
+
+.student-page-header h1 {
+    margin: 0;
+    color: #172033;
+    font-size: 28px;
+    font-weight: 750;
+}
+
+.student-page-header p {
+    margin: 6px 0 0;
+    color: #7b8494;
+    font-size: 13px;
+}
+
+.student-page-header-icon {
+    width: 50px;
+    height: 50px;
+
+    border-radius: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eaf1ff;
+    color: #2563eb;
+
+    font-size: 22px;
+}
+
+
+/* =========================================================
+   PROFILE LAYOUT
+========================================================= */
+
+.profile-container {
+    display: grid;
+
+    grid-template-columns: 280px minmax(0, 1fr);
+
+    gap: 22px;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   SUMMARY CARD
+========================================================= */
+
+.profile-summary-card {
+    background: #ffffff;
+
+    border: 1px solid #e8ecf2;
+
+    border-radius: 18px;
+
+    padding: 28px 20px;
+
+    text-align: center;
+
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+
+    height: fit-content;
+}
+
+
+.profile-large-avatar {
+    width: 105px;
+    height: 105px;
+
+    margin: 0 auto 15px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef2ff;
+
+    color: #64748b;
+
+    font-size: 48px;
+
+    border: 4px solid #ffffff;
+
+    box-shadow:
+        0 0 0 1px #e5e7eb,
+        0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.profile-large-avatar img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    display: block;
+}
+
+
+.profile-summary-card h2 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 18px;
+    font-weight: 700;
+}
+
+
+.student-id {
+    margin: 5px 0 12px;
+
+    color: #7b8494;
+
+    font-size: 12px;
+}
+
+
+.profile-status {
+    display: inline-flex;
+
+    align-items: center;
+    gap: 6px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    background: #ecfdf5;
+
+    color: #059669;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #10b981;
+}
+
+
+.profile-summary-info {
+    margin-top: 22px;
+
+    padding-top: 18px;
+
+    border-top: 1px solid #edf0f4;
+
+    text-align: left;
+}
+
+
+.profile-summary-info div {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 13px;
+
+    color: #5e6878;
+
+    font-size: 12px;
+}
+
+
+.profile-summary-info div:last-child {
+    margin-bottom: 0;
+}
+
+
+.profile-summary-info i {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: #f1f5f9;
+
+    color: #2563eb;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   EDIT CARD
+========================================================= */
+
+.profile-edit-card {
+    background: #ffffff;
+
+    border: 1px solid #e8ecf2;
+
+    border-radius: 18px;
+
+    padding: 25px;
+
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+
+    min-width: 0;
+}
+
+
+.profile-card-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    padding-bottom: 18px;
+
+    margin-bottom: 20px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+.profile-card-header h3 {
+    margin: 0;
+
+    color: #172033;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+.profile-card-header p {
+    margin: 5px 0 0;
+
+    color: #8992a1;
+
+    font-size: 12px;
+}
+
+
+.profile-card-header > i {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef4ff;
+
+    color: #2563eb;
+
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.profile-form {
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 17px 18px;
+}
+
+
+.form-group {
+    min-width: 0;
+}
+
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #364152;
+
+    font-size: 12px;
+    font-weight: 650;
+}
+
+
+.input-wrapper {
+    position: relative;
+
+    width: 100%;
+}
+
+
+.input-wrapper > i {
+    position: absolute;
+
+    left: 13px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    font-size: 14px;
+
+    pointer-events: none;
+}
+
+
+.input-wrapper input {
+    width: 100%;
+    height: 44px;
+
+    padding: 0 13px 0 39px;
+
+    border: 1px solid #dfe4eb;
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: #273244;
+
+    font-size: 12px;
+
+    box-sizing: border-box;
+
+    transition: 0.2s ease;
+}
+
+
+.input-wrapper input:focus {
+    border-color: #60a5fa;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+
+.disabled-input input {
+    background: #f8fafc;
+
+    color: #7b8494;
+
+    cursor: not-allowed;
+}
+
+
+.form-group small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9aa2af;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   PHOTO UPLOAD
+========================================================= */
+
+.photo-upload-group {
+    grid-column: 1 / -1;
+}
+
+
+.photo-upload-box {
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    padding: 15px;
+
+    border: 1px dashed #cfd7e3;
+
+    border-radius: 12px;
+
+    background: #fafbfc;
+}
+
+
+.photo-preview {
+    width: 64px;
+    height: 64px;
+
+    min-width: 64px;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eef2ff;
+}
+
+
+.photo-preview img {
+    width: 64px;
+    height: 64px;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+}
+
+
+.photo-placeholder {
+    width: 64px;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #64748b;
+
+    font-size: 28px;
+}
+
+
+.photo-upload-content {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 3px;
+}
+
+
+.photo-upload-content strong {
+    color: #374151;
+
+    font-size: 12px;
+}
+
+
+.photo-upload-content span {
+    color: #9aa2af;
+
+    font-size: 10px;
+
+    margin-bottom: 5px;
+}
+
+
+.upload-button {
+    display: inline-flex !important;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px 11px;
+
+    border-radius: 8px;
+
+    background: #eef4ff;
+
+    color: #2563eb !important;
+
+    cursor: pointer;
+
+    font-size: 11px !important;
+
+    margin: 0 !important;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.profile-form-actions {
+    grid-column: 1 / -1;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 8px;
+}
+
+
+.save-profile-btn,
+.cancel-profile-btn {
+    height: 42px;
+
+    padding: 0 18px;
+
+    border-radius: 9px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+
+.save-profile-btn {
+    border: 0;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #4f46e5
+    );
+
+    color: #ffffff;
+}
+
+
+.save-profile-btn:hover {
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+
+.cancel-profile-btn {
+    border: 1px solid #dfe4eb;
+
+    background: #ffffff;
+
+    color: #5f6b7a;
+}
+
+
+.cancel-profile-btn:hover {
+    color: #2563eb;
+
+    border-color: #93c5fd;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-summary-card {
+        width: 100%;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .student-page {
+        padding: 18px;
+    }
+
+    .profile-form {
+        grid-template-columns: 1fr;
+    }
+
+    .photo-upload-group,
+    .profile-form-actions {
+        grid-column: auto;
+    }
+
+    .profile-form-actions {
+        justify-content: stretch;
+    }
+
+    .save-profile-btn,
+    .cancel-profile-btn {
+        flex: 1;
+    }
+
+}
+
+</style>
+
+
+<script>
+
+const photoInput = document.getElementById("photo");
+
+if (photoInput) {
+
+    photoInput.addEventListener("change", function () {
+
+        const file = this.files && this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+
+            alert(
+                "Please select JPG, JPEG, PNG or WEBP image."
+            );
+
+            this.value = "";
+
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+            let image =
+                document.getElementById("profilePreview");
+
+            if (!image) {
+
+                const placeholder =
+                    document.getElementById(
+                        "profilePreviewPlaceholder"
+                    );
+
+                if (placeholder) {
+
+                    image =
+                        document.createElement("img");
+
+                    image.id =
+                        "profilePreview";
+
+                    image.alt =
+                        "Profile Preview";
+
+                    placeholder.replaceWith(image);
+
+                }
+
+            }
+
+            if (image) {
+
+                image.src =
+                    event.target.result;
+
+                image.style.width = "64px";
+                image.style.height = "64px";
+                image.style.objectFit = "cover";
+
+            }
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+}
+
+</script>
+
+{% endblock %}

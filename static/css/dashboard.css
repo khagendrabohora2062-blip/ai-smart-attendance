@@ -1,0 +1,2470 @@
+
+/* ============================================================
+   AI SMART ATTENDANCE SYSTEM
+   ADMIN DASHBOARD CSS
+   ============================================================
+   File:
+   static/css/dashboard.css
+
+   This CSS is ONLY for the ADMIN PANEL.
+
+   Structure:
+   - Admin Sidebar
+   - Admin Navbar
+   - Dashboard
+   - Statistics Cards
+   - Quick Actions
+   - Attendance Table
+   - Feedback
+   - Contact Messages
+   - Forms
+   - Responsive Design
+   ============================================================ */
+
+
+/* ============================================================
+   1. ROOT VARIABLES
+   ============================================================ */
+
+:root {
+
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #eff6ff;
+
+    --secondary: #64748b;
+
+    --success: #16a34a;
+    --success-light: #dcfce7;
+
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+
+    --info: #0891b2;
+    --info-light: #cffafe;
+
+    --purple: #7c3aed;
+
+    --dark: #0f172a;
+    --dark-blue: #172554;
+
+    --text: #1e293b;
+    --muted: #64748b;
+
+    --background: #f5f7fb;
+    --white: #ffffff;
+
+    --border: #e5e7eb;
+
+    --sidebar-width: 260px;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --shadow-sm:
+        0 2px 8px rgba(15, 23, 42, 0.05);
+
+    --shadow-md:
+        0 6px 20px rgba(15, 23, 42, 0.07);
+
+    --shadow-lg:
+        0 12px 30px rgba(15, 23, 42, 0.10);
+
+}
+
+
+/* ============================================================
+   2. GLOBAL RESET
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+
+    box-sizing: border-box;
+
+}
+
+
+html {
+
+    width: 100%;
+    min-height: 100%;
+
+    scroll-behavior: smooth;
+
+}
+
+
+body {
+
+    width: 100%;
+    min-height: 100vh;
+
+    margin: 0;
+    padding: 0;
+
+    background: var(--background);
+
+    color: var(--text);
+
+    font-family:
+        "Poppins",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    overflow-x: hidden;
+
+}
+
+
+a {
+
+    text-decoration: none;
+
+}
+
+
+button,
+input,
+select,
+textarea {
+
+    font-family: inherit;
+
+}
+
+
+img {
+
+    max-width: 100%;
+
+}
+
+
+/* ============================================================
+   3. MAIN WRAPPER
+   ============================================================ */
+
+.wrapper {
+
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+
+}
+
+
+/* ============================================================
+   4. ADMIN SIDEBAR
+   ============================================================ */
+
+.admin-sidebar {
+
+    position: sticky;
+
+    top: 0;
+    left: 0;
+
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #172554 100%
+        );
+
+    color: #ffffff;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    z-index: 1000;
+
+    box-shadow:
+        5px 0 22px rgba(15, 23, 42, 0.10);
+
+}
+
+
+/* ============================================================
+   SIDEBAR SCROLLBAR
+   ============================================================ */
+
+.admin-sidebar::-webkit-scrollbar {
+
+    width: 5px;
+
+}
+
+
+.admin-sidebar::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+
+.admin-sidebar::-webkit-scrollbar-thumb {
+
+    background:
+        rgba(255, 255, 255, 0.20);
+
+    border-radius: 20px;
+
+}
+
+
+/* ============================================================
+   5. SIDEBAR HEADER
+   ============================================================ */
+
+.admin-sidebar .sidebar-header {
+
+    width: 100%;
+
+    padding: 18px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.08);
+
+}
+
+
+.admin-sidebar .logo {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+}
+
+
+.admin-sidebar .logo-icon {
+
+    width: 40px;
+    height: 40px;
+
+    min-width: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background:
+        rgba(37, 99, 235, 0.20);
+
+    color: #60a5fa;
+
+    margin-right: 0;
+
+}
+
+
+.admin-sidebar .logo-icon i {
+
+    font-size: 20px;
+
+}
+
+
+.admin-sidebar .logo h4 {
+
+    margin: 0 !important;
+
+    color: #ffffff;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+    line-height: 1.2;
+
+}
+
+
+.admin-sidebar .logo small {
+
+    display: block;
+
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    line-height: 1.2;
+
+}
+
+
+/* ============================================================
+   6. ADMIN PROFILE IN SIDEBAR
+   ============================================================ */
+
+.admin-sidebar .admin-profile {
+
+    width: 100%;
+
+    padding: 18px 15px;
+
+    text-align: center;
+
+    border-bottom:
+        1px solid rgba(255,255,255,0.08);
+
+}
+
+
+.admin-sidebar .admin-sidebar-avatar {
+
+    width: 68px;
+    height: 68px;
+
+    margin: 0 auto 10px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255,255,255,0.10);
+
+    border:
+        2px solid rgba(255,255,255,0.15);
+
+    color: #cbd5e1;
+
+    font-size: 34px;
+
+}
+
+
+.admin-sidebar .admin-sidebar-avatar-img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+
+}
+
+
+.admin-sidebar .admin-profile h6 {
+
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+}
+
+
+.admin-sidebar .admin-profile small {
+
+    display: block;
+
+    margin-top: 3px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+
+}
+
+
+/* ============================================================
+   7. SIDEBAR MENU
+   ============================================================ */
+
+.admin-sidebar .sidebar-menu {
+
+    width: 100%;
+
+    flex: 1 1 auto;
+
+    list-style: none;
+
+    margin: 0;
+
+    padding: 13px 10px;
+
+}
+
+
+.admin-sidebar .sidebar-menu li {
+
+    width: 100%;
+
+    margin: 0 0 4px;
+
+    padding: 0;
+
+}
+
+
+.admin-sidebar .sidebar-menu a {
+
+    width: 100%;
+    min-height: 43px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 9px 12px;
+
+    border-radius: 9px;
+
+    color: #cbd5e1;
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.admin-sidebar .sidebar-menu a i {
+
+    width: 20px;
+    min-width: 20px;
+
+    text-align: center;
+
+    font-size: 16px;
+
+}
+
+
+.admin-sidebar .sidebar-menu a span {
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+
+}
+
+
+.admin-sidebar .sidebar-menu a:hover {
+
+    color: #ffffff;
+
+    background:
+        rgba(255,255,255,0.08);
+
+    transform:
+        translateX(2px);
+
+}
+
+
+.admin-sidebar .sidebar-menu a.active {
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #3b82f6
+        );
+
+    box-shadow:
+        0 6px 16px rgba(37,99,235,0.25);
+
+}
+
+
+.admin-sidebar .sidebar-menu a.active i {
+
+    color: #ffffff;
+
+}
+
+
+/* ============================================================
+   SIDEBAR DIVIDER
+   ============================================================ */
+
+.admin-sidebar .sidebar-divider {
+
+    margin-top: 9px !important;
+
+    margin-bottom: 9px !important;
+
+}
+
+
+.admin-sidebar .sidebar-divider hr {
+
+    margin: 10px 3px;
+
+    border: 0;
+
+    border-top:
+        1px solid rgba(255,255,255,0.10);
+
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+.admin-sidebar .logout-link {
+
+    color: #fca5a5 !important;
+
+}
+
+
+.admin-sidebar .logout-link:hover {
+
+    color: #ffffff !important;
+
+    background:
+        rgba(220,38,38,0.15) !important;
+
+}
+
+
+/* ============================================================
+   SIDEBAR FOOTER
+   ============================================================ */
+
+.admin-sidebar .sidebar-footer {
+
+    width: 100%;
+
+    padding: 12px 10px;
+
+    text-align: center;
+
+    color: #94a3b8;
+
+    font-size: 9px;
+
+    line-height: 1.7;
+
+    border-top:
+        1px solid rgba(255,255,255,0.08);
+
+}
+
+
+/* ============================================================
+   8. MAIN AREA
+   ============================================================ */
+
+.main {
+
+    flex: 1 1 auto;
+
+    width:
+        calc(100% - var(--sidebar-width));
+
+    min-width: 0;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    background: var(--background);
+
+}
+
+
+/* ============================================================
+   9. ADMIN NAVBAR
+   ============================================================ */
+
+.top-navbar {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 900;
+
+    width: 100%;
+
+    min-height: 72px;
+
+    padding: 0 20px;
+
+    background:
+        rgba(255,255,255,0.97);
+
+    border-bottom:
+        1px solid var(--border);
+
+    box-shadow:
+        0 3px 15px rgba(15,23,42,0.04);
+
+    backdrop-filter:
+        blur(10px);
+
+}
+
+
+.top-navbar .container-fluid {
+
+    width: 100%;
+
+    min-height: 72px;
+
+    padding: 0 !important;
+
+    display: flex;
+
+    align-items: center;
+
+}
+
+
+/* ============================================================
+   NAVBAR PAGE TITLE
+   ============================================================ */
+
+.navbar-page-title {
+
+    min-width: 0;
+
+}
+
+
+.navbar-page-title h5 {
+
+    margin: 0;
+
+    color: var(--dark);
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    line-height: 1.25;
+
+}
+
+
+.navbar-page-title small {
+
+    display: block;
+
+    margin-top: 2px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+
+}
+
+
+/* ============================================================
+   NAVBAR SEARCH
+   ============================================================ */
+
+.search-box {
+
+    width: 220px;
+
+}
+
+
+.search-box .input-group {
+
+    height: 36px;
+
+}
+
+
+.search-box .input-group-text {
+
+    border-color:
+        var(--border);
+
+    background: #f8fafc;
+
+    color: var(--muted);
+
+}
+
+
+.search-box .form-control {
+
+    border-color:
+        var(--border);
+
+    background: #f8fafc;
+
+    font-size: 11px;
+
+}
+
+
+.search-box .form-control:focus {
+
+    border-color:
+        #93c5fd;
+
+    box-shadow:
+        0 0 0 0.15rem
+        rgba(37,99,235,0.08);
+
+}
+
+
+/* ============================================================
+   NAVBAR DATE / TIME
+   ============================================================ */
+
+.navbar-date,
+.navbar-time {
+
+    min-width: 92px;
+
+    min-height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 7px 10px;
+
+    border-radius: 8px !important;
+
+    font-size: 9px !important;
+
+    font-weight: 600 !important;
+
+    white-space: nowrap;
+
+}
+
+
+.navbar-date {
+
+    background:
+        var(--primary) !important;
+
+}
+
+
+.navbar-time {
+
+    background:
+        #1e293b !important;
+
+}
+
+
+/* ============================================================
+   NOTIFICATION BUTTON
+   ============================================================ */
+
+.notification-btn {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid var(--border) !important;
+
+    border-radius: 9px !important;
+
+    background: #ffffff !important;
+
+    color: #334155 !important;
+
+    box-shadow: none !important;
+
+    position: relative;
+
+}
+
+
+.notification-btn:hover {
+
+    color: var(--primary) !important;
+
+    background:
+        var(--primary-light) !important;
+
+}
+
+
+/* ============================================================
+   ADMIN PROFILE BUTTON
+   ============================================================ */
+
+.admin-profile-btn {
+
+    min-height: 44px;
+
+    padding: 4px 9px 4px 5px !important;
+
+    display: flex;
+
+    align-items: center;
+
+    border:
+        1px solid var(--border) !important;
+
+    border-radius: 10px !important;
+
+    background:
+        #ffffff !important;
+
+    color:
+        var(--dark) !important;
+
+    box-shadow: none !important;
+
+}
+
+
+.admin-profile-btn:hover {
+
+    background:
+        #f8fafc !important;
+
+}
+
+
+/* ============================================================
+   NAVBAR AVATAR
+   ============================================================ */
+
+.admin-navbar-avatar {
+
+    width: 35px;
+    height: 35px;
+
+    min-width: 35px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background:
+        var(--primary);
+
+    color: #ffffff;
+
+}
+
+
+.admin-navbar-avatar-img {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    display: block;
+
+}
+
+
+.admin-navbar-info {
+
+    min-width: 0;
+
+    text-align: left;
+
+    line-height: 1.2;
+
+}
+
+
+.admin-navbar-info strong {
+
+    display: block;
+
+    max-width: 120px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: var(--dark);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+}
+
+
+.admin-navbar-info small {
+
+    display: block;
+
+    max-width: 120px;
+
+    margin-top: 2px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: var(--muted);
+
+    font-size: 8px;
+
+}
+
+
+.profile-arrow {
+
+    color: var(--muted);
+
+    font-size: 9px;
+
+}
+
+
+/* ============================================================
+   DROPDOWN MENUS
+   ============================================================ */
+
+.admin-dropdown-menu,
+.notification-menu {
+
+    min-width: 210px;
+
+    margin-top: 7px !important;
+
+    padding: 6px !important;
+
+    border:
+        1px solid var(--border) !important;
+
+    border-radius:
+        11px !important;
+
+    background:
+        #ffffff !important;
+
+    box-shadow:
+        0 15px 35px
+        rgba(15,23,42,0.12) !important;
+
+}
+
+
+.admin-dropdown-menu .dropdown-item,
+.notification-menu .dropdown-item {
+
+    padding: 8px 10px;
+
+    border-radius: 7px;
+
+    color: #334155;
+
+    font-size: 11px;
+
+}
+
+
+.admin-dropdown-menu .dropdown-item:hover,
+.notification-menu .dropdown-item:hover {
+
+    background:
+        #f8fafc;
+
+}
+
+
+.admin-dropdown-header {
+
+    padding:
+        8px 10px;
+
+    color:
+        var(--dark);
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
+}
+
+
+/* ============================================================
+   10. CONTENT
+   ============================================================ */
+
+.content {
+
+    width: 100%;
+
+    min-width: 0;
+
+    flex: 1 1 auto;
+
+}
+
+
+.dashboard-page {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    padding-top: 24px !important;
+
+    padding-bottom: 30px !important;
+
+}
+
+
+/* ============================================================
+   11. GLASS CARD
+   ============================================================ */
+
+.glass-card {
+
+    width: 100%;
+
+    background:
+        rgba(255,255,255,0.98);
+
+    border:
+        1px solid #edf1f6;
+
+    border-radius:
+        var(--radius-md);
+
+    box-shadow:
+        var(--shadow-md);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.glass-card:hover {
+
+    box-shadow:
+        var(--shadow-lg);
+
+}
+
+
+/* ============================================================
+   CARD HEADINGS
+   ============================================================ */
+
+.glass-card h4 {
+
+    margin-bottom: 0;
+
+    color:
+        var(--dark);
+
+    font-size:
+        16px;
+
+    font-weight:
+        700;
+
+}
+
+
+.glass-card hr {
+
+    margin:
+        14px 0;
+
+    border:
+        0;
+
+    border-top:
+        1px solid #edf1f6;
+
+    opacity:
+        1;
+
+}
+
+
+/* ============================================================
+   12. STATISTICS CARDS
+   ============================================================ */
+
+.stats-card {
+
+    min-height:
+        112px;
+
+    padding:
+        18px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    border:
+        0 !important;
+
+    border-radius:
+        13px !important;
+
+    color:
+        #ffffff;
+
+    overflow:
+        hidden;
+
+    position:
+        relative;
+
+    box-shadow:
+        var(--shadow-md);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.stats-card:hover {
+
+    transform:
+        translateY(-3px);
+
+    box-shadow:
+        var(--shadow-lg);
+
+}
+
+
+/* ============================================================
+   STAT CARD COLORS
+   ============================================================ */
+
+.stats-card.students {
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #3b82f6
+        );
+
+}
+
+
+.stats-card.teachers {
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #8b5cf6
+        );
+
+}
+
+
+.stats-card.subjects {
+
+    background:
+        linear-gradient(
+            135deg,
+            #d97706,
+            #f59e0b
+        );
+
+}
+
+
+.stats-card.attendance {
+
+    background:
+        linear-gradient(
+            135deg,
+            #059669,
+            #10b981
+        );
+
+}
+
+
+/* ============================================================
+   STAT CARD TEXT
+   ============================================================ */
+
+.stats-card small {
+
+    display:
+        block;
+
+    margin-bottom:
+        4px;
+
+    color:
+        rgba(255,255,255,0.90);
+
+    font-size:
+        11px;
+
+    font-weight:
+        500;
+
+}
+
+
+.stats-card h2 {
+
+    margin:
+        0;
+
+    color:
+        #ffffff;
+
+    font-size:
+        28px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1.1;
+
+}
+
+
+.stats-card .icon {
+
+    font-size:
+        38px;
+
+    line-height:
+        1;
+
+    opacity:
+        0.85;
+
+}
+
+
+/* ============================================================
+   13. QUICK ACTION BUTTONS
+   ============================================================ */
+
+.glass-card .d-grid {
+
+    width:
+        100%;
+
+}
+
+
+.glass-card .d-grid .btn {
+
+    min-height:
+        42px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        flex-start;
+
+    gap:
+        9px;
+
+    padding:
+        9px 13px;
+
+    border:
+        0;
+
+    border-radius:
+        8px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+
+.glass-card .d-grid .btn:hover {
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 5px 12px
+        rgba(15,23,42,0.10);
+
+}
+
+
+.glass-card .d-grid .btn i {
+
+    width:
+        18px;
+
+    font-size:
+        15px;
+
+}
+
+
+/* ============================================================
+   14. TABLE
+   ============================================================ */
+
+.table-responsive {
+
+    width:
+        100%;
+
+    overflow-x:
+        auto;
+
+    overflow-y:
+        hidden;
+
+    -webkit-overflow-scrolling:
+        touch;
+
+}
+
+
+.dashboard-page .table {
+
+    width:
+        100%;
+
+    min-width:
+        620px;
+
+    margin-bottom:
+        0;
+
+    vertical-align:
+        middle;
+
+}
+
+
+.dashboard-page .table thead th {
+
+    padding:
+        11px 10px;
+
+    border:
+        0;
+
+    color:
+        #475569;
+
+    background:
+        #f8fafc;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+}
+
+
+.dashboard-page .table tbody td {
+
+    padding:
+        10px;
+
+    border-color:
+        #eef2f7;
+
+    color:
+        #334155;
+
+    font-size:
+        11px;
+
+}
+
+
+.dashboard-page .table tbody tr {
+
+    transition:
+        background 0.15s ease;
+
+}
+
+
+.dashboard-page .table tbody tr:hover {
+
+    background:
+        #f8fbff;
+
+}
+
+
+/* ============================================================
+   15. BADGES
+   ============================================================ */
+
+.dashboard-page .badge {
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    min-height:
+        22px;
+
+    padding:
+        4px 8px;
+
+    border-radius:
+        6px;
+
+    font-size:
+        9px;
+
+    font-weight:
+        600;
+
+}
+
+
+/* ============================================================
+   BADGE COLORS
+   ============================================================ */
+
+.dashboard-page .badge.bg-success {
+
+    background:
+        #dcfce7 !important;
+
+    color:
+        #166534 !important;
+
+}
+
+
+.dashboard-page .badge.bg-danger {
+
+    background:
+        #fee2e2 !important;
+
+    color:
+        #991b1b !important;
+
+}
+
+
+.dashboard-page .badge.bg-warning {
+
+    background:
+        #fef3c7 !important;
+
+    color:
+        #92400e !important;
+
+}
+
+
+.dashboard-page .badge.bg-primary {
+
+    background:
+        #dbeafe !important;
+
+    color:
+        #1d4ed8 !important;
+
+}
+
+
+.dashboard-page .badge.bg-info {
+
+    background:
+        #cffafe !important;
+
+    color:
+        #155e75 !important;
+
+}
+
+
+.dashboard-page .badge.bg-secondary {
+
+    background:
+        #e2e8f0 !important;
+
+    color:
+        #475569 !important;
+
+}
+
+
+/* ============================================================
+   16. FEEDBACK / MESSAGE SECTION
+   ============================================================ */
+
+.dashboard-page .border-bottom {
+
+    border-color:
+        #edf1f6 !important;
+
+}
+
+
+.dashboard-page .border-bottom strong {
+
+    color:
+        var(--dark);
+
+    font-size:
+        12px;
+
+}
+
+
+.dashboard-page .border-bottom small {
+
+    font-size:
+        9px;
+
+}
+
+
+.dashboard-page .border-bottom p {
+
+    color:
+        #475569;
+
+    font-size:
+        11px;
+
+    line-height:
+        1.6;
+
+    word-break:
+        break-word;
+
+}
+
+
+/* ============================================================
+   17. TEXT UTILITIES
+   ============================================================ */
+
+.dashboard-page .text-muted {
+
+    color:
+        var(--muted) !important;
+
+}
+
+
+.dashboard-page .text-primary {
+
+    color:
+        var(--primary) !important;
+
+}
+
+
+.dashboard-page .text-secondary {
+
+    color:
+        #475569 !important;
+
+}
+
+
+.dashboard-page .text-info {
+
+    color:
+        var(--info) !important;
+
+}
+
+
+.dashboard-page .text-warning {
+
+    color:
+        var(--warning) !important;
+
+}
+
+
+/* ============================================================
+   18. ALERTS
+   ============================================================ */
+
+.content > .alert {
+
+    margin-bottom:
+        18px;
+
+    border:
+        0;
+
+    border-radius:
+        10px;
+
+    font-size:
+        11px;
+
+    box-shadow:
+        var(--shadow-sm);
+
+}
+
+
+/* ============================================================
+   19. GENERAL ADMIN FORMS
+   ============================================================ */
+
+.main .form-label {
+
+    margin-bottom:
+        5px;
+
+    color:
+        #334155;
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+
+}
+
+
+.main .form-control,
+.main .form-select {
+
+    min-height:
+        38px;
+
+    border:
+        1px solid #dbe2ea;
+
+    border-radius:
+        8px;
+
+    color:
+        #334155;
+
+    background:
+        #ffffff;
+
+    font-size:
+        12px;
+
+}
+
+
+.main .form-control:focus,
+.main .form-select:focus {
+
+    border-color:
+        #93c5fd;
+
+    box-shadow:
+        0 0 0 0.18rem
+        rgba(37,99,235,0.10);
+
+}
+
+
+/* ============================================================
+   20. GENERAL ADMIN BUTTONS
+   ============================================================ */
+
+.main .btn {
+
+    border-radius:
+        8px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+
+}
+
+
+.main .btn-sm {
+
+    padding:
+        6px 9px;
+
+    font-size:
+        10px;
+
+}
+
+
+/* ============================================================
+   21. ADMIN CARDS
+   ============================================================ */
+
+.main .card {
+
+    border:
+        1px solid #edf1f6;
+
+    border-radius:
+        var(--radius-md);
+
+    box-shadow:
+        var(--shadow-md);
+
+}
+
+
+.main .card-header {
+
+    border-bottom:
+        1px solid #edf1f6;
+
+    font-weight:
+        600;
+
+}
+
+
+/* ============================================================
+   22. PAGINATION
+   ============================================================ */
+
+.pagination {
+
+    gap:
+        3px;
+
+}
+
+
+.pagination .page-link {
+
+    min-width:
+        32px;
+
+    height:
+        32px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        4px 8px;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        7px !important;
+
+    color:
+        #475569;
+
+    font-size:
+        10px;
+
+}
+
+
+.pagination .page-link:hover {
+
+    color:
+        var(--primary);
+
+    background:
+        var(--primary-light);
+
+}
+
+
+.pagination .page-item.active .page-link {
+
+    color:
+        #ffffff;
+
+    background:
+        var(--primary);
+
+    border-color:
+        var(--primary);
+
+}
+
+
+/* ============================================================
+   23. MODAL
+   ============================================================ */
+
+.modal-content {
+
+    border:
+        0;
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 20px 50px
+        rgba(15,23,42,0.15);
+
+}
+
+
+.modal-header {
+
+    border-bottom:
+        1px solid var(--border);
+
+}
+
+
+.modal-footer {
+
+    border-top:
+        1px solid var(--border);
+
+}
+
+
+/* ============================================================
+   24. DASHBOARD SPACING
+   ============================================================ */
+
+.dashboard-page > .row {
+
+    width:
+        100%;
+
+}
+
+
+.dashboard-page .row {
+
+    --bs-gutter-y:
+        1.25rem;
+
+}
+
+
+.dashboard-page .row.mb-4 {
+
+    margin-bottom:
+        1.25rem !important;
+
+}
+
+
+.dashboard-page .row.mt-4 {
+
+    margin-top:
+        1.25rem !important;
+
+}
+
+
+/* ============================================================
+   25. RESPONSIVE — LARGE TABLET
+   ============================================================ */
+
+@media (max-width: 1199px) {
+
+    :root {
+
+        --sidebar-width:
+            240px;
+
+    }
+
+
+    .admin-sidebar {
+
+        width:
+            240px;
+
+        min-width:
+            240px;
+
+    }
+
+
+    .main {
+
+        width:
+            calc(100% - 240px);
+
+    }
+
+
+    .search-box {
+
+        width:
+            180px;
+
+    }
+
+
+    .dashboard-page {
+
+        padding-top:
+            20px !important;
+
+    }
+
+}
+
+
+/* ============================================================
+   26. RESPONSIVE — TABLET
+   ============================================================ */
+
+@media (max-width: 991px) {
+
+    .admin-sidebar {
+
+        position:
+            fixed;
+
+        top:
+            0;
+
+        left:
+            -270px;
+
+        width:
+            260px;
+
+        min-width:
+            260px;
+
+        height:
+            100vh;
+
+        z-index:
+            2000;
+
+        transition:
+            left 0.25s ease;
+
+    }
+
+
+    .admin-sidebar.show {
+
+        left:
+            0;
+
+    }
+
+
+    .main {
+
+        width:
+            100%;
+
+        min-width:
+            0;
+
+    }
+
+
+    .top-navbar {
+
+        min-height:
+            66px;
+
+        padding:
+            0 14px;
+
+    }
+
+
+    .top-navbar .container-fluid {
+
+        min-height:
+            66px;
+
+    }
+
+
+    .navbar-page-title {
+
+        display:
+            none !important;
+
+    }
+
+
+    .dashboard-page {
+
+        padding:
+            18px 15px 25px !important;
+
+    }
+
+
+    .stats-card {
+
+        min-height:
+            105px;
+
+    }
+
+
+    .stats-card h2 {
+
+        font-size:
+            25px;
+
+    }
+
+
+    .stats-card .icon {
+
+        font-size:
+            34px;
+
+    }
+
+}
+
+
+/* ============================================================
+   27. RESPONSIVE — MOBILE
+   ============================================================ */
+
+@media (max-width: 767px) {
+
+    .dashboard-page {
+
+        padding:
+            15px 12px 22px !important;
+
+    }
+
+
+    .glass-card {
+
+        border-radius:
+            11px;
+
+    }
+
+
+    .glass-card.p-4 {
+
+        padding:
+            15px !important;
+
+    }
+
+
+    .stats-card {
+
+        min-height:
+            100px;
+
+        padding:
+            15px;
+
+    }
+
+
+    .stats-card h2 {
+
+        font-size:
+            23px;
+
+    }
+
+
+    .stats-card small {
+
+        font-size:
+            10px;
+
+    }
+
+
+    .stats-card .icon {
+
+        font-size:
+            30px;
+
+    }
+
+
+    .search-box {
+
+        display:
+            none !important;
+
+    }
+
+
+    .navbar-date,
+    .navbar-time {
+
+        display:
+            none !important;
+
+    }
+
+
+    .admin-navbar-info {
+
+        display:
+            none !important;
+
+    }
+
+
+    .dashboard-page .table {
+
+        min-width:
+            600px;
+
+    }
+
+}
+
+
+/* ============================================================
+   28. RESPONSIVE — SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 576px) {
+
+    .top-navbar {
+
+        padding:
+            0 9px;
+
+    }
+
+
+    .top-navbar .btn-light {
+
+        width:
+            38px;
+
+        height:
+            38px;
+
+        padding:
+            0;
+
+        display:
+            flex;
+
+        align-items:
+            center;
+
+        justify-content:
+            center;
+
+    }
+
+
+    .admin-profile-btn {
+
+        padding:
+            4px !important;
+
+    }
+
+
+    .admin-navbar-avatar {
+
+        width:
+            34px;
+
+        height:
+            34px;
+
+        min-width:
+            34px;
+
+    }
+
+
+    .dashboard-page {
+
+        padding:
+            12px 10px 20px !important;
+
+    }
+
+
+    .glass-card.p-4 {
+
+        padding:
+            13px !important;
+
+    }
+
+
+    .glass-card h4 {
+
+        font-size:
+            14px;
+
+    }
+
+
+    .stats-card {
+
+        min-height:
+            94px;
+
+        padding:
+            13px;
+
+    }
+
+
+    .stats-card h2 {
+
+        font-size:
+            21px;
+
+    }
+
+
+    .stats-card .icon {
+
+        font-size:
+            27px;
+
+    }
+
+
+    .dashboard-page .table {
+
+        min-width:
+            560px;
+
+    }
+
+
+    .dashboard-page .table thead th,
+    .dashboard-page .table tbody td {
+
+        padding:
+            8px;
+
+        font-size:
+            10px;
+
+    }
+
+
+    .glass-card .d-grid .btn {
+
+        min-height:
+            40px;
+
+        font-size:
+            10px;
+
+    }
+
+}
+
+
+/* ============================================================
+   29. OVERLAY FOR MOBILE SIDEBAR
+   ============================================================ */
+
+.admin-sidebar-overlay {
+
+    display:
+        none;
+
+}
+
+
+@media (max-width: 991px) {
+
+    .admin-sidebar-overlay {
+
+        position:
+            fixed;
+
+        inset:
+            0;
+
+        z-index:
+            1900;
+
+        background:
+            rgba(15,23,42,0.45);
+
+        backdrop-filter:
+            blur(2px);
+
+    }
+
+
+    .admin-sidebar-overlay.show {
+
+        display:
+            block;
+
+    }
+
+}
+
+
+/* ============================================================
+   30. PRINT
+   ============================================================ */
+
+@media print {
+
+    .admin-sidebar,
+    .top-navbar,
+    .notification-btn,
+    .admin-profile-btn,
+    .btn,
+    .report-actions {
+
+        display:
+            none !important;
+
+    }
+
+
+    .main {
+
+        width:
+            100% !important;
+
+    }
+
+
+    .dashboard-page {
+
+        padding:
+            0 !important;
+
+    }
+
+
+    .glass-card {
+
+        box-shadow:
+            none !important;
+
+        border:
+            1px solid #dddddd !important;
+
+    }
+
+}
+

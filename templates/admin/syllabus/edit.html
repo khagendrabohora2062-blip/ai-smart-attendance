@@ -1,0 +1,164 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Edit Syllabus
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex align-items-center mb-4">
+
+        <a
+            href="{{ url_for('admin_syllabus.index') }}"
+            class="btn btn-outline-secondary me-3"
+        >
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <div>
+
+            <h2 class="fw-bold mb-1">
+                Edit Syllabus
+            </h2>
+
+            <p class="text-muted mb-0">
+                Update syllabus information.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'admin_syllabus.edit',
+                    id=syllabus[0]
+                ) }}"
+            >
+
+                <!-- SUBJECT INFORMATION -->
+
+                <div class="row mb-4">
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Department
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ syllabus[1] }}"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Semester
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ syllabus[2] }}"
+                            readonly
+                        >
+
+                    </div>
+
+
+                    <div class="col-md-4">
+
+                        <label class="form-label fw-semibold">
+                            Subject
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ syllabus[6] }} — {{ syllabus[7] }}"
+                            readonly
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- TITLE -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Syllabus Title
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        class="form-control"
+                        value="{{ syllabus[4] }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Description / Syllabus Content
+                    </label>
+
+                    <textarea
+                        name="description"
+                        class="form-control"
+                        rows="14"
+                    >{{ syllabus[5] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-save me-1"></i>
+                        Update Syllabus
+                    </button>
+
+                    <a
+                        href="{{ url_for('admin_syllabus.index') }}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

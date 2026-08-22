@@ -1,0 +1,833 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Attendance Report
+{% endblock %}
+
+{% block content %}
+
+<!-- =====================================================
+     HEADER
+====================================================== -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h2 class="fw-bold mb-1">
+
+            <i class="bi bi-file-earmark-bar-graph-fill text-primary"></i>
+
+            Attendance Report
+
+        </h2>
+
+        <p class="text-muted mb-0">
+
+            Detailed attendance report for the selected session.
+
+        </p>
+
+    </div>
+
+
+    <div>
+
+        <a
+            href="{{ url_for('teacher_attendance.reports') }}"
+            class="btn btn-secondary"
+        >
+
+            <i class="bi bi-arrow-left"></i>
+
+            Back to Reports
+
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     SESSION INFORMATION
+====================================================== -->
+
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-dark text-white">
+
+        <h5 class="mb-0">
+
+            <i class="bi bi-info-circle-fill"></i>
+
+            Session Information
+
+        </h5>
+
+    </div>
+
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <!-- Subject Code -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Subject Code
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        {{ session_info[1] }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <!-- Subject -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Subject
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        {{ session_info[2] }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <!-- Date -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Date
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        {{ session_info[3] }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <!-- Start Time -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Start Time
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        {{ session_info[4] }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <!-- End Time -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        End Time
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        {{ session_info[5] or "-" }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+
+            <!-- Status -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Session Status
+                    </small>
+
+                    <div class="mt-1">
+
+                        {% if session_info[6] == "OPEN" %}
+
+                            <span class="badge bg-success fs-6">
+
+                                <i class="bi bi-unlock-fill"></i>
+
+                                OPEN
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-danger fs-6">
+
+                                <i class="bi bi-lock-fill"></i>
+
+                                CLOSED
+
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Session ID -->
+
+            <div class="col-md-4">
+
+                <div class="border rounded p-3 h-100">
+
+                    <small class="text-muted">
+                        Session ID
+                    </small>
+
+                    <h5 class="fw-bold mb-0 mt-1">
+
+                        #{{ session_info[0] }}
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ATTENDANCE SUMMARY
+     
+     ONLY PRESENT + ABSENT
+     LATE REMOVED
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+
+    <!-- Present -->
+
+    <div class="col-md-6">
+
+        <div class="card shadow border-0 h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <small class="text-muted">
+                            Present
+                        </small>
+
+                        <h2 class="fw-bold text-success mb-0">
+
+                            {{ present or 0 }}
+
+                        </h2>
+
+                    </div>
+
+                    <div class="fs-1 text-success">
+
+                        <i class="bi bi-person-check-fill"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Absent -->
+
+    <div class="col-md-6">
+
+        <div class="card shadow border-0 h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <small class="text-muted">
+                            Absent
+                        </small>
+
+                        <h2 class="fw-bold text-danger mb-0">
+
+                            {{ absent or 0 }}
+
+                        </h2>
+
+                    </div>
+
+                    <div class="fs-1 text-danger">
+
+                        <i class="bi bi-person-x-fill"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOTAL / ATTENDANCE OVERVIEW
+====================================================== -->
+
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-body">
+
+        <div class="row text-center">
+
+
+            <!-- Total Records -->
+
+            <div class="col-md-4">
+
+                <div class="p-3">
+
+                    <div class="text-muted small">
+
+                        Total Attendance Records
+
+                    </div>
+
+                    <h3 class="fw-bold mb-0">
+
+                        {{ total or 0 }}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- Present -->
+
+            <div class="col-md-4">
+
+                <div class="p-3">
+
+                    <div class="text-muted small">
+
+                        Present
+
+                    </div>
+
+                    <h3 class="fw-bold text-success mb-0">
+
+                        {{ present or 0 }}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- Absent -->
+
+            <div class="col-md-4">
+
+                <div class="p-3">
+
+                    <div class="text-muted small">
+
+                        Absent
+
+                    </div>
+
+                    <h3 class="fw-bold text-danger mb-0">
+
+                        {{ absent or 0 }}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ACTION BUTTONS
+====================================================== -->
+
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-body">
+
+        <div class="d-flex flex-wrap gap-2">
+
+
+            <!-- Back -->
+
+            <a
+                href="{{ url_for('teacher_attendance.reports') }}"
+                class="btn btn-secondary"
+            >
+
+                <i class="bi bi-arrow-left"></i>
+
+                Back to Reports
+
+            </a>
+
+
+            <!-- Excel -->
+
+            <a
+                href="{{ url_for(
+                    'teacher_attendance.export_excel',
+                    session_id=session_info[0]
+                ) }}"
+                class="btn btn-success"
+            >
+
+                <i class="bi bi-file-earmark-excel-fill"></i>
+
+                Download Excel
+
+            </a>
+
+
+            <!-- PDF -->
+
+            <a
+                href="{{ url_for(
+                    'teacher_attendance.export_pdf',
+                    session_id=session_info[0]
+                ) }}"
+                class="btn btn-danger"
+            >
+
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                Download PDF
+
+            </a>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ATTENDANCE RECORDS
+====================================================== -->
+
+<div class="card shadow border-0">
+
+    <div class="card-header bg-primary text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="bi bi-people-fill"></i>
+
+                Attendance Records
+
+            </h5>
+
+
+            <span class="badge bg-light text-dark">
+
+                {{ records|length }} Records
+
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="card-body">
+
+
+        {% if records %}
+
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>
+                                #
+                            </th>
+
+                            <th>
+                                Student ID
+                            </th>
+
+                            <th>
+                                Student Name
+                            </th>
+
+                            <th>
+                                Department
+                            </th>
+
+                            <th>
+                                Attendance Time
+                            </th>
+
+                            <th>
+                                Method
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Remarks
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+
+                        {% for row in records %}
+
+
+                        <tr>
+
+
+                            <!-- # -->
+
+                            <td>
+
+                                <strong>
+
+                                    {{ loop.index }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- Student ID -->
+
+                            <td>
+
+                                <strong>
+
+                                    {{ row[1] }}
+
+                                </strong>
+
+                            </td>
+
+
+                            <!-- Student Name -->
+
+                            <td>
+
+                                {{ row[2] }}
+
+                            </td>
+
+
+                            <!-- Department -->
+
+                            <td>
+
+                                {{ row[3] or "-" }}
+
+                            </td>
+
+
+                            <!-- Attendance Time -->
+
+                            <td>
+
+                                {% if row[5] %}
+
+                                    {{ row[5] }}
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Method -->
+
+                            <td>
+
+                                {% set method = (row[6] or "")|upper %}
+
+
+                                {% if method == "FACE" %}
+
+                                    <span class="badge bg-primary">
+
+                                        <i class="bi bi-person-bounding-box me-1"></i>
+
+                                        Face
+
+                                    </span>
+
+
+                                {% elif method == "QR" %}
+
+                                    <span class="badge bg-info text-dark">
+
+                                        <i class="bi bi-qr-code me-1"></i>
+
+                                        QR
+
+                                    </span>
+
+
+                                {% elif method == "SYSTEM" %}
+
+                                    <span class="badge bg-secondary">
+
+                                        <i class="bi bi-gear-fill me-1"></i>
+
+                                        System
+
+                                    </span>
+
+
+                                {% elif method == "MANUAL" %}
+
+                                    <span class="badge bg-dark">
+
+                                        <i class="bi bi-pencil-fill me-1"></i>
+
+                                        Manual
+
+                                    </span>
+
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ row[6] or "Unknown" }}
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Status -->
+
+                            <td>
+
+                                {% set status = (row[7] or "")|upper %}
+
+
+                                {% if status == "PRESENT" %}
+
+                                    <span class="badge bg-success">
+
+                                        <i class="bi bi-check-circle-fill me-1"></i>
+
+                                        Present
+
+                                    </span>
+
+
+                                {% elif status == "ABSENT" %}
+
+                                    <span class="badge bg-danger">
+
+                                        <i class="bi bi-x-circle-fill me-1"></i>
+
+                                        Absent
+
+                                    </span>
+
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ row[7] or "Unknown" }}
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Remarks -->
+
+                            <td>
+
+                                {% if row[8] %}
+
+                                    {{ row[8] }}
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 EMPTY STATE
+            ================================================== -->
+
+            <div class="text-center py-5">
+
+                <i
+                    class="bi bi-clipboard-x text-muted"
+                    style="font-size:70px;"
+                ></i>
+
+
+                <h5 class="mt-3 text-muted">
+
+                    No Attendance Records Found
+
+                </h5>
+
+
+                <p class="text-muted mb-4">
+
+                    No attendance records have been created
+                    for this attendance session yet.
+
+                </p>
+
+
+                <a
+                    href="{{ url_for('teacher_attendance.index') }}"
+                    class="btn btn-primary"
+                >
+
+                    <i class="bi bi-calendar-check-fill"></i>
+
+                    Go to Attendance
+
+                </a>
+
+            </div>
+
+
+        {% endif %}
+
+
+    </div>
+
+</div>
+
+
+{% endblock %}

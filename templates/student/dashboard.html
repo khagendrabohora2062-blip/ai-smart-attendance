@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Dashboard | AI Smart Attendance</title>
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- =====================================================
+         BOOTSTRAP ICONS
+    ====================================================== -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- =====================================================
+         STUDENT CSS
+    ====================================================== -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/student.css') }}?v=20260822">
+
+    <!-- =====================================================
+         DASHBOARD OVERRIDES
+    ====================================================== -->
+    <style>
+
+        /* =====================================================
+           DASHBOARD LOCAL OVERRIDES
+        ====================================================== */
+
+        .welcome-card h1 {
+            font-size: 32px !important;
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+
+        .quick-action-card {
+            text-decoration: none !important;
+        }
+
+        .quick-action-card:hover {
+            text-decoration: none !important;
+        }
+
+        .quick-action-icon.assignment {
+            background: #f3e8ff;
+            color: #9333ea;
+        }
+
+        /* =====================================================
+           MOBILE TOPBAR
+        ====================================================== */
+
+        .mobile-menu-btn {
+            border: none;
+            outline: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .mobile-menu-btn:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        /* =====================================================
+           PROFILE IMAGE SAFETY
+        ====================================================== */
+
+        .top-profile {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top-profile img {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .top-profile i {
+            font-size: 38px;
+        }
+
+        /* =====================================================
+           TABLE SAFETY
+        ====================================================== */
+
+        .student-table {
+            min-width: 700px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* =====================================================
+           MOBILE
+        ====================================================== */
+
+        @media (max-width: 991px) {
+
+            .welcome-card h1 {
+                font-size: 28px !important;
+            }
+
+            .student-id-box {
+                display: none !important;
+            }
+
+            .topbar-title h4 {
+                font-size: 18px;
+            }
+
+            .topbar-title p {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 768px) {
+
+            .welcome-card h1 {
+                font-size: 26px !important;
+            }
+
+            .student-content {
+                padding: 15px !important;
+            }
+
+            .student-topbar {
+                padding: 12px 15px !important;
+            }
+
+            .welcome-card {
+                padding: 22px !important;
+            }
+
+            .student-table {
+                min-width: 650px;
+            }
+        }
+
+        @media (max-width: 576px) {
+
+            .top-profile {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+            }
+
+            .top-profile i {
+                font-size: 34px;
+            }
+
+            .topbar-title h4 {
+                font-size: 16px;
+            }
+
+            .topbar-title p {
+                font-size: 11px;
+            }
+
+            .welcome-card h1 {
+                font-size: 24px !important;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         MOBILE OVERLAY
+    ====================================================== -->
+    <div
+        class="student-overlay"
+        id="studentOverlay">
+    </div>
+
+
+    <!-- =====================================================
+         STUDENT SIDEBAR
+         File:
+         templates/layouts/student_sidebar.html
+    ====================================================== -->
+
+    {% include 'layouts/student_sidebar.html' %}
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="student-main">
+
+
+        <!-- =================================================
+             TOP NAVBAR
+        ================================================== -->
+
+        <header class="student-topbar">
+
+            <!-- Mobile Menu Button -->
+
+            <button
+                class="mobile-menu-btn"
+                id="mobileMenuBtn"
+                type="button"
+                aria-label="Open navigation menu"
+                aria-expanded="false">
+
+                <i class="bi bi-list"></i>
+
+            </button>
+
+
+            <!-- Page Title -->
+
+            <div class="topbar-title">
+
+                <h4>
+                    Student Dashboard
+                </h4>
+
+                <p>
+                    Welcome back, {{ student[2] }} 👋
+                </p>
+
+            </div>
+
+
+            <!-- Right Side -->
+
+            <div class="topbar-right">
+
+
+                <!-- Student ID -->
+
+                <div class="student-id-box">
+
+                    <i class="bi bi-person-badge-fill"></i>
+
+                    <span>
+                        {{ student[1] }}
+                    </span>
+
+                </div>
+
+
+                <!-- Profile -->
+
+                <div class="top-profile">
+
+                    {% if student[8] %}
+
+                        <img
+                            src="{{ url_for(
+                                'static',
+                                filename='uploads/students/' + student[8]
+                            ) }}"
+                            alt="Student Profile">
+
+                    {% else %}
+
+                        <i class="bi bi-person-circle"></i>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <div class="student-content">
+
+
+            <!-- =================================================
+                 FLASH MESSAGES
+            ================================================== -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="alert alert-{{ category }} alert-dismissible fade show student-alert"
+                            role="alert">
+
+                            {% if category == "success" %}
+
+                                <i class="bi bi-check-circle-fill"></i>
+
+                            {% elif category == "danger" %}
+
+                                <i class="bi bi-exclamation-circle-fill"></i>
+
+                            {% elif category == "warning" %}
+
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                            {% else %}
+
+                                <i class="bi bi-info-circle-fill"></i>
+
+                            {% endif %}
+
+                            <span>
+                                {{ message }}
+                            </span>
+
+                            <button
+                                type="button"
+                                class="btn-close"
+                                data-bs-dismiss="alert"
+                                aria-label="Close">
+                            </button>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+
+            <!-- =================================================
+                 WELCOME BANNER
+            ================================================== -->
+
+            <section class="welcome-card">
+
+                <div class="welcome-content">
+
+                    <div class="welcome-label">
+
+                        <i class="bi bi-stars"></i>
+
+                        STUDENT PORTAL
+
+                    </div>
+
+
+                    <h1>
+                        Hello, {{ student[2] }}!
+                    </h1>
+
+
+                    <p>
+                        Manage your attendance,
+                        subjects, assignments and academic
+                        information from your personal student dashboard.
+                    </p>
+
+
+                    <div class="welcome-meta">
+
+                        <span>
+
+                            <i class="bi bi-person-badge"></i>
+
+                            {{ student[1] }}
+
+                        </span>
+
+
+                        <span>
+
+                            <i class="bi bi-mortarboard-fill"></i>
+
+                            {{ student[6] or 'Semester N/A' }}
+
+                        </span>
+
+
+                        <span>
+
+                            <i class="bi bi-building"></i>
+
+                            {{ student[5] or 'Department N/A' }}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="welcome-illustration">
+
+                    <div class="welcome-circle">
+
+                        <i class="bi bi-mortarboard-fill"></i>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+
+            <section class="row g-4 stats-section">
+
+
+                <!-- Total Subjects -->
+
+                <div class="col-xl-3 col-md-6">
+
+                    <div class="student-stat-card">
+
+                        <div class="stat-icon blue">
+
+                            <i class="bi bi-book-fill"></i>
+
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Total Subjects
+                            </span>
+
+                            <h2>
+                                {{ total_subjects }}
+                            </h2>
+
+                            <small>
+                                Current semester
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Present -->
+
+                <div class="col-xl-3 col-md-6">
+
+                    <div class="student-stat-card">
+
+                        <div class="stat-icon green">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Present
+                            </span>
+
+                            <h2>
+                                {{ total_present }}
+                            </h2>
+
+                            <small>
+                                Classes attended
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Absent -->
+
+                <div class="col-xl-3 col-md-6">
+
+                    <div class="student-stat-card">
+
+                        <div class="stat-icon red">
+
+                            <i class="bi bi-x-circle-fill"></i>
+
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Absent
+                            </span>
+
+                            <h2>
+                                {{ total_absent }}
+                            </h2>
+
+                            <small>
+                                Classes missed
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Attendance -->
+
+                <div class="col-xl-3 col-md-6">
+
+                    <div class="student-stat-card">
+
+                        <div class="stat-icon purple">
+
+                            <i class="bi bi-graph-up-arrow"></i>
+
+                        </div>
+
+                        <div class="stat-content">
+
+                            <span>
+                                Attendance
+                            </span>
+
+                            <h2>
+                                {{ attendance_percentage }}%
+                            </h2>
+
+                            <small>
+                                Overall percentage
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 ATTENDANCE + PROFILE
+            ================================================== -->
+
+            <section class="row g-4 dashboard-middle">
+
+
+                <!-- =================================================
+                     ATTENDANCE OVERVIEW
+                ================================================== -->
+
+                <div class="col-xl-7">
+
+                    <div class="student-card attendance-card">
+
+
+                        <div class="card-header-custom">
+
+                            <div>
+
+                                <h5>
+                                    Attendance Overview
+                                </h5>
+
+                                <span>
+                                    Your overall attendance performance
+                                </span>
+
+                            </div>
+
+
+                            <div class="header-icon">
+
+                                <i class="bi bi-bar-chart-line-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="attendance-overview">
+
+
+                            <!-- Attendance Circle -->
+
+                            <div
+                                class="attendance-circle"
+                                style="--attendance: {{ attendance_percentage }}%;">
+
+                                <div>
+
+                                    <strong>
+                                        {{ attendance_percentage }}%
+                                    </strong>
+
+                                    <span>
+                                        Attendance
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Details -->
+
+                            <div class="attendance-details">
+
+
+                                <div class="detail-item">
+
+                                    <div>
+
+                                        <span>
+                                            Total Classes
+                                        </span>
+
+                                        <small>
+                                            Recorded classes
+                                        </small>
+
+                                    </div>
+
+                                    <strong>
+                                        {{ total_attendance }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-item present">
+
+                                    <div>
+
+                                        <span>
+                                            Present
+                                        </span>
+
+                                        <small>
+                                            Attended classes
+                                        </small>
+
+                                    </div>
+
+                                    <strong>
+                                        {{ total_present }}
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="detail-item absent">
+
+                                    <div>
+
+                                        <span>
+                                            Absent
+                                        </span>
+
+                                        <small>
+                                            Missed classes
+                                        </small>
+
+                                    </div>
+
+                                    <strong>
+                                        {{ total_absent }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Attendance Message -->
+
+                        <div class="attendance-message">
+
+                            {% if attendance_percentage >= 75 %}
+
+                                <i class="bi bi-check-circle-fill"></i>
+
+                                <span>
+                                    Great! Your attendance is above 75%.
+                                </span>
+
+                            {% elif attendance_percentage >= 50 %}
+
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                                <span>
+                                    Your attendance needs improvement.
+                                </span>
+
+                            {% else %}
+
+                                <i class="bi bi-exclamation-circle-fill"></i>
+
+                                <span>
+                                    Your attendance is below the recommended level.
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     PROFILE
+                ================================================== -->
+
+                <div class="col-xl-5">
+
+                    <div class="student-card profile-card">
+
+
+                        <div class="card-header-custom">
+
+                            <div>
+
+                                <h5>
+                                    My Profile
+                                </h5>
+
+                                <span>
+                                    Personal & academic information
+                                </span>
+
+                            </div>
+
+
+                            <div class="header-icon">
+
+                                <i class="bi bi-person-vcard-fill"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="profile-info">
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Student ID
+                                </span>
+
+                                <strong>
+                                    {{ student[1] }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Full Name
+                                </span>
+
+                                <strong>
+                                    {{ student[2] }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Email
+                                </span>
+
+                                <strong>
+                                    {{ student[3] or 'Not available' }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Phone
+                                </span>
+
+                                <strong>
+                                    {{ student[4] or 'Not available' }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Department
+                                </span>
+
+                                <strong>
+                                    {{ student[5] or 'Not available' }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Semester
+                                </span>
+
+                                <strong>
+                                    {{ student[6] or 'Not available' }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="profile-row">
+
+                                <span>
+                                    Section
+                                </span>
+
+                                <strong>
+                                    {{ student[7] or 'Not available' }}
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <!-- Change Password -->
+
+                        <a
+                            href="{{ url_for('student_auth.change_password') }}"
+                            class="profile-password-btn">
+
+                            <i class="bi bi-shield-lock-fill"></i>
+
+                            Change Password
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 SUBJECT-WISE ATTENDANCE
+            ================================================== -->
+
+            <section
+                class="student-card mt-4"
+                id="subjects">
+
+
+                <div class="card-header-custom">
+
+                    <div>
+
+                        <h5>
+                            Subject-wise Attendance
+                        </h5>
+
+                        <span>
+                            Attendance performance for each subject
+                        </span>
+
+                    </div>
+
+
+                    <div class="header-icon">
+
+                        <i class="bi bi-journal-text"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table student-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    #
+                                </th>
+
+                                <th>
+                                    Subject
+                                </th>
+
+                                <th>
+                                    Total Classes
+                                </th>
+
+                                <th>
+                                    Present
+                                </th>
+
+                                <th>
+                                    Absent
+                                </th>
+
+                                <th>
+                                    Attendance
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% if subject_attendance %}
+
+                                {% for subject in subject_attendance %}
+
+                                    <tr>
+
+                                        <td>
+
+                                            <span class="table-number">
+                                                {{ loop.index }}
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="subject-name">
+
+                                                <strong>
+                                                    {{ subject.code }}
+                                                </strong>
+
+                                                <small>
+                                                    {{ subject.name }}
+                                                </small>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <strong>
+                                                {{ subject.total }}
+                                            </strong>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span
+                                                class="count-badge present-count">
+
+                                                {{ subject.present }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span
+                                                class="count-badge absent-count">
+
+                                                {{ subject.absent }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="subject-progress">
+
+                                                <div class="progress">
+
+                                                    <div
+                                                        class="progress-bar
+                                                        {% if subject.percentage >= 75 %}
+                                                            bg-success
+                                                        {% elif subject.percentage >= 50 %}
+                                                            bg-warning
+                                                        {% else %}
+                                                            bg-danger
+                                                        {% endif %}"
+                                                        style="width: {{ subject.percentage }}%;">
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                <strong>
+                                                    {{ subject.percentage }}%
+                                                </strong>
+
+                                            </div>
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="6"
+                                        class="empty-state">
+
+                                        <i class="bi bi-journal-x"></i>
+
+                                        <h6>
+                                            No Subjects Found
+                                        </h6>
+
+                                        <p>
+                                            No subject attendance records are available yet.
+                                        </p>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endif %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 RECENT ATTENDANCE
+            ================================================== -->
+
+            <section class="student-card mt-4">
+
+
+                <div class="card-header-custom">
+
+                    <div>
+
+                        <h5>
+                            Recent Attendance
+                        </h5>
+
+                        <span>
+                            Your latest attendance records
+                        </span>
+
+                    </div>
+
+
+                    <a
+                        href="{{ url_for('student_auth.attendance') }}"
+                        class="view-all-btn">
+
+                        View All
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </a>
+
+                </div>
+
+
+                <div class="table-responsive">
+
+                    <table class="table student-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Date
+                                </th>
+
+                                <th>
+                                    Subject
+                                </th>
+
+                                <th>
+                                    Method
+                                </th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% if recent_attendance %}
+
+                                {% for record in recent_attendance %}
+
+                                    <tr>
+
+
+                                        <td>
+
+                                            <span class="date-badge">
+
+                                                <i class="bi bi-calendar3"></i>
+
+                                                {{ record[1] }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="subject-name">
+
+                                                <strong>
+                                                    {{ record[5] or 'N/A' }}
+                                                </strong>
+
+                                                <small>
+                                                    {{ record[6] or 'Unknown Subject' }}
+                                                </small>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {% if record[3] == 'FACE' %}
+
+                                                <span class="method-badge face">
+
+                                                    <i class="bi bi-camera-fill"></i>
+
+                                                    Face
+
+                                                </span>
+
+                                            {% elif record[3] == 'QR' %}
+
+                                                <span class="method-badge qr">
+
+                                                    <i class="bi bi-qr-code"></i>
+
+                                                    QR
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="method-badge manual">
+
+                                                    <i class="bi bi-pencil-fill"></i>
+
+                                                    Manual
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <span class="time-text">
+
+                                                <i class="bi bi-clock"></i>
+
+                                                {{ record[2] }}
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            {% if record[4] == 'Present' %}
+
+                                                <span class="status-badge present">
+
+                                                    <i class="bi bi-check-circle-fill"></i>
+
+                                                    Present
+
+                                                </span>
+
+                                            {% elif record[4] == 'Absent' %}
+
+                                                <span class="status-badge absent">
+
+                                                    <i class="bi bi-x-circle-fill"></i>
+
+                                                    Absent
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span class="status-badge late">
+
+                                                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                                                    {{ record[4] }}
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="5"
+                                        class="empty-state">
+
+                                        <i class="bi bi-calendar-x"></i>
+
+                                        <h6>
+                                            No Attendance Records
+                                        </h6>
+
+                                        <p>
+                                            Your attendance records will appear here.
+                                        </p>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endif %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 QUICK ACTIONS
+            ================================================== -->
+
+            <section class="quick-actions mt-4">
+
+
+                <div class="quick-action-header">
+
+                    <div>
+
+                        <h5>
+                            Quick Actions
+                        </h5>
+
+                        <span>
+                            Quickly access your student portal features
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="row g-3 mt-1">
+
+
+                    <!-- Attendance -->
+
+                    <div class="col-xl-3 col-md-6">
+
+                        <a
+                            href="{{ url_for('student_auth.attendance') }}"
+                            class="quick-action-card">
+
+                            <div class="quick-action-icon blue">
+
+                                <i class="bi bi-calendar-check-fill"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    View Attendance
+                                </strong>
+
+                                <small>
+                                    Check attendance history
+                                </small>
+
+                            </div>
+
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </a>
+
+                    </div>
+
+
+
+                    <!-- Subjects -->
+
+                    <div class="col-xl-3 col-md-6">
+
+                        <a
+                            href="{{ url_for('student_auth.subjects') }}"
+                            class="quick-action-card">
+
+                            <div class="quick-action-icon green">
+
+                                <i class="bi bi-journal-bookmark-fill"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    My Subjects
+                                </strong>
+
+                                <small>
+                                    View your subjects
+                                </small>
+
+                            </div>
+
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </a>
+
+                    </div>
+
+
+
+                    <!-- Assignments -->
+
+                    <div class="col-xl-3 col-md-6">
+
+                        <a
+                            href="{{ url_for('student_assignment.index') }}"
+                            class="quick-action-card">
+
+                            <div class="quick-action-icon assignment">
+
+                                <i class="bi bi-journal-text"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Assignments
+                                </strong>
+
+                                <small>
+                                    View your assignments
+                                </small>
+
+                            </div>
+
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </a>
+
+                    </div>
+
+
+
+                    <!-- Change Password -->
+
+                    <div class="col-xl-3 col-md-6">
+
+                        <a
+                            href="{{ url_for('student_auth.change_password') }}"
+                            class="quick-action-card">
+
+                            <div class="quick-action-icon purple">
+
+                                <i class="bi bi-shield-lock-fill"></i>
+
+                            </div>
+
+
+                            <div>
+
+                                <strong>
+                                    Change Password
+                                </strong>
+
+                                <small>
+                                    Keep your account secure
+                                </small>
+
+                            </div>
+
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="student-footer">
+
+                <span>
+
+                    © 2026
+
+                    <strong>
+                        AI Smart Attendance System
+                    </strong>
+
+                </span>
+
+
+                <span>
+
+                    <i class="bi bi-shield-check"></i>
+
+                    Student Portal
+
+                </span>
+
+            </footer>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         BOOTSTRAP JS
+    ====================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+
+
+    <!-- =====================================================
+         MOBILE SIDEBAR SCRIPT
+         FIXED VERSION
+    ====================================================== -->
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const sidebar =
+                document.getElementById("studentSidebar");
+
+            const overlay =
+                document.getElementById("studentOverlay");
+
+            const menuBtn =
+                document.getElementById("mobileMenuBtn");
+
+
+            /*
+             * =================================================
+             * OPEN SIDEBAR
+             * =================================================
+             */
+
+            function openSidebar() {
+
+                if (!sidebar) {
+                    return;
+                }
+
+                sidebar.classList.add("show");
+
+                if (overlay) {
+                    overlay.classList.add("show");
+                }
+
+                if (menuBtn) {
+                    menuBtn.setAttribute(
+                        "aria-expanded",
+                        "true"
+                    );
+                }
+
+                document.body.classList.add(
+                    "student-sidebar-open"
+                );
+            }
+
+
+            /*
+             * =================================================
+             * CLOSE SIDEBAR
+             * =================================================
+             */
+
+            function closeSidebar() {
+
+                if (sidebar) {
+                    sidebar.classList.remove("show");
+                }
+
+                if (overlay) {
+                    overlay.classList.remove("show");
+                }
+
+                if (menuBtn) {
+                    menuBtn.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+                }
+
+                document.body.classList.remove(
+                    "student-sidebar-open"
+                );
+            }
+
+
+            /*
+             * =================================================
+             * TOGGLE SIDEBAR
+             * =================================================
+             */
+
+            function toggleSidebar() {
+
+                if (!sidebar) {
+                    return;
+                }
+
+                if (sidebar.classList.contains("show")) {
+
+                    closeSidebar();
+
+                } else {
+
+                    openSidebar();
+
+                }
+            }
+
+
+            /*
+             * =================================================
+             * MOBILE MENU BUTTON
+             * =================================================
+             */
+
+            if (menuBtn) {
+
+                menuBtn.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+
+                        toggleSidebar();
+
+                    }
+                );
+
+            }
+
+
+            /*
+             * =================================================
+             * OVERLAY CLICK
+             * =================================================
+             */
+
+            if (overlay) {
+
+                overlay.addEventListener(
+                    "click",
+                    function () {
+
+                        closeSidebar();
+
+                    }
+                );
+
+            }
+
+
+            /*
+             * =================================================
+             * SIDEBAR NAVIGATION CLICK
+             *
+             * Close sidebar automatically on mobile.
+             * =================================================
+             */
+
+            const navLinks =
+                document.querySelectorAll(
+                    ".student-nav-link"
+                );
+
+            navLinks.forEach(
+                function (link) {
+
+                    link.addEventListener(
+                        "click",
+                        function () {
+
+                            if (window.innerWidth <= 991) {
+
+                                closeSidebar();
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+             * =================================================
+             * ESC KEY
+             * =================================================
+             */
+
+            document.addEventListener(
+                "keydown",
+                function (event) {
+
+                    if (event.key === "Escape") {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
+
+            /*
+             * =================================================
+             * WINDOW RESIZE
+             *
+             * If user changes from mobile to desktop,
+             * remove mobile sidebar state.
+             * =================================================
+             */
+
+            window.addEventListener(
+                "resize",
+                function () {
+
+                    if (window.innerWidth > 991) {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
+
+            /*
+             * =================================================
+             * PREVENT BODY SCROLL WHEN SIDEBAR IS OPEN
+             * =================================================
+             */
+
+            const observer =
+                new MutationObserver(
+                    function () {
+
+                        if (
+                            sidebar &&
+                            sidebar.classList.contains("show") &&
+                            window.innerWidth <= 991
+                        ) {
+
+                            document.body.style.overflow =
+                                "hidden";
+
+                        } else {
+
+                            document.body.style.overflow =
+                                "";
+
+                        }
+
+                    }
+                );
+
+
+            if (sidebar) {
+
+                observer.observe(
+                    sidebar,
+                    {
+                        attributes: true,
+                        attributeFilter: ["class"]
+                    }
+                );
+
+            }
+
+        });
+
+    </script>
+
+
+</body>
+
+</html>

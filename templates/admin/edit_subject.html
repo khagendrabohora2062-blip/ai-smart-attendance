@@ -1,0 +1,581 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Edit Subject
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="row justify-content-center">
+
+        <div class="col-xl-9 col-lg-10">
+
+            <div class="card shadow border-0">
+
+                <!-- ==================================================
+                     HEADER
+                =================================================== -->
+
+                <div class="card-header bg-warning py-3">
+
+                    <h4 class="mb-0 text-dark">
+
+                        <i class="bi bi-pencil-square me-2"></i>
+
+                        Edit Subject
+
+                    </h4>
+
+                </div>
+
+
+                <div class="card-body p-4">
+
+                    <form method="POST">
+
+
+                        <!-- ==================================================
+                             SUBJECT INFORMATION
+                        =================================================== -->
+
+                        <h5 class="fw-bold mb-3">
+
+                            <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>
+
+                            Subject Information
+
+                        </h5>
+
+
+                        <div class="row">
+
+                            <!-- Subject Code -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Subject Code
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="subject_code"
+                                    class="form-control"
+                                    value="{{ subject[1] }}"
+                                    required>
+
+                            </div>
+
+
+                            <!-- Subject Name -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Subject Name
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="subject_name"
+                                    class="form-control"
+                                    value="{{ subject[2] }}"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row">
+
+                            <!-- Semester -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Semester
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="semester"
+                                    class="form-control"
+                                    value="{{ subject[3] }}"
+                                    required>
+
+                            </div>
+
+
+                            <!-- Department -->
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Department
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="department"
+                                    class="form-control"
+                                    value="{{ subject[4] }}"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ==================================================
+                             TEACHER
+                        =================================================== -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+
+                                Assign Teacher
+
+                            </label>
+
+                            <select
+                                name="teacher_id"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+
+                                    -- Select Teacher --
+
+                                </option>
+
+
+                                {% for teacher in teachers %}
+
+                                <option
+                                    value="{{ teacher[0] }}"
+                                    {% if teacher[0] == subject[5] %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ teacher[1] }}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+
+                        <!-- ==================================================
+                             MARKS SETTINGS
+                        =================================================== -->
+
+                        <div class="card border-primary mb-4">
+
+                            <div class="card-header bg-primary text-white">
+
+                                <h5 class="mb-0">
+
+                                    <i class="bi bi-bar-chart-fill me-2"></i>
+
+                                    Marks Settings
+
+                                </h5>
+
+                            </div>
+
+
+                            <div class="card-body">
+
+                                <p class="text-muted mb-4">
+
+                                    Set the maximum marks and pass marks
+                                    for this subject.
+
+                                </p>
+
+
+                                <div class="row">
+
+
+                                    <!-- ==================================================
+                                         THEORY FULL MARKS
+                                    =================================================== -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label
+                                            class="form-label fw-semibold">
+
+                                            Theory Full Marks
+
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="theory_full_marks"
+                                            id="theoryFullMarks"
+                                            class="form-control"
+                                            min="0.01"
+                                            step="0.01"
+                                            value="{{ subject[6] }}"
+                                            required>
+
+                                    </div>
+
+
+                                    <!-- ==================================================
+                                         PRACTICAL FULL MARKS
+                                    =================================================== -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label
+                                            class="form-label fw-semibold">
+
+                                            Practical Full Marks
+
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="practical_full_marks"
+                                            id="practicalFullMarks"
+                                            class="form-control"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ subject[7] }}"
+                                            required>
+
+                                    </div>
+
+
+                                    <!-- ==================================================
+                                         PASS MARKS
+                                    =================================================== -->
+
+                                    <div class="col-md-4 mb-3">
+
+                                        <label
+                                            class="form-label fw-semibold">
+
+                                            Pass Marks
+
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            name="pass_marks"
+                                            id="passMarks"
+                                            class="form-control"
+                                            min="0"
+                                            step="0.01"
+                                            value="{{ subject[9] }}"
+                                            required>
+
+                                    </div>
+
+                                </div>
+
+
+
+                                <!-- ==================================================
+                                     TOTAL FULL MARKS
+                                =================================================== -->
+
+                                <div class="alert alert-info mb-0">
+
+                                    <div class="row align-items-center">
+
+                                        <div class="col-md-6">
+
+                                            <strong>
+
+                                                Total Full Marks:
+
+                                            </strong>
+
+                                            <span
+                                                id="totalFullMarks"
+                                                class="badge bg-primary fs-6 ms-2">
+
+                                                {{ subject[8] }}
+
+                                            </span>
+
+                                        </div>
+
+
+                                        <div class="col-md-6">
+
+                                            <small class="text-muted">
+
+                                                Total = Theory + Practical
+
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ==================================================
+                             CURRENT SETTINGS SUMMARY
+                        =================================================== -->
+
+                        <div class="card bg-light border-0 mb-4">
+
+                            <div class="card-body">
+
+                                <h6 class="fw-bold mb-3">
+
+                                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
+
+                                    Marks Summary
+
+                                </h6>
+
+
+                                <div class="row text-center">
+
+                                    <div class="col-md-4">
+
+                                        <div class="border rounded p-3">
+
+                                            <small class="text-muted d-block">
+
+                                                Theory
+
+                                            </small>
+
+                                            <strong
+                                                id="summaryTheory">
+
+                                                {{ subject[6] }}
+
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <div class="border rounded p-3">
+
+                                            <small class="text-muted d-block">
+
+                                                Practical
+
+                                            </small>
+
+                                            <strong
+                                                id="summaryPractical">
+
+                                                {{ subject[7] }}
+
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="col-md-4">
+
+                                        <div class="border rounded p-3">
+
+                                            <small class="text-muted d-block">
+
+                                                Pass Marks
+
+                                            </small>
+
+                                            <strong
+                                                id="summaryPass">
+
+                                                {{ subject[9] }}
+
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ==================================================
+                             BUTTONS
+                        =================================================== -->
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="submit"
+                                class="btn btn-success">
+
+                                <i class="bi bi-check-circle-fill me-1"></i>
+
+                                Update Subject
+
+                            </button>
+
+
+                            <a
+                                href="{{ url_for('subjects.index') }}"
+                                class="btn btn-secondary">
+
+                                <i class="bi bi-arrow-left me-1"></i>
+
+                                Back
+
+                            </a>
+
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block js %}
+
+<script>
+
+function formatNumber(value) {
+
+    let number = parseFloat(value) || 0;
+
+    return number
+        .toFixed(2)
+        .replace(/\.00$/, "");
+
+}
+
+
+function calculateTotalMarks() {
+
+    const theory =
+        parseFloat(
+            document.getElementById(
+                "theoryFullMarks"
+            ).value
+        ) || 0;
+
+
+    const practical =
+        parseFloat(
+            document.getElementById(
+                "practicalFullMarks"
+            ).value
+        ) || 0;
+
+
+    const total =
+        theory + practical;
+
+
+    document.getElementById(
+        "totalFullMarks"
+    ).textContent =
+        formatNumber(total);
+
+
+    document.getElementById(
+        "summaryTheory"
+    ).textContent =
+        formatNumber(theory);
+
+
+    document.getElementById(
+        "summaryPractical"
+    ).textContent =
+        formatNumber(practical);
+
+
+    const pass =
+        parseFloat(
+            document.getElementById(
+                "passMarks"
+            ).value
+        ) || 0;
+
+
+    document.getElementById(
+        "summaryPass"
+    ).textContent =
+        formatNumber(pass);
+
+}
+
+
+document.getElementById(
+    "theoryFullMarks"
+).addEventListener(
+    "input",
+    calculateTotalMarks
+);
+
+
+document.getElementById(
+    "practicalFullMarks"
+).addEventListener(
+    "input",
+    calculateTotalMarks
+);
+
+
+document.getElementById(
+    "passMarks"
+).addEventListener(
+    "input",
+    calculateTotalMarks
+);
+
+
+calculateTotalMarks();
+
+</script>
+
+{% endblock %}

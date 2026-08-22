@@ -1,0 +1,2052 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+{{ form_title }} - AI Smart Attendance System
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4 routine-form-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+
+        <div class="d-flex align-items-center gap-3">
+
+            <a
+                href="{{ url_for('routine.index') }}"
+                class="btn btn-light border routine-back-btn"
+            >
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+            <div class="routine-title-icon">
+                <i class="bi bi-calendar-plus"></i>
+            </div>
+
+            <div>
+                <h3 class="mb-0 fw-bold">
+                    {{ form_title }}
+                </h3>
+
+                <p class="text-muted mb-0">
+                    Create and manage class routine
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show shadow-sm"
+                    role="alert"
+                >
+                    <i
+                        class="
+                            {% if category == 'success' %}
+                                bi bi-check-circle-fill
+                            {% elif category == 'danger' %}
+                                bi bi-exclamation-triangle-fill
+                            {% elif category == 'warning' %}
+                                bi bi-exclamation-circle-fill
+                            {% else %}
+                                bi bi-info-circle-fill
+                            {% endif %}
+                            me-2
+                        "
+                    ></i>
+
+                    {{ message }}
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                    ></button>
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =====================================================
+         MAIN FORM CARD
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm rounded-4 routine-main-card">
+
+        <div class="card-body p-4 p-lg-5">
+
+            <form
+                method="POST"
+                action="{{ form_action }}"
+                id="routineForm"
+                novalidate
+            >
+
+                <!-- =================================================
+                     CLASS INFORMATION
+                ================================================== -->
+
+                <div class="routine-section">
+
+                    <div class="routine-section-title">
+
+                        <div class="routine-section-icon blue">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                Class Information
+                            </h5>
+
+                            <small class="text-muted">
+                                Select semester, department and section
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row g-3 mt-1">
+
+                        <!-- =================================================
+                             SEMESTER
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                class="form-label fw-semibold"
+                                for="semester"
+                            >
+                                Semester
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select
+                                name="semester"
+                                id="semester"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Semester
+                                </option>
+
+                                {% if semesters %}
+
+                                    {% for sem in semesters %}
+
+                                        {% set semester_value = sem[0] %}
+
+                                        <option
+                                            value="{{ semester_value }}"
+                                            {% if routine_data and routine_data[1]|string == semester_value|string %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Semester {{ semester_value }}
+                                        </option>
+
+                                    {% endfor %}
+
+                                {% else %}
+
+                                    {% for sem in range(1, 9) %}
+
+                                        <option
+                                            value="{{ sem }}"
+                                            {% if routine_data and routine_data[1]|string == sem|string %}
+                                                selected
+                                            {% endif %}
+                                        >
+                                            Semester {{ sem }}
+                                        </option>
+
+                                    {% endfor %}
+
+                                {% endif %}
+
+                            </select>
+
+                            <div class="invalid-feedback">
+                                Please select a semester.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             DEPARTMENT
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                class="form-label fw-semibold"
+                                for="department"
+                            >
+                                Department
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            {% set current_department =
+                                routine_data[2]
+                                if routine_data
+                                else ''
+                            %}
+
+                            <select
+                                name="department"
+                                id="department"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Department
+                                </option>
+
+                                {% for department in departments %}
+
+                                    <option
+                                        value="{{ department[0] }}"
+                                        {% if current_department|string|trim|lower == department[0]|string|trim|lower %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ department[0] }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <small class="text-muted">
+                                Departments are loaded from the Subjects database.
+                            </small>
+
+                            <div class="invalid-feedback">
+                                Please select a department.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             SECTION
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                class="form-label fw-semibold"
+                                for="section"
+                            >
+                                Section / Batch
+                            </label>
+
+                            <input
+                                type="text"
+                                name="section"
+                                id="section"
+                                class="form-control"
+                                maxlength="50"
+                                placeholder="e.g. A"
+                                value="{% if routine_data %}{{ routine_data[3] or '' }}{% endif %}"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- =================================================
+                     SCHEDULE
+                ================================================== -->
+
+                <div class="routine-section">
+
+                    <div class="routine-section-title">
+
+                        <div class="routine-section-icon green">
+                            <i class="bi bi-clock-fill"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                Schedule
+                            </h5>
+
+                            <small class="text-muted">
+                                Set the day and class time
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row g-3 mt-1">
+
+                        <!-- =================================================
+                             DAY
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                for="day"
+                                class="form-label fw-semibold"
+                            >
+                                Day
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select
+                                name="day"
+                                id="day"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Day
+                                </option>
+
+                                {% for day in [
+                                    'Sunday',
+                                    'Monday',
+                                    'Tuesday',
+                                    'Wednesday',
+                                    'Thursday',
+                                    'Friday',
+                                    'Saturday'
+                                ] %}
+
+                                    <option
+                                        value="{{ day }}"
+                                        {% if routine_data and routine_data[4]|string == day|string %}
+                                            selected
+                                        {% endif %}
+                                    >
+                                        {{ day }}
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <div class="invalid-feedback">
+                                Please select a day.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             START TIME
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                for="start_time"
+                                class="form-label fw-semibold"
+                            >
+                                Start Time
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <input
+                                type="time"
+                                name="start_time"
+                                id="start_time"
+                                class="form-control"
+                                required
+                                value="{% if routine_data %}{{ routine_data[5] }}{% endif %}"
+                            >
+
+                            <div class="invalid-feedback">
+                                Please enter the start time.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             END TIME
+                        ================================================== -->
+
+                        <div class="col-lg-4 col-md-6">
+
+                            <label
+                                for="end_time"
+                                class="form-label fw-semibold"
+                            >
+                                End Time
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <input
+                                type="time"
+                                name="end_time"
+                                id="end_time"
+                                class="form-control"
+                                required
+                                value="{% if routine_data %}{{ routine_data[6] }}{% endif %}"
+                            >
+
+                            <div class="invalid-feedback">
+                                Please enter the end time.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TIME PREVIEW -->
+
+                    <div
+                        id="timePreview"
+                        class="routine-time-preview d-none mt-3"
+                    >
+
+                        <i class="bi bi-clock me-2"></i>
+
+                        <span id="timePreviewText"></span>
+
+                    </div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- =================================================
+                     SUBJECT & TEACHER
+                ================================================== -->
+
+                <div class="routine-section">
+
+                    <div class="routine-section-title">
+
+                        <div class="routine-section-icon purple">
+                            <i class="bi bi-book-fill"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                Subject & Teacher
+                            </h5>
+
+                            <small class="text-muted">
+                                Select a subject for the selected class
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row g-3 mt-1">
+
+                        <!-- =================================================
+                             SUBJECT
+                        ================================================== -->
+
+                        <div class="col-lg-8">
+
+                            <label
+                                for="subject_id"
+                                class="form-label fw-semibold"
+                            >
+                                Subject
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select
+                                name="subject_id"
+                                id="subject_id"
+                                class="form-select"
+                                required
+                            >
+
+                                <option value="">
+                                    Select Subject
+                                </option>
+
+                                {% for subject in subjects %}
+
+                                    <option
+                                        value="{{ subject[0] }}"
+                                        data-semester="{{ subject[3] }}"
+                                        data-department="{{ subject[4] or '' }}"
+                                        data-teacher="{{ subject[6] or 'No teacher assigned' }}"
+                                        data-teacher-id="{{ subject[5] or '' }}"
+
+                                        {% if routine_data and routine_data[7]|string == subject[0]|string %}
+                                            selected
+                                        {% endif %}
+                                    >
+
+                                        {{ subject[1] }}
+
+                                        -
+
+                                        {{ subject[2] }}
+
+                                        {% if subject[3] %}
+                                            | Sem {{ subject[3] }}
+                                        {% endif %}
+
+                                        {% if subject[4] %}
+                                            | {{ subject[4] }}
+                                        {% endif %}
+
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                            <small
+                                id="subjectHelp"
+                                class="text-muted"
+                            >
+                                Select semester and department to filter subjects.
+                            </small>
+
+                            <div class="invalid-feedback">
+                                Please select a subject.
+                            </div>
+
+                        </div>
+
+
+                        <!-- =================================================
+                             TEACHER
+                        ================================================== -->
+
+                        <div class="col-lg-4">
+
+                            <label
+                                class="form-label fw-semibold"
+                            >
+                                Assigned Teacher
+                            </label>
+
+                            <div
+                                id="teacherDisplay"
+                                class="teacher-display"
+                            >
+
+                                <div class="teacher-placeholder">
+
+                                    <div class="teacher-icon">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+
+                                    <span>
+                                        Select a subject
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <input
+                                type="hidden"
+                                name="teacher_id"
+                                id="teacher_id"
+                                value="{% if routine_data %}{{ routine_data[8] or '' }}{% endif %}"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUBJECT STATUS -->
+
+                    <div
+                        id="subjectStatus"
+                        class="subject-status d-none mt-3"
+                    ></div>
+
+                </div>
+
+
+                <hr class="my-4">
+
+
+                <!-- =================================================
+                     CLASSROOM
+                ================================================== -->
+
+                <div class="routine-section">
+
+                    <div class="routine-section-title">
+
+                        <div class="routine-section-icon orange">
+                            <i class="bi bi-door-open-fill"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                Classroom
+                            </h5>
+
+                            <small class="text-muted">
+                                Enter room or laboratory information
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="row g-3 mt-1">
+
+                        <div class="col-lg-6 col-md-8">
+
+                            <label
+                                for="room"
+                                class="form-label fw-semibold"
+                            >
+                                Room / Lab
+                            </label>
+
+                            <input
+                                type="text"
+                                name="room"
+                                id="room"
+                                class="form-control"
+                                maxlength="100"
+                                placeholder="e.g. Room 204 / Lab 1"
+                                value="{% if routine_data %}{{ routine_data[9] or '' }}{% endif %}"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     INFORMATION
+                ================================================== -->
+
+                <div class="alert alert-info border-0 rounded-3 mt-4 routine-info">
+
+                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                    <strong>Automatic Teacher Assignment:</strong>
+
+                    Teacher is automatically assigned from the selected
+                    subject. You do not need to select the teacher manually.
+
+                </div>
+
+
+                <!-- =================================================
+                     BUTTONS
+                ================================================== -->
+
+                <div
+                    class="d-flex flex-wrap justify-content-end gap-2 border-top pt-4 mt-4"
+                >
+
+                    <a
+                        href="{{ url_for('routine.index') }}"
+                        class="btn btn-light border px-4 routine-cancel-btn"
+                    >
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancel
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary px-4 routine-submit-btn"
+                        id="submitBtn"
+                    >
+
+                        {% if routine_data %}
+
+                            <i class="bi bi-check-circle me-1"></i>
+
+                            Update Routine
+
+                        {% else %}
+
+                            <i class="bi bi-plus-circle me-1"></i>
+
+                            Add Routine
+
+                        {% endif %}
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const semester =
+        document.getElementById("semester");
+
+    const department =
+        document.getElementById("department");
+
+    const subject =
+        document.getElementById("subject_id");
+
+    const teacherDisplay =
+        document.getElementById("teacherDisplay");
+
+    const teacherInput =
+        document.getElementById("teacher_id");
+
+    const startTime =
+        document.getElementById("start_time");
+
+    const endTime =
+        document.getElementById("end_time");
+
+    const timePreview =
+        document.getElementById("timePreview");
+
+    const timePreviewText =
+        document.getElementById("timePreviewText");
+
+    const subjectStatus =
+        document.getElementById("subjectStatus");
+
+    const subjectHelp =
+        document.getElementById("subjectHelp");
+
+    const routineForm =
+        document.getElementById("routineForm");
+
+
+    /* =====================================================
+       STORE ORIGINAL SUBJECT
+    ====================================================== */
+
+    const originalSubjectId =
+        subject.value || "";
+
+
+    /* =====================================================
+       NORMALIZE TEXT
+    ====================================================== */
+
+    function normalize(value) {
+
+        return String(value || "")
+            .trim()
+            .toLowerCase();
+
+    }
+
+
+    /* =====================================================
+       FILTER SUBJECTS
+    ====================================================== */
+
+    function filterSubjects() {
+
+        const selectedSemester =
+            normalize(semester.value);
+
+        const selectedDepartment =
+            normalize(department.value);
+
+        let visibleCount = 0;
+
+        Array.from(subject.options).forEach(
+            function (option, index) {
+
+                if (index === 0) {
+
+                    option.hidden = false;
+
+                    return;
+                }
+
+
+                const optionSemester =
+                    normalize(
+                        option.dataset.semester
+                    );
+
+                const optionDepartment =
+                    normalize(
+                        option.dataset.department
+                    );
+
+
+                let show = true;
+
+
+                /* -----------------------------------------
+                   SEMESTER FILTER
+                ------------------------------------------ */
+
+                if (
+                    selectedSemester &&
+                    optionSemester &&
+                    optionSemester !== selectedSemester
+                ) {
+
+                    show = false;
+
+                }
+
+
+                /* -----------------------------------------
+                   DEPARTMENT FILTER
+                ------------------------------------------ */
+
+                if (
+                    selectedDepartment &&
+                    optionDepartment &&
+                    optionDepartment !== selectedDepartment
+                ) {
+
+                    show = false;
+
+                }
+
+
+                /*
+                 * If department is selected but the subject
+                 * has no department, hide it.
+                 */
+
+                if (
+                    selectedDepartment &&
+                    !optionDepartment
+                ) {
+
+                    show = false;
+
+                }
+
+
+                option.hidden = !show;
+
+
+                if (show) {
+                    visibleCount++;
+                }
+
+            }
+        );
+
+
+        /* =================================================
+           KEEP EDIT SUBJECT
+        ================================================== */
+
+        if (originalSubjectId) {
+
+            const originalOption =
+                Array.from(subject.options)
+                    .find(
+                        option =>
+                            option.value === originalSubjectId
+                    );
+
+            if (originalOption) {
+
+                originalOption.hidden = false;
+
+            }
+
+        }
+
+
+        /* =================================================
+           CHECK CURRENT SELECTION
+        ================================================== */
+
+        const selected =
+            subject.options[
+                subject.selectedIndex
+            ];
+
+
+        if (
+            selected &&
+            selected.value &&
+            selected.hidden
+        ) {
+
+            subject.value = "";
+
+        }
+
+
+        /* =================================================
+           STATUS
+        ================================================== */
+
+        if (
+            selectedSemester &&
+            selectedDepartment &&
+            visibleCount === 0
+        ) {
+
+            subjectStatus.className =
+                "subject-status mt-3 alert alert-warning border-0";
+
+            subjectStatus.innerHTML = `
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                No subjects found for the selected semester and department.
+            `;
+
+        }
+        else {
+
+            subjectStatus.className =
+                "subject-status d-none mt-3";
+
+            subjectStatus.innerHTML = "";
+
+        }
+
+
+        updateTeacher();
+
+    }
+
+
+    /* =====================================================
+       UPDATE TEACHER
+    ====================================================== */
+
+    function updateTeacher() {
+
+        const selected =
+            subject.options[
+                subject.selectedIndex
+            ];
+
+
+        if (
+            !selected ||
+            !selected.value ||
+            selected.hidden
+        ) {
+
+            teacherDisplay.innerHTML = `
+
+                <div class="teacher-placeholder">
+
+                    <div class="teacher-icon">
+                        <i class="bi bi-person"></i>
+                    </div>
+
+                    <span>
+                        Select a subject
+                    </span>
+
+                </div>
+
+            `;
+
+            teacherInput.value = "";
+
+            return;
+
+        }
+
+
+        const teacher =
+            selected.dataset.teacher ||
+            "No teacher assigned";
+
+
+        const teacherId =
+            selected.dataset.teacherId ||
+            "";
+
+
+        teacherInput.value =
+            teacherId;
+
+
+        /* =================================================
+           NO TEACHER
+        ================================================== */
+
+        if (!teacherId) {
+
+            teacherDisplay.innerHTML = `
+
+                <div class="teacher-placeholder teacher-warning">
+
+                    <div class="teacher-icon warning">
+                        <i class="bi bi-person-exclamation"></i>
+                    </div>
+
+                    <span>
+                        No teacher assigned
+                    </span>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        /* =================================================
+           TEACHER FOUND
+        ================================================== */
+
+        teacherDisplay.innerHTML = `
+
+            <div class="teacher-selected">
+
+                <div class="teacher-icon">
+
+                    <i class="bi bi-person-fill"></i>
+
+                </div>
+
+                <div class="teacher-info">
+
+                    <span class="teacher-label">
+                        Assigned Teacher
+                    </span>
+
+                    <span class="teacher-name">
+                        ${escapeHtml(teacher)}
+                    </span>
+
+                </div>
+
+                <i
+                    class="bi bi-check-circle-fill teacher-check"
+                ></i>
+
+            </div>
+
+        `;
+
+    }
+
+
+    /* =====================================================
+       HTML ESCAPE
+    ====================================================== */
+
+    function escapeHtml(value) {
+
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    /* =====================================================
+       FORMAT TIME
+    ====================================================== */
+
+    function formatTime(time) {
+
+        if (!time) {
+            return "";
+        }
+
+
+        const parts =
+            time.split(":");
+
+
+        let hour =
+            parseInt(parts[0], 10);
+
+        const minute =
+            parts[1];
+
+
+        const period =
+            hour >= 12
+                ? "PM"
+                : "AM";
+
+
+        hour =
+            hour % 12 || 12;
+
+
+        return `${hour}:${minute} ${period}`;
+
+    }
+
+
+    /* =====================================================
+       TIME PREVIEW
+    ====================================================== */
+
+    function updateTimePreview() {
+
+        if (
+            !startTime.value ||
+            !endTime.value
+        ) {
+
+            timePreview.classList.add("d-none");
+
+            return;
+
+        }
+
+
+        if (
+            startTime.value >=
+            endTime.value
+        ) {
+
+            timePreview.classList.remove("d-none");
+
+            timePreview.classList.add(
+                "time-invalid"
+            );
+
+            timePreviewText.innerHTML = `
+
+                <strong>Invalid time:</strong>
+
+                End time must be later than start time.
+
+            `;
+
+            return;
+
+        }
+
+
+        timePreview.classList.remove(
+            "d-none",
+            "time-invalid"
+        );
+
+
+        timePreviewText.innerHTML = `
+
+            Class time:
+
+            <strong>
+                ${formatTime(startTime.value)}
+            </strong>
+
+            -
+
+            <strong>
+                ${formatTime(endTime.value)}
+            </strong>
+
+        `;
+
+    }
+
+
+    /* =====================================================
+       SUBJECT API FALLBACK
+    ====================================================== */
+
+    async function loadSubjectsFromAPI() {
+
+        const selectedSemester =
+            semester.value.trim();
+
+        const selectedDepartment =
+            department.value.trim();
+
+
+        if (
+            !selectedSemester ||
+            !selectedDepartment
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * The server already sends subjects to the template.
+         * This API is used only as a fallback if no matching
+         * subjects are available in the current select.
+         */
+
+        const options =
+            Array.from(subject.options)
+                .filter(
+                    option =>
+                        option.value &&
+                        !option.hidden
+                );
+
+
+        if (options.length > 0) {
+
+            return;
+
+        }
+
+
+        try {
+
+            const params =
+                new URLSearchParams({
+
+                    semester:
+                        selectedSemester,
+
+                    department:
+                        selectedDepartment
+
+                });
+
+
+            const response =
+                await fetch(
+                    "{{ url_for('routine.subjects_api') }}?" +
+                    params.toString(),
+                    {
+                        headers: {
+                            "X-Requested-With":
+                                "XMLHttpRequest"
+                        }
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !result.success ||
+                !Array.isArray(result.subjects)
+            ) {
+
+                return;
+
+            }
+
+
+            result.subjects.forEach(
+                function(item) {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+
+                    option.value =
+                        item.id;
+
+                    option.textContent =
+                        `${item.subject_code} - ${item.subject_name}` +
+                        ` | Sem ${item.semester}` +
+                        ` | ${item.department}`;
+
+
+                    option.dataset.semester =
+                        item.semester || "";
+
+                    option.dataset.department =
+                        item.department || "";
+
+                    option.dataset.teacher =
+                        item.teacher_name ||
+                        "No teacher assigned";
+
+                    option.dataset.teacherId =
+                        item.teacher_id || "";
+
+
+                    subject.appendChild(option);
+
+                }
+            );
+
+
+            filterSubjects();
+
+
+        }
+        catch (error) {
+
+            console.error(
+                "Subject API error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EVENTS
+    ====================================================== */
+
+    semester.addEventListener(
+        "change",
+        async function () {
+
+            filterSubjects();
+
+            await loadSubjectsFromAPI();
+
+        }
+    );
+
+
+    department.addEventListener(
+        "change",
+        async function () {
+
+            filterSubjects();
+
+            await loadSubjectsFromAPI();
+
+        }
+    );
+
+
+    subject.addEventListener(
+        "change",
+        function () {
+
+            updateTeacher();
+
+        }
+    );
+
+
+    startTime.addEventListener(
+        "change",
+        updateTimePreview
+    );
+
+
+    endTime.addEventListener(
+        "change",
+        updateTimePreview
+    );
+
+
+    startTime.addEventListener(
+        "input",
+        updateTimePreview
+    );
+
+
+    endTime.addEventListener(
+        "input",
+        updateTimePreview
+    );
+
+
+    /* =====================================================
+       FORM VALIDATION
+    ====================================================== */
+
+    routineForm.addEventListener(
+        "submit",
+        function(event) {
+
+            let valid = true;
+
+
+            /* ---------------------------------------------
+               NATIVE REQUIRED VALIDATION
+            ---------------------------------------------- */
+
+            if (!routineForm.checkValidity()) {
+
+                valid = false;
+
+            }
+
+
+            /* ---------------------------------------------
+               TIME VALIDATION
+            ---------------------------------------------- */
+
+            if (
+                startTime.value &&
+                endTime.value &&
+                startTime.value >= endTime.value
+            ) {
+
+                valid = false;
+
+                endTime.classList.add(
+                    "is-invalid"
+                );
+
+                timePreview.classList.remove(
+                    "d-none"
+                );
+
+                timePreview.classList.add(
+                    "time-invalid"
+                );
+
+                timePreviewText.innerHTML = `
+
+                    <strong>Invalid time:</strong>
+
+                    End time must be later than start time.
+
+                `;
+
+                endTime.focus();
+
+            }
+            else {
+
+                endTime.classList.remove(
+                    "is-invalid"
+                );
+
+            }
+
+
+            /* ---------------------------------------------
+               SUBJECT TEACHER VALIDATION
+            ---------------------------------------------- */
+
+            if (
+                subject.value &&
+                !teacherInput.value
+            ) {
+
+                valid = false;
+
+
+                subjectStatus.className =
+                    "subject-status mt-3 alert alert-danger border-0";
+
+                subjectStatus.innerHTML = `
+
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+
+                    The selected subject does not have a teacher assigned.
+
+                `;
+
+            }
+
+
+            if (!valid) {
+
+                event.preventDefault();
+
+                event.stopPropagation();
+
+            }
+
+
+            routineForm.classList.add(
+                "was-validated"
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       INITIAL LOAD
+    ====================================================== */
+
+    filterSubjects();
+
+    updateTeacher();
+
+    updateTimePreview();
+
+
+    /* =====================================================
+       EDIT MODE TEACHER FIX
+    ====================================================== */
+
+    setTimeout(
+        function () {
+
+            updateTeacher();
+
+        },
+        100
+    );
+
+});
+
+</script>
+
+
+<!-- =========================================================
+     STYLE
+========================================================= -->
+
+<style>
+
+    /* =====================================================
+       PAGE
+    ====================================================== */
+
+    .routine-form-page {
+        min-height: 100%;
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    .routine-back-btn {
+        width: 44px;
+        height: 44px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 10px;
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .routine-back-btn:hover {
+        transform: translateX(-2px);
+
+        box-shadow:
+            0 4px 12px rgba(0,0,0,.08);
+    }
+
+
+    .routine-title-icon {
+
+        width: 46px;
+        height: 46px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: rgba(13,110,253,.10);
+
+        color: #0d6efd;
+
+        font-size: 22px;
+    }
+
+
+    /* =====================================================
+       MAIN CARD
+    ====================================================== */
+
+    .routine-main-card {
+
+        overflow: hidden;
+
+        border: 1px solid
+            rgba(0,0,0,.04) !important;
+    }
+
+
+    /* =====================================================
+       SECTION
+    ====================================================== */
+
+    .routine-section {
+        width: 100%;
+    }
+
+
+    .routine-section-title {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        margin-bottom: 4px;
+    }
+
+
+    .routine-section-icon {
+
+        width: 40px;
+        height: 40px;
+
+        flex-shrink: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 10px;
+
+        font-size: 18px;
+    }
+
+
+    .routine-section-icon.blue {
+
+        background: rgba(13,110,253,.10);
+
+        color: #0d6efd;
+    }
+
+
+    .routine-section-icon.green {
+
+        background: rgba(25,135,84,.10);
+
+        color: #198754;
+    }
+
+
+    .routine-section-icon.purple {
+
+        background: rgba(111,66,193,.10);
+
+        color: #6f42c1;
+    }
+
+
+    .routine-section-icon.orange {
+
+        background: rgba(255,193,7,.14);
+
+        color: #d39e00;
+    }
+
+
+    /* =====================================================
+       FORM
+    ====================================================== */
+
+    .form-label {
+
+        margin-bottom: 7px;
+    }
+
+
+    .form-control,
+    .form-select {
+
+        min-height: 44px;
+
+        border-radius: 10px;
+
+        border-color: #dee2e6;
+
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .form-control:focus,
+    .form-select:focus {
+
+        border-color: #86b7fe;
+
+        box-shadow:
+            0 0 0 .20rem
+            rgba(13,110,253,.10);
+    }
+
+
+    .form-control:hover,
+    .form-select:hover {
+
+        border-color: #b8c2cc;
+    }
+
+
+    /* =====================================================
+       TEACHER DISPLAY
+    ====================================================== */
+
+    .teacher-display {
+
+        min-height: 44px;
+
+        width: 100%;
+
+        border: 1px solid #dee2e6;
+
+        border-radius: 10px;
+
+        background: #f8f9fa;
+
+        display: flex;
+
+        align-items: center;
+
+        padding: 7px 10px;
+    }
+
+
+    .teacher-placeholder {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        color: #6c757d;
+
+        font-size: 14px;
+    }
+
+
+    .teacher-selected {
+
+        width: 100%;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+    }
+
+
+    .teacher-icon {
+
+        width: 30px;
+        height: 30px;
+
+        flex-shrink: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 50%;
+
+        background: rgba(13,110,253,.10);
+
+        color: #0d6efd;
+    }
+
+
+    .teacher-icon.warning {
+
+        background: rgba(255,193,7,.15);
+
+        color: #b58100;
+    }
+
+
+    .teacher-info {
+
+        display: flex;
+
+        flex-direction: column;
+
+        min-width: 0;
+    }
+
+
+    .teacher-label {
+
+        font-size: 10px;
+
+        color: #6c757d;
+
+        line-height: 1.2;
+    }
+
+
+    .teacher-name {
+
+        font-weight: 600;
+
+        font-size: 14px;
+
+        color: #212529;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+
+    .teacher-check {
+
+        margin-left: auto;
+
+        color: #198754;
+
+        font-size: 16px;
+    }
+
+
+    /* =====================================================
+       TIME PREVIEW
+    ====================================================== */
+
+    .routine-time-preview {
+
+        padding: 10px 14px;
+
+        border-radius: 10px;
+
+        background: rgba(25,135,84,.08);
+
+        color: #146c43;
+
+        font-size: 14px;
+
+        border: 1px solid
+            rgba(25,135,84,.12);
+    }
+
+
+    .routine-time-preview.time-invalid {
+
+        background: rgba(220,53,69,.08);
+
+        color: #b02a37;
+
+        border-color:
+            rgba(220,53,69,.15);
+    }
+
+
+    /* =====================================================
+       SUBJECT STATUS
+    ====================================================== */
+
+    .subject-status {
+
+        font-size: 14px;
+    }
+
+
+    /* =====================================================
+       INFO
+    ====================================================== */
+
+    .routine-info {
+
+        background: rgba(13,110,253,.07);
+
+        color: #084298;
+    }
+
+
+    /* =====================================================
+       BUTTONS
+    ====================================================== */
+
+    .btn {
+
+        border-radius: 10px;
+
+        min-height: 44px;
+    }
+
+
+    .routine-submit-btn {
+
+        min-width: 145px;
+
+        font-weight: 600;
+    }
+
+
+    .routine-cancel-btn {
+
+        min-width: 105px;
+
+        font-weight: 500;
+    }
+
+
+    /* =====================================================
+       PURPLE
+    ====================================================== */
+
+    .text-purple {
+
+        color: #6f42c1;
+    }
+
+
+    /* =====================================================
+       SELECT HIDDEN OPTIONS
+    ====================================================== */
+
+    select option[hidden] {
+
+        display: none;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media (max-width: 768px) {
+
+        .container-fluid {
+
+            padding-left: 14px !important;
+
+            padding-right: 14px !important;
+        }
+
+
+        .routine-main-card
+        .card-body {
+
+            padding: 20px !important;
+        }
+
+
+        .routine-title-icon {
+
+            width: 42px;
+
+            height: 42px;
+
+            font-size: 19px;
+        }
+
+
+        .routine-section-icon {
+
+            width: 36px;
+
+            height: 36px;
+
+            font-size: 16px;
+        }
+
+
+        .routine-section-title h5 {
+
+            font-size: 16px;
+        }
+
+
+        .routine-section-title small {
+
+            font-size: 12px;
+        }
+
+
+        .routine-submit-btn,
+        .routine-cancel-btn {
+
+            flex: 1;
+
+            min-width: 120px;
+        }
+
+    }
+
+
+    @media (max-width: 480px) {
+
+        .routine-form-page h3 {
+
+            font-size: 20px;
+        }
+
+
+        .routine-form-page .d-flex.justify-content-end {
+
+            flex-direction: column;
+        }
+
+
+        .routine-submit-btn,
+        .routine-cancel-btn {
+
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+{% endblock %}

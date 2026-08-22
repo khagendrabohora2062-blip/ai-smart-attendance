@@ -1,0 +1,261 @@
+{% extends "layouts/base.html" %}
+
+{% if notice %}
+    {% set page_title = "Edit Notice" %}
+{% else %}
+    {% set page_title = "Add Notice" %}
+{% endif %}
+
+{% block title %}
+{{ page_title }} - Admin
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="mb-4">
+
+        <h3 class="fw-bold mb-1">
+
+            <i class="bi bi-megaphone-fill me-2"></i>
+
+            {{ page_title }}
+
+        </h3>
+
+        <p class="text-muted">
+            Create a notice for students.
+        </p>
+
+    </div>
+
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            {% if notice %}
+
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'admin_notice.edit',
+                    notice_id=notice[0]
+                ) }}">
+
+            {% else %}
+
+            <form
+                method="POST"
+                action="{{ url_for('admin_notice.add') }}">
+
+            {% endif %}
+
+
+                <!-- TITLE -->
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Notice Title
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        class="form-control"
+                        placeholder="Enter notice title"
+                        value="{% if notice %}{{ notice[1] }}{% endif %}"
+                        required>
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Description
+                    </label>
+
+                    <textarea
+                        name="description"
+                        rows="6"
+                        class="form-control"
+                        placeholder="Write notice details..."
+                        required>{% if notice %}{{ notice[2] }}{% endif %}</textarea>
+
+                </div>
+
+
+                <div class="row">
+
+
+                    <!-- SEMESTER -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Target Semester
+                        </label>
+
+                        <select
+                            name="target_semester"
+                            class="form-select">
+
+                            <option value="">
+                                All Semesters
+                            </option>
+
+                            {% for sem in [
+                                '1st',
+                                '2nd',
+                                '3rd',
+                                '4th',
+                                '5th',
+                                '6th',
+                                '7th',
+                                '8th'
+                            ] %}
+
+                                <option
+                                    value="{{ sem }}"
+                                    {% if notice and notice[3] == sem %}
+                                        selected
+                                    {% endif %}>
+
+                                    {{ sem }} Semester
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- DEPARTMENT -->
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Target Department
+                        </label>
+
+                        <input
+                            type="text"
+                            name="target_department"
+                            class="form-control"
+                            placeholder="e.g. Computer Engineering"
+                            value="{% if notice %}{{ notice[4] or '' }}{% endif %}">
+
+                    </div>
+
+                </div>
+
+
+                <!-- TYPE -->
+
+                <div class="mb-3">
+
+                    <label class="form-label fw-semibold">
+                        Notice Type
+                    </label>
+
+                    <select
+                        name="notice_type"
+                        class="form-select">
+
+                        {% for type in [
+                            'General',
+                            'Exam',
+                            'Assignment',
+                            'Holiday',
+                            'Important',
+                            'Event'
+                        ] %}
+
+                            <option
+                                value="{{ type }}"
+                                {% if notice and notice[5] == type %}
+                                    selected
+                                {% endif %}>
+
+                                {{ type }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- PUBLISH -->
+
+                <div class="form-check form-switch mb-4">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="is_published"
+                        id="publishNotice"
+                        {% if not notice or notice[6] == 1 %}
+                            checked
+                        {% endif %}>
+
+                    <label
+                        class="form-check-label"
+                        for="publishNotice">
+
+                        Publish notice immediately
+
+                    </label>
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+
+                        <i class="bi bi-check-circle me-1"></i>
+
+                        {% if notice %}
+                            Update Notice
+                        {% else %}
+                            Publish Notice
+                        {% endif %}
+
+                    </button>
+
+
+                    <a
+                        href="{{ url_for('admin_notice.index') }}"
+                        class="btn btn-secondary">
+
+                        Cancel
+
+                    </a>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

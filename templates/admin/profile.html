@@ -1,0 +1,241 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="mb-4">
+
+        <h2 class="fw-bold">
+            <i class="bi bi-person-circle text-primary"></i>
+            My Profile
+        </h2>
+
+        <p class="text-muted">
+            Manage your account information and security.
+        </p>
+
+    </div>
+
+    <div class="row">
+
+        <!-- Left -->
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-lg">
+
+                <div class="card-body text-center">
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + (admin[5] if admin[5] else 'default.png')) }}"
+                        class="rounded-circle shadow"
+                        width="170"
+                        height="170"
+                        style="object-fit:cover;"
+                    >
+
+                    <h4 class="fw-bold mt-3">
+                        {{ admin[1] }}
+                    </h4>
+
+                    <p class="text-muted">
+                        System Administrator
+                    </p>
+
+                    <hr>
+
+                    <form
+                        method="POST"
+                        enctype="multipart/form-data"
+                        action="{{ url_for('admin.upload_photo') }}"
+                    >
+
+                        <input
+                            type="file"
+                            name="photo"
+                            class="form-control mb-3"
+                            required
+                        >
+
+                        <button class="btn btn-primary w-100">
+
+                            <i class="bi bi-camera-fill"></i>
+
+                            Upload Photo
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Right -->
+        <div class="col-lg-8">
+
+            <div class="card border-0 shadow-lg">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Profile Information
+
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Full Name
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="full_name"
+                                    class="form-control"
+                                    value="{{ admin[1] }}"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Username
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="username"
+                                    class="form-control"
+                                    value="{{ admin[2] }}"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Email
+
+                                </label>
+
+                                <input
+                                    type="email"
+                                    name="email"
+                                    class="form-control"
+                                    value="{{ admin[3] }}"
+                                    required
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label fw-semibold">
+
+                                    Account Created
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ admin[4] }}"
+                                    readonly
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <hr>
+
+                        <h5>
+
+                            <i class="bi bi-lock-fill"></i>
+
+                            Change Password
+
+                        </h5>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    New Password
+
+                                </label>
+
+                                <input
+                                    type="password"
+                                    name="password"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Confirm Password
+
+                                </label>
+
+                                <input
+                                    type="password"
+                                    name="confirm_password"
+                                    class="form-control"
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <button class="btn btn-success px-4">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            Save Changes
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

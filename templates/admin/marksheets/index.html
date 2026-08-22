@@ -1,0 +1,1314 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Marksheet Management - AI Smart Attendance System
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>
+                Marksheet Management
+            </h3>
+
+            <p class="text-muted mb-0">
+                Manage student marks, grades and academic results
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin_marksheet.add') }}"
+            class="btn btn-primary"
+        >
+            <i class="bi bi-plus-circle me-1"></i>
+            Add Marks
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY CARDS
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- TOTAL RECORDS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="marksheet-stat-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                        </div>
+
+                        <div class="ms-3">
+
+                            <div class="text-muted small">
+                                Total Mark Records
+                            </div>
+
+                            <h4
+                                class="fw-bold mb-0"
+                                id="totalRecords"
+                            >
+                                {{ marksheets|length }}
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL STUDENTS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="marksheet-stat-icon bg-success-subtle text-success">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+
+                        <div class="ms-3">
+
+                            <div class="text-muted small">
+                                Students
+                            </div>
+
+                            <h4
+                                class="fw-bold mb-0"
+                                id="totalStudents"
+                            >
+                                0
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PASSED -->
+
+        <div class="col-lg-4 col-md-12">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="marksheet-stat-icon bg-info-subtle text-info">
+                            <i class="bi bi-check-circle-fill"></i>
+                        </div>
+
+                        <div class="ms-3">
+
+                            <div class="text-muted small">
+                                Passed Records
+                            </div>
+
+                            <h4
+                                class="fw-bold mb-0"
+                                id="passedRecords"
+                            >
+                                0
+                            </h4>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         FILTER / SEARCH
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row g-3 align-items-end">
+
+                <!-- SEARCH -->
+
+                <div class="col-xl-5 col-lg-6">
+
+                    <label
+                        for="marksheetSearch"
+                        class="form-label fw-semibold"
+                    >
+                        Search Student / Subject
+                    </label>
+
+                    <div class="input-group">
+
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="marksheetSearch"
+                            class="form-control"
+                            placeholder="Search student ID, name, subject..."
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- SEMESTER -->
+
+                <div class="col-xl-3 col-lg-3 col-md-6">
+
+                    <label
+                        for="semesterFilter"
+                        class="form-label fw-semibold"
+                    >
+                        Semester
+                    </label>
+
+                    <select
+                        id="semesterFilter"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Semesters
+                        </option>
+
+                        {% for semester in [
+                            "1st",
+                            "2nd",
+                            "3rd",
+                            "4th",
+                            "5th",
+                            "6th",
+                            "7th",
+                            "8th"
+                        ] %}
+
+                            <option value="{{ semester|lower }}">
+                                {{ semester }} Semester
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- DEPARTMENT -->
+
+                <div class="col-xl-3 col-lg-3 col-md-5">
+
+                    <label
+                        for="departmentFilter"
+                        class="form-label fw-semibold"
+                    >
+                        Department
+                    </label>
+
+                    <select
+                        id="departmentFilter"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Departments
+                        </option>
+
+                        {% set departments = [] %}
+
+                        {% for mark in marksheets %}
+
+                            {% if mark[3] and mark[3] not in departments %}
+
+                                {% set _ = departments.append(mark[3]) %}
+
+                                <option value="{{ mark[3]|lower }}">
+                                    {{ mark[3] }}
+                                </option>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- RESET -->
+
+                <div class="col-xl-1 col-lg-12 col-md-1">
+
+                    <button
+                        type="button"
+                        id="resetFilters"
+                        class="btn btn-outline-secondary w-100"
+                        title="Reset filters"
+                    >
+
+                        <i class="bi bi-arrow-clockwise"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MARKSHEET TABLE
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <!-- HEADER -->
+
+        <div class="card-header bg-white border-0 py-3">
+
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                <div>
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-table me-2"></i>
+
+                        Student Results
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Theory + Practical marks and final grades
+
+                    </small>
+
+                </div>
+
+                <span
+                    class="badge bg-primary"
+                    id="visibleCount"
+                >
+                    {{ marksheets|length }}
+                    {{ "Record" if marksheets|length == 1 else "Records" }}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- TABLE BODY -->
+
+        <div class="card-body p-0">
+
+            {% if marksheets %}
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-hover align-middle mb-0"
+                    id="marksheetTable"
+                >
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Student
+                            </th>
+
+                            <th>
+                                Department
+                            </th>
+
+                            <th>
+                                Semester
+                            </th>
+
+                            <th>
+                                Subject
+                            </th>
+
+                            <th class="text-center">
+                                Theory
+                            </th>
+
+                            <th class="text-center">
+                                Practical
+                            </th>
+
+                            <th class="text-center">
+                                Total
+                            </th>
+
+                            <th class="text-center">
+                                Pass
+                            </th>
+
+                            <th class="text-center">
+                                Grade
+                            </th>
+
+                            <th class="text-center">
+                                GP
+                            </th>
+
+                            <th class="text-center">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for mark in marksheets %}
+
+                        <!--
+                        INDEX MAPPING FROM admin_marksheet.py
+
+                        0  = marksheet id
+                        1  = student id
+                        2  = student name
+                        3  = department
+                        4  = semester
+                        5  = subject code
+                        6  = subject name
+                        7  = theory full marks
+                        8  = practical full marks
+                        9  = total full marks
+                        10 = pass marks
+                        11 = theory obtained
+                        12 = practical obtained
+                        13 = total obtained
+                        14 = grade
+                        15 = grade point
+                        16 = remarks
+                        17 = created_at
+                        18 = updated_at
+                        -->
+
+                        {% set theory_full = mark[7] or 0 %}
+                        {% set practical_full = mark[8] or 0 %}
+                        {% set total_full = mark[9] or 0 %}
+                        {% set pass_mark = mark[10] or 0 %}
+
+                        {% set theory_obtained = mark[11] or 0 %}
+                        {% set practical_obtained = mark[12] or 0 %}
+                        {% set total_obtained = mark[13] or 0 %}
+
+                        <tr
+                            class="marksheet-row"
+
+                            data-student="{{ (mark[1] or '')|lower }}"
+
+                            data-name="{{ (mark[2] or '')|lower }}"
+
+                            data-department="{{ (mark[3] or '')|lower }}"
+
+                            data-semester="{{ (mark[4] or '')|lower }}"
+
+                            data-subject="{{ (mark[6] or '')|lower }}"
+                        >
+
+                            <!-- NUMBER -->
+
+                            <td class="ps-4 fw-semibold text-muted">
+
+                                {{ loop.index }}
+
+                            </td>
+
+
+                            <!-- STUDENT -->
+
+                            <td>
+
+                                <div class="d-flex align-items-center">
+
+                                    <div class="student-avatar-sm">
+
+                                        <i class="bi bi-person-fill"></i>
+
+                                    </div>
+
+                                    <div class="ms-2">
+
+                                        <div class="fw-semibold">
+
+                                            {{ mark[2] }}
+
+                                        </div>
+
+                                        <small class="text-muted">
+
+                                            ID: {{ mark[1] }}
+
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <!-- DEPARTMENT -->
+
+                            <td>
+
+                                <span class="text-muted">
+
+                                    {{ mark[3] or "N/A" }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- SEMESTER -->
+
+                            <td>
+
+                                {% if mark[4] %}
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ mark[4] }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        N/A
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- SUBJECT -->
+
+                            <td>
+
+                                <div class="fw-semibold">
+
+                                    {{ mark[6] }}
+
+                                </div>
+
+                                <small class="text-muted">
+
+                                    {{ mark[5] }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- THEORY -->
+
+                            <td class="text-center">
+
+                                <span class="marks-value">
+
+                                    {{ "%.2f"|format(theory_obtained) }}
+
+                                </span>
+
+                                <small class="text-muted d-block">
+
+                                    / {{ "%.2f"|format(theory_full) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- PRACTICAL -->
+
+                            <td class="text-center">
+
+                                <span class="marks-value">
+
+                                    {{ "%.2f"|format(practical_obtained) }}
+
+                                </span>
+
+                                <small class="text-muted d-block">
+
+                                    / {{ "%.2f"|format(practical_full) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- TOTAL -->
+
+                            <td class="text-center">
+
+                                <span
+                                    class="fw-bold
+                                    {% if total_obtained >= pass_mark %}
+                                        text-success
+                                    {% else %}
+                                        text-danger
+                                    {% endif %}"
+                                >
+
+                                    {{ "%.2f"|format(total_obtained) }}
+
+                                </span>
+
+                                <small class="text-muted d-block">
+
+                                    / {{ "%.2f"|format(total_full) }}
+
+                                </small>
+
+                            </td>
+
+
+                            <!-- PASS MARK -->
+
+                            <td class="text-center">
+
+                                <span class="text-muted">
+
+                                    {{ "%.2f"|format(pass_mark) }}
+
+                                </span>
+
+                            </td>
+
+
+                            <!-- GRADE -->
+
+                            <td class="text-center">
+
+                                {% if mark[14] == "A+" %}
+
+                                    <span class="badge bg-success grade-badge">
+                                        A+
+                                    </span>
+
+                                {% elif mark[14] == "A" %}
+
+                                    <span class="badge bg-success grade-badge">
+                                        A
+                                    </span>
+
+                                {% elif mark[14] == "B+" %}
+
+                                    <span class="badge bg-primary grade-badge">
+                                        B+
+                                    </span>
+
+                                {% elif mark[14] == "B" %}
+
+                                    <span class="badge bg-primary grade-badge">
+                                        B
+                                    </span>
+
+                                {% elif mark[14] == "C+" %}
+
+                                    <span class="badge bg-warning text-dark grade-badge">
+                                        C+
+                                    </span>
+
+                                {% elif mark[14] == "C" %}
+
+                                    <span class="badge bg-warning text-dark grade-badge">
+                                        C
+                                    </span>
+
+                                {% elif mark[14] == "D" %}
+
+                                    <span class="badge bg-secondary grade-badge">
+                                        D
+                                    </span>
+
+                                {% elif mark[14] == "F" %}
+
+                                    <span class="badge bg-danger grade-badge">
+                                        F
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary grade-badge">
+                                        {{ mark[14] or "N/A" }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- GRADE POINT -->
+
+                            <td class="text-center">
+
+                                {% if mark[15] is not none %}
+
+                                    <span class="fw-semibold">
+
+                                        {{ "%.2f"|format(mark[15]) }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        -
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- ACTION -->
+
+                            <td class="text-center">
+
+                                <div class="d-flex justify-content-center gap-1">
+
+                                    <!-- EDIT -->
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin_marksheet.edit',
+                                            marksheet_id=mark[0]
+                                        ) }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="Edit Marks"
+                                    >
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </a>
+
+
+                                    <!-- DELETE -->
+
+                                    <form
+                                        method="POST"
+
+                                        action="{{ url_for(
+                                            'admin_marksheet.delete',
+                                            marksheet_id=mark[0]
+                                        ) }}"
+
+                                        onsubmit="return confirm('Are you sure you want to delete these marks?');"
+                                    >
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Delete Marks"
+                                        >
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- NO FILTER RESULT -->
+
+            <div
+                id="noFilterResult"
+                class="text-center py-5 d-none"
+            >
+
+                <i class="bi bi-search display-5 text-muted"></i>
+
+                <h6 class="fw-bold mt-3">
+                    No matching records
+                </h6>
+
+                <p class="text-muted mb-0">
+                    Try changing your search or filters.
+                </p>
+
+            </div>
+
+
+            {% else %}
+
+            <!-- EMPTY STATE -->
+
+            <div class="text-center py-5 px-3">
+
+                <div class="empty-marksheet-icon">
+
+                    <i class="bi bi-file-earmark-spreadsheet"></i>
+
+                </div>
+
+                <h5 class="fw-bold mt-3">
+                    No Marksheets Found
+                </h5>
+
+                <p class="text-muted mb-4">
+                    No student marks have been added yet.
+                </p>
+
+                <a
+                    href="{{ url_for('admin_marksheet.add') }}"
+                    class="btn btn-primary"
+                >
+
+                    <i class="bi bi-plus-circle me-1"></i>
+
+                    Add First Mark
+
+                </a>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CUSTOM CSS
+========================================================= -->
+
+<style>
+
+.marksheet-stat-icon {
+
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    font-size: 21px;
+
+}
+
+
+.student-avatar-sm {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eef2ff;
+    color: #4f46e5;
+
+    flex-shrink: 0;
+
+}
+
+
+.marks-value {
+
+    font-weight: 600;
+
+}
+
+
+.grade-badge {
+
+    min-width: 38px;
+
+    padding: 6px 8px;
+
+    font-size: 12px;
+
+}
+
+
+.empty-marksheet-icon {
+
+    width: 80px;
+    height: 80px;
+
+    margin: 0 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #f1f5f9;
+
+    color: #64748b;
+
+    font-size: 36px;
+
+}
+
+
+#marksheetTable thead th {
+
+    white-space: nowrap;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+}
+
+
+#marksheetTable tbody td {
+
+    font-size: 13px;
+
+}
+
+
+#marksheetTable tbody tr {
+
+    transition: background-color .15s ease;
+
+}
+
+
+#marksheetTable tbody tr:hover {
+
+    background-color: #f8fafc;
+
+}
+
+
+#noFilterResult {
+
+    border-top: 1px solid #f1f5f9;
+
+}
+
+
+@media (max-width: 1200px) {
+
+    #marksheetTable {
+
+        min-width: 1250px;
+
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .container-fluid {
+
+        padding-left: 12px !important;
+
+        padding-right: 12px !important;
+
+    }
+
+}
+
+</style>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput =
+        document.getElementById("marksheetSearch");
+
+    const semesterFilter =
+        document.getElementById("semesterFilter");
+
+    const departmentFilter =
+        document.getElementById("departmentFilter");
+
+    const resetButton =
+        document.getElementById("resetFilters");
+
+    const rows =
+        document.querySelectorAll(".marksheet-row");
+
+    const visibleCount =
+        document.getElementById("visibleCount");
+
+    const totalStudents =
+        document.getElementById("totalStudents");
+
+    const passedRecords =
+        document.getElementById("passedRecords");
+
+    const noFilterResult =
+        document.getElementById("noFilterResult");
+
+
+    /* =====================================================
+       COUNT UNIQUE STUDENTS
+    ====================================================== */
+
+    const studentSet = new Set();
+
+    rows.forEach(function (row) {
+
+        const student =
+            row.dataset.student || "";
+
+        if (student) {
+
+            studentSet.add(student);
+
+        }
+
+    });
+
+    totalStudents.textContent =
+        studentSet.size;
+
+
+    /* =====================================================
+       COUNT PASSED RECORDS
+       Total column = 8th TD
+    ====================================================== */
+
+    let passed = 0;
+
+    rows.forEach(function (row) {
+
+        const totalCell =
+            row.querySelector("td:nth-child(8)");
+
+        if (!totalCell) {
+            return;
+        }
+
+        const totalText =
+            totalCell.innerText
+                .split("/")[0]
+                .trim();
+
+        const total =
+            parseFloat(totalText);
+
+        const passText =
+            totalCell
+                .closest("tr")
+                .querySelector("td:nth-child(9)");
+
+        let passMark = 0;
+
+        if (passText) {
+
+            passMark =
+                parseFloat(
+                    passText.innerText.trim()
+                ) || 0;
+
+        }
+
+        if (
+            !isNaN(total) &&
+            total >= passMark
+        ) {
+
+            passed++;
+
+        }
+
+    });
+
+    passedRecords.textContent =
+        passed;
+
+
+    /* =====================================================
+       FILTER FUNCTION
+    ====================================================== */
+
+    function filterRows() {
+
+        const search =
+            searchInput.value
+                .toLowerCase()
+                .trim();
+
+        const semester =
+            semesterFilter.value
+                .toLowerCase()
+                .trim();
+
+        const department =
+            departmentFilter.value
+                .toLowerCase()
+                .trim();
+
+        let visible = 0;
+
+
+        rows.forEach(function (row) {
+
+            const student =
+                row.dataset.student || "";
+
+            const name =
+                row.dataset.name || "";
+
+            const rowDepartment =
+                row.dataset.department || "";
+
+            const rowSemester =
+                row.dataset.semester || "";
+
+            const subject =
+                row.dataset.subject || "";
+
+
+            /* SEARCH */
+
+            const matchesSearch =
+
+                !search ||
+
+                student.includes(search) ||
+
+                name.includes(search) ||
+
+                subject.includes(search);
+
+
+            /* SEMESTER */
+
+            const matchesSemester =
+
+                !semester ||
+
+                rowSemester === semester;
+
+
+            /* DEPARTMENT */
+
+            const matchesDepartment =
+
+                !department ||
+
+                rowDepartment === department;
+
+
+            /* SHOW / HIDE */
+
+            if (
+
+                matchesSearch &&
+
+                matchesSemester &&
+
+                matchesDepartment
+
+            ) {
+
+                row.style.display = "";
+
+                visible++;
+
+            }
+
+            else {
+
+                row.style.display = "none";
+
+            }
+
+        });
+
+
+        /* UPDATE COUNT */
+
+        visibleCount.textContent =
+
+            visible +
+
+            (
+                visible === 1
+                    ? " Record"
+                    : " Records"
+            );
+
+
+        /* EMPTY FILTER RESULT */
+
+        if (noFilterResult) {
+
+            if (visible === 0) {
+
+                noFilterResult.classList.remove(
+                    "d-none"
+                );
+
+            }
+
+            else {
+
+                noFilterResult.classList.add(
+                    "d-none"
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       EVENTS
+    ====================================================== */
+
+    if (searchInput) {
+
+        searchInput.addEventListener(
+            "input",
+            filterRows
+        );
+
+    }
+
+
+    if (semesterFilter) {
+
+        semesterFilter.addEventListener(
+            "change",
+            filterRows
+        );
+
+    }
+
+
+    if (departmentFilter) {
+
+        departmentFilter.addEventListener(
+            "change",
+            filterRows
+        );
+
+    }
+
+
+    /* =====================================================
+       RESET
+    ====================================================== */
+
+    if (resetButton) {
+
+        resetButton.addEventListener(
+            "click",
+            function () {
+
+                searchInput.value = "";
+
+                semesterFilter.value = "";
+
+                departmentFilter.value = "";
+
+                filterRows();
+
+            }
+        );
+
+    }
+
+});
+
+</script>
+
+{% endblock %}

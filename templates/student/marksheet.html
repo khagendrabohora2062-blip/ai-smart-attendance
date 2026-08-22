@@ -1,0 +1,961 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Student Marksheet
+{% endblock %}
+
+{% block content %}
+
+<style>
+    /* =========================================================
+       STUDENT MARKSHEET - PROFESSIONAL UI
+       ========================================================= */
+
+    .marksheet-page {
+        padding: 25px;
+        background: #f5f7fb;
+        min-height: calc(100vh - 70px);
+    }
+
+    /* Header */
+    .marksheet-header {
+        background: linear-gradient(135deg, #0f172a, #1e3a8a);
+        color: #fff;
+        border-radius: 18px;
+        padding: 28px 30px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    .marksheet-header h2 {
+        margin: 0;
+        font-size: 27px;
+        font-weight: 700;
+    }
+
+    .marksheet-header p {
+        margin: 7px 0 0;
+        opacity: 0.85;
+        font-size: 14px;
+    }
+
+    /* Student Information */
+    .student-info-card {
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, 0.07);
+        border: 1px solid #e5e7eb;
+    }
+
+    .student-info-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 18px;
+    }
+
+    .student-info-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+    }
+
+    .info-item {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 15px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #111827;
+        font-weight: 700;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 24px;
+    }
+
+    .summary-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, 0.06);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .summary-card::after {
+        content: "";
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        right: -25px;
+        top: -25px;
+        background: rgba(59, 130, 246, 0.07);
+    }
+
+    .summary-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .summary-label {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .summary-value {
+        margin-top: 4px;
+        font-size: 25px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    /* Marksheet Card */
+    .marksheet-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, 0.07);
+        overflow: hidden;
+    }
+
+    .marksheet-card-header {
+        padding: 21px 24px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .marksheet-card-header h4 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .marksheet-card-header p {
+        margin: 5px 0 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    /* Print Button */
+    .print-btn {
+        border: none;
+        background: #111827;
+        color: white;
+        padding: 10px 17px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+
+    .print-btn:hover {
+        background: #1f2937;
+        transform: translateY(-1px);
+    }
+
+    /* Table */
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .marksheet-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 950px;
+    }
+
+    .marksheet-table thead th {
+        background: #f8fafc;
+        color: #374151;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 14px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    .marksheet-table tbody td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #eef0f3;
+        font-size: 13px;
+        color: #374151;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .marksheet-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .marksheet-table td.subject-cell {
+        text-align: left;
+    }
+
+    .subject-code {
+        display: inline-block;
+        background: #eff6ff;
+        color: #2563eb;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .subject-name {
+        font-weight: 700;
+        color: #111827;
+        display: block;
+    }
+
+    .marks-value {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    /* Grade Badge */
+    .grade-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 800;
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    /* Result Badge */
+    .result-pass {
+        display: inline-block;
+        background: #dcfce7;
+        color: #15803d;
+        padding: 6px 11px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .result-fail {
+        display: inline-block;
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 6px 11px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    /* Remarks */
+    .remarks-text {
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        padding: 65px 25px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 17px;
+        border-radius: 18px;
+        background: #f1f5f9;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+
+    .empty-state h5 {
+        margin: 0 0 7px;
+        color: #111827;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    /* Footer */
+    .marksheet-footer {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        color: #6b7280;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px) {
+
+        .student-info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 700px) {
+
+        .marksheet-page {
+            padding: 15px;
+        }
+
+        .marksheet-header {
+            padding: 22px;
+        }
+
+        .marksheet-header h2 {
+            font-size: 22px;
+        }
+
+        .student-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .marksheet-card-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .print-btn {
+            width: 100%;
+        }
+    }
+
+    /* =========================================================
+       PRINT
+       ========================================================= */
+
+    @media print {
+
+        body {
+            background: #ffffff !important;
+        }
+
+        .marksheet-page {
+            padding: 0 !important;
+            background: #ffffff !important;
+        }
+
+        .marksheet-header {
+            background: #ffffff !important;
+            color: #000000 !important;
+            box-shadow: none !important;
+            border: 1px solid #ddd;
+        }
+
+        .marksheet-card,
+        .student-info-card,
+        .summary-card,
+        .marksheet-footer {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .print-btn {
+            display: none !important;
+        }
+
+        .marksheet-table tbody tr:hover {
+            background: transparent !important;
+        }
+
+        .marksheet-table {
+            min-width: 0 !important;
+        }
+    }
+</style>
+
+
+<div class="marksheet-page">
+
+    <!-- =====================================================
+         HEADER
+         ====================================================== -->
+
+    <div class="marksheet-header">
+
+        <h2>
+            <i class="fas fa-file-alt me-2"></i>
+            My Marksheet
+        </h2>
+
+        <p>
+            View your academic performance, subject-wise marks,
+            grades and results.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         STUDENT INFORMATION
+         ====================================================== -->
+
+    <div class="student-info-card">
+
+        <div class="student-info-title">
+            <i class="fas fa-user-graduate me-2"></i>
+            Student Information
+        </div>
+
+        <div class="student-info-grid">
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    Student ID
+                </div>
+
+                <div class="info-value">
+                    {{ student.student_id if student.student_id is defined else student[1] }}
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    Full Name
+                </div>
+
+                <div class="info-value">
+                    {{ student.full_name if student.full_name is defined else student[2] }}
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    Department
+                </div>
+
+                <div class="info-value">
+                    {{ student.department if student.department is defined else student[5] }}
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    Semester
+                </div>
+
+                <div class="info-value">
+                    {{ student.semester if student.semester is defined else student[6] }}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY
+         ====================================================== -->
+
+    <div class="summary-grid">
+
+        <!-- Total Subjects -->
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                <i class="fas fa-book"></i>
+            </div>
+
+            <div class="summary-label">
+                Total Subjects
+            </div>
+
+            <div class="summary-value">
+                {{ marksheets|length }}
+            </div>
+
+        </div>
+
+
+        <!-- Total Full Marks -->
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+
+            <div class="summary-label">
+                Total Full Marks
+            </div>
+
+            <div class="summary-value">
+                {{ "%.0f"|format(total_full_marks|default(0)) }}
+            </div>
+
+        </div>
+
+
+        <!-- Total Obtained -->
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+
+            <div class="summary-label">
+                Total Obtained
+            </div>
+
+            <div class="summary-value">
+                {{ "%.0f"|format(total_obtained|default(0)) }}
+            </div>
+
+        </div>
+
+
+        <!-- Overall Percentage -->
+
+        <div class="summary-card">
+
+            <div class="summary-icon">
+                <i class="fas fa-percent"></i>
+            </div>
+
+            <div class="summary-label">
+                Overall Percentage
+            </div>
+
+            <div class="summary-value">
+                {{ "%.1f"|format(overall_percentage|default(0)) }}%
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MARKSHEET TABLE
+         ====================================================== -->
+
+    <div class="marksheet-card">
+
+        <div class="marksheet-card-header">
+
+            <div>
+
+                <h4>
+                    <i class="fas fa-table me-2"></i>
+                    Subject-wise Result
+                </h4>
+
+                <p>
+                    Your marks and grades for each registered subject.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="print-btn"
+                onclick="window.print()"
+            >
+                <i class="fas fa-print me-2"></i>
+                Print Marksheet
+            </button>
+
+        </div>
+
+
+        {% if marksheets %}
+
+        <div class="table-wrapper">
+
+            <table class="marksheet-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            S.N.
+                        </th>
+
+                        <th>
+                            Subject
+                        </th>
+
+                        <th>
+                            Theory
+                        </th>
+
+                        <th>
+                            Practical
+                        </th>
+
+                        <th>
+                            Total
+                        </th>
+
+                        <th>
+                            Full Marks
+                        </th>
+
+                        <th>
+                            Pass Marks
+                        </th>
+
+                        <th>
+                            Grade
+                        </th>
+
+                        <th>
+                            Grade Point
+                        </th>
+
+                        <th>
+                            Result
+                        </th>
+
+                        <th>
+                            Remarks
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for mark in marksheets %}
+
+                    <tr>
+
+                        <!-- Serial Number -->
+
+                        <td>
+                            <strong>
+                                {{ loop.index }}
+                            </strong>
+                        </td>
+
+
+                        <!-- Subject -->
+
+                        <td class="subject-cell">
+
+                            <span class="subject-code">
+
+                                {{ mark.subject_code
+                                   if mark.subject_code is defined
+                                   else mark[5] }}
+
+                            </span>
+
+                            <span class="subject-name">
+
+                                {{ mark.subject_name
+                                   if mark.subject_name is defined
+                                   else mark[6] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- Theory -->
+
+                        <td>
+
+                            <span class="marks-value">
+
+                                {{ "%.1f"|format(
+                                    mark.theory_marks
+                                    if mark.theory_marks is defined
+                                    else mark[11]
+                                    ) }}
+
+                            </span>
+
+                            <small class="text-muted">
+
+                                /
+                                {{ "%.0f"|format(
+                                    mark.theory_full_marks
+                                    if mark.theory_full_marks is defined
+                                    else mark[7]
+                                    ) }}
+
+                            </small>
+
+                        </td>
+
+
+                        <!-- Practical -->
+
+                        <td>
+
+                            <span class="marks-value">
+
+                                {{ "%.1f"|format(
+                                    mark.practical_marks
+                                    if mark.practical_marks is defined
+                                    else mark[12]
+                                    ) }}
+
+                            </span>
+
+                            <small class="text-muted">
+
+                                /
+                                {{ "%.0f"|format(
+                                    mark.practical_full_marks
+                                    if mark.practical_full_marks is defined
+                                    else mark[8]
+                                    ) }}
+
+                            </small>
+
+                        </td>
+
+
+                        <!-- Total -->
+
+                        <td>
+
+                            <strong>
+
+                                {{ "%.1f"|format(
+                                    mark.total_marks
+                                    if mark.total_marks is defined
+                                    else mark[13]
+                                    ) }}
+
+                            </strong>
+
+                        </td>
+
+
+                        <!-- Full Marks -->
+
+                        <td>
+
+                            {{ "%.0f"|format(
+                                mark.full_marks
+                                if mark.full_marks is defined
+                                else mark[9]
+                                ) }}
+
+                        </td>
+
+
+                        <!-- Pass Marks -->
+
+                        <td>
+
+                            {{ "%.0f"|format(
+                                mark.pass_marks
+                                if mark.pass_marks is defined
+                                else mark[10]
+                                ) }}
+
+                        </td>
+
+
+                        <!-- Grade -->
+
+                        <td>
+
+                            <span class="grade-badge">
+
+                                {{ mark.grade
+                                   if mark.grade is defined
+                                   else mark[14] }}
+
+                            </span>
+
+                        </td>
+
+
+                        <!-- Grade Point -->
+
+                        <td>
+
+                            <strong>
+
+                                {{ "%.2f"|format(
+                                    mark.grade_point
+                                    if mark.grade_point is defined
+                                    else mark[15]
+                                    ) }}
+
+                            </strong>
+
+                        </td>
+
+
+                        <!-- Result -->
+
+                        <td>
+
+                            {% set current_remarks =
+                                mark.remarks
+                                if mark.remarks is defined
+                                else mark[16]
+                            %}
+
+                            {% set result_text =
+                                current_remarks|string|lower
+                            %}
+
+                            {% if 'fail' in result_text %}
+
+                                <span class="result-fail">
+                                    FAIL
+                                </span>
+
+                            {% else %}
+
+                                <span class="result-pass">
+                                    PASS
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <!-- Remarks -->
+
+                        <td>
+
+                            <span class="remarks-text">
+
+                                {{ mark.remarks
+                                   if mark.remarks is defined
+                                   else mark[16]
+                                   or "-" }}
+
+                            </span>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <!-- =================================================
+             EMPTY STATE
+             ================================================== -->
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+
+                <i class="fas fa-file-circle-xmark"></i>
+
+            </div>
+
+            <h5>
+                No Marksheet Available
+            </h5>
+
+            <p>
+                Your marks have not been published by the administrator yet.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         FOOTER
+         ====================================================== -->
+
+    <div class="marksheet-footer">
+
+        <i class="fas fa-info-circle me-1"></i>
+
+        This marksheet displays the academic records published
+        by the college administrator.
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,2035 @@
+{% extends "layouts/base.html" %}
+
+
+{% block title %}
+
+Admin Dashboard
+
+{% endblock %}
+
+
+
+{% block content %}
+
+
+<style>
+
+    /* =========================================================
+       ADMIN DASHBOARD
+    ========================================================= */
+
+    .admin-dashboard {
+
+        width: 100%;
+
+        color: #172554;
+
+    }
+
+
+    /* =========================================================
+       WELCOME CARD
+    ========================================================= */
+
+    .admin-dashboard .glass-card {
+
+        background: #ffffff;
+
+        border: 1px solid #e5eaf2;
+
+        border-radius: 15px;
+
+        box-shadow:
+            0 5px 20px rgba(15,23,42,.055);
+
+    }
+
+
+    .admin-dashboard .glass-card h2,
+    .admin-dashboard .glass-card h3,
+    .admin-dashboard .glass-card h4 {
+
+        color: #172554;
+
+    }
+
+
+    /* =========================================================
+       WELCOME
+    ========================================================= */
+
+    .admin-dashboard .welcome-card {
+
+        min-height: 140px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+    }
+
+
+    .admin-dashboard .welcome-card h2 {
+
+        font-size: 27px;
+
+        font-weight: 700;
+
+        margin-bottom: 8px;
+
+    }
+
+
+    .admin-dashboard .welcome-card p {
+
+        color: #64748b;
+
+        font-size: 14px;
+
+    }
+
+
+    /* =========================================================
+       DATE TIME CARD
+    ========================================================= */
+
+    .admin-dashboard .datetime-card {
+
+        min-height: 140px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+
+        align-items: center;
+
+    }
+
+
+    .admin-dashboard .datetime-card h6 {
+
+        color: #64748b;
+
+        font-size: 13px;
+
+        margin-bottom: 5px;
+
+    }
+
+
+    .admin-dashboard #liveClock {
+
+        color: #06b6d4;
+
+        font-size: 25px;
+
+        font-weight: 700;
+
+    }
+
+
+    .admin-dashboard #liveDate {
+
+        font-size: 10px;
+
+        padding: 7px 11px;
+
+        border-radius: 7px;
+
+    }
+
+
+    /* =========================================================
+       STAT CARDS
+    ========================================================= */
+
+    .admin-dashboard .stats-card {
+
+        min-height: 135px;
+
+        padding: 21px;
+
+        border-radius: 14px;
+
+        background: #ffffff;
+
+        border: 1px solid #e5eaf2;
+
+        box-shadow:
+            0 5px 17px rgba(15,23,42,.055);
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+
+    }
+
+
+    .admin-dashboard .stats-card:hover {
+
+        transform: translateY(-3px);
+
+        box-shadow:
+            0 10px 25px rgba(15,23,42,.10);
+
+    }
+
+
+    .admin-dashboard .stats-card small {
+
+        color: #64748b;
+
+        font-size: 12px;
+
+        font-weight: 500;
+
+        display: block;
+
+        margin-bottom: 4px;
+
+    }
+
+
+    .admin-dashboard .stats-card h2 {
+
+        font-size: 30px;
+
+        line-height: 1;
+
+        font-weight: 700;
+
+        margin: 0;
+
+    }
+
+
+    /* =========================================================
+       STAT CARD COLORS
+    ========================================================= */
+
+    .admin-dashboard .stats-card.students {
+
+        border-left: 4px solid #0d6efd;
+
+    }
+
+
+    .admin-dashboard .stats-card.students h2 {
+
+        color: #0d6efd;
+
+    }
+
+
+    .admin-dashboard .stats-card.teachers {
+
+        border-left: 4px solid #198754;
+
+    }
+
+
+    .admin-dashboard .stats-card.teachers h2 {
+
+        color: #198754;
+
+    }
+
+
+    .admin-dashboard .stats-card.subjects {
+
+        border-left: 4px solid #ffc107;
+
+    }
+
+
+    .admin-dashboard .stats-card.subjects h2 {
+
+        color: #d39e00;
+
+    }
+
+
+    .admin-dashboard .stats-card.attendance {
+
+        border-left: 4px solid #06b6d4;
+
+    }
+
+
+    .admin-dashboard .stats-card.attendance h2 {
+
+        color: #0891b2;
+
+    }
+
+
+    /* =========================================================
+       STAT ICON
+    ========================================================= */
+
+    .admin-dashboard .stats-card .icon {
+
+        width: 52px;
+
+        height: 52px;
+
+        min-width: 52px;
+
+        border-radius: 12px;
+
+        background: #f1f5f9;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 22px;
+
+        color: #172554;
+
+    }
+
+
+    /* =========================================================
+       LIVE BADGE
+    ========================================================= */
+
+    .admin-dashboard .live-dot {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+    }
+
+
+    .admin-dashboard .live-dot::before {
+
+        content: "";
+
+        width: 7px;
+
+        height: 7px;
+
+        border-radius: 50%;
+
+        background: #22c55e;
+
+        box-shadow:
+            0 0 0 4px rgba(34,197,94,.12);
+
+        animation: livePulse 1.5s infinite;
+
+    }
+
+
+    @keyframes livePulse {
+
+        0% {
+
+            opacity: 1;
+
+            transform: scale(1);
+
+        }
+
+        50% {
+
+            opacity: .5;
+
+            transform: scale(.85);
+
+        }
+
+        100% {
+
+            opacity: 1;
+
+            transform: scale(1);
+
+        }
+
+    }
+
+
+    /* =========================================================
+       ATTENDANCE OVERVIEW
+    ========================================================= */
+
+    .admin-dashboard .overview-card {
+
+        min-height: 340px;
+
+    }
+
+
+    .admin-dashboard .overview-header {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+    }
+
+
+    .admin-dashboard .overview-header h4 {
+
+        font-size: 18px;
+
+        margin: 0;
+
+    }
+
+
+    .admin-dashboard .overview-line {
+
+        height: 1px;
+
+        background: #e5e7eb;
+
+        margin: 15px 0 20px;
+
+    }
+
+
+    .admin-dashboard .overview-stats {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, 1fr);
+
+        gap: 15px;
+
+    }
+
+
+    .admin-dashboard .overview-box {
+
+        padding: 18px 14px;
+
+        border-radius: 12px;
+
+        background: #f8fafc;
+
+        border: 1px solid #e7edf5;
+
+        text-align: center;
+
+    }
+
+
+    .admin-dashboard .overview-box .overview-number {
+
+        font-size: 27px;
+
+        font-weight: 700;
+
+        line-height: 1;
+
+        margin-bottom: 6px;
+
+    }
+
+
+    .admin-dashboard .overview-box small {
+
+        color: #64748b;
+
+        font-size: 11px;
+
+    }
+
+
+    .admin-dashboard .overview-present
+    .overview-number {
+
+        color: #198754;
+
+    }
+
+
+    .admin-dashboard .overview-late
+    .overview-number {
+
+        color: #d39e00;
+
+    }
+
+
+    .admin-dashboard .overview-absent
+    .overview-number {
+
+        color: #dc3545;
+
+    }
+
+
+    /* =========================================================
+       PROGRESS
+    ========================================================= */
+
+    .admin-dashboard .attendance-progress {
+
+        margin-top: 25px;
+
+    }
+
+
+    .admin-dashboard .attendance-progress-header {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        margin-bottom: 8px;
+
+    }
+
+
+    .admin-dashboard .attendance-progress-header span {
+
+        font-size: 12px;
+
+        color: #64748b;
+
+    }
+
+
+    .admin-dashboard .attendance-progress-header strong {
+
+        font-size: 12px;
+
+        color: #172554;
+
+    }
+
+
+    .admin-dashboard .attendance-progress .progress {
+
+        height: 10px;
+
+        border-radius: 20px;
+
+        background: #e9eef5;
+
+    }
+
+
+    .admin-dashboard .attendance-progress .progress-bar {
+
+        border-radius: 20px;
+
+        transition: width .5s ease;
+
+    }
+
+
+    /* =========================================================
+       QUICK ACTIONS
+    ========================================================= */
+
+    .admin-dashboard .quick-card h4 {
+
+        font-size: 18px;
+
+    }
+
+
+    .admin-dashboard .quick-card hr {
+
+        border-color: #e5e7eb;
+
+        opacity: 1;
+
+    }
+
+
+    .admin-dashboard .quick-card .btn {
+
+        border-radius: 9px;
+
+        padding: 11px 14px;
+
+        font-size: 13px;
+
+        font-weight: 500;
+
+    }
+
+
+    .admin-dashboard .quick-card .btn i {
+
+        margin-right: 5px;
+
+    }
+
+
+    /* =========================================================
+       RECENT ATTENDANCE
+    ========================================================= */
+
+    .admin-dashboard .recent-card h4 {
+
+        font-size: 18px;
+
+    }
+
+
+    .admin-dashboard .table {
+
+        margin-bottom: 0;
+
+    }
+
+
+    .admin-dashboard .table thead th {
+
+        background: #f8fafc;
+
+        color: #334155;
+
+        border-bottom: 1px solid #e2e8f0;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        white-space: nowrap;
+
+    }
+
+
+    .admin-dashboard .table tbody td {
+
+        color: #475569;
+
+        font-size: 12px;
+
+        vertical-align: middle;
+
+    }
+
+
+    .admin-dashboard .table tbody tr:hover {
+
+        background: #f8fafc;
+
+    }
+
+
+    /* =========================================================
+       FEEDBACK / MESSAGES
+    ========================================================= */
+
+    .admin-dashboard .bottom-card h4 {
+
+        font-size: 17px;
+
+    }
+
+
+    .admin-dashboard .bottom-item {
+
+        border-bottom: 1px solid #e5e7eb;
+
+        padding-bottom: 12px;
+
+        margin-bottom: 12px;
+
+    }
+
+
+    .admin-dashboard .bottom-item:last-child {
+
+        border-bottom: none;
+
+        margin-bottom: 0;
+
+    }
+
+
+    .admin-dashboard .bottom-item strong {
+
+        font-size: 13px;
+
+    }
+
+
+    .admin-dashboard .bottom-item p {
+
+        font-size: 12px;
+
+        color: #64748b;
+
+    }
+
+
+    /* =========================================================
+       LIVE UPDATE INDICATOR
+    ========================================================= */
+
+    .admin-dashboard .live-refresh-text {
+
+        font-size: 9px;
+
+        color: #94a3b8;
+
+        margin-top: 7px;
+
+    }
+
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 991px) {
+
+        .admin-dashboard .welcome-card,
+        .admin-dashboard .datetime-card {
+
+            min-height: 125px;
+
+        }
+
+
+        .admin-dashboard .overview-stats {
+
+            gap: 10px;
+
+        }
+
+    }
+
+
+    @media (max-width: 576px) {
+
+        .admin-dashboard .welcome-card h2 {
+
+            font-size: 21px;
+
+        }
+
+
+        .admin-dashboard .stats-card {
+
+            min-height: 115px;
+
+            padding: 17px;
+
+        }
+
+
+        .admin-dashboard .stats-card h2 {
+
+            font-size: 26px;
+
+        }
+
+
+        .admin-dashboard .stats-card .icon {
+
+            width: 45px;
+
+            height: 45px;
+
+            min-width: 45px;
+
+            font-size: 19px;
+
+        }
+
+
+        .admin-dashboard .overview-stats {
+
+            grid-template-columns: 1fr;
+
+        }
+
+
+        .admin-dashboard .glass-card {
+
+            border-radius: 11px;
+
+        }
+
+    }
+
+</style>
+
+
+
+<!-- =========================================================
+     ADMIN DASHBOARD
+========================================================= -->
+
+<div class="admin-dashboard">
+
+
+    <!-- =====================================================
+         WELCOME
+    ====================================================== -->
+
+    <div class="row g-4 mb-4">
+
+
+        <!-- WELCOME -->
+
+        <div class="col-lg-8">
+
+            <div class="glass-card welcome-card p-4">
+
+                <h2>
+
+                    Welcome Back,
+
+                    <span class="text-primary">
+
+                        {{ session.get(
+                            "admin_name",
+                            "Administrator"
+                        ) }}
+
+                    </span>
+
+                    👋
+
+                </h2>
+
+                <p class="mb-0">
+
+                    AI Smart Attendance System Dashboard
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- DATE TIME -->
+
+        <div class="col-lg-4">
+
+            <div class="glass-card datetime-card p-4 text-center">
+
+                <h6>
+
+                    Current Date & Time
+
+                </h6>
+
+                <h3
+                    id="liveClock"
+                    class="mb-1">
+                </h3>
+
+                <span
+                    id="liveDate"
+                    class="badge bg-primary">
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <div class="row g-4">
+
+
+        <!-- STUDENTS -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="stats-card students">
+
+                <div>
+
+                    <small>
+                        Total Students
+                    </small>
+
+                    <h2 id="liveTotalStudents">
+
+                        {{ total_students }}
+
+                    </h2>
+
+                </div>
+
+                <div class="icon">
+
+                    <i class="bi bi-people-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TEACHERS -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="stats-card teachers">
+
+                <div>
+
+                    <small>
+                        Total Teachers
+                    </small>
+
+                    <h2 id="liveTotalTeachers">
+
+                        {{ total_teachers }}
+
+                    </h2>
+
+                </div>
+
+                <div class="icon">
+
+                    <i class="bi bi-person-workspace"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SUBJECTS -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="stats-card subjects">
+
+                <div>
+
+                    <small>
+                        Total Subjects
+                    </small>
+
+                    <h2 id="liveTotalSubjects">
+
+                        {{ total_subjects }}
+
+                    </h2>
+
+                </div>
+
+                <div class="icon">
+
+                    <i class="bi bi-book-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TODAY ATTENDANCE -->
+
+        <div class="col-xl-3 col-md-6">
+
+            <div class="stats-card attendance">
+
+                <div>
+
+                    <small>
+                        Today's Attendance
+                    </small>
+
+                    <h2
+                        id="liveTodayAttendance">
+
+                        {{ today_attendance }}
+
+                    </h2>
+
+                    <span
+                        id="liveAttendancePercentage"
+                        class="badge bg-success mt-2">
+
+                        {{ attendance_percentage }}%
+
+                    </span>
+
+                </div>
+
+                <div class="icon">
+
+                    <i class="bi bi-calendar-check-fill"></i>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ATTENDANCE OVERVIEW + QUICK ACTIONS
+    ====================================================== -->
+
+    <div class="row mt-4 g-4">
+
+
+        <!-- =================================================
+             ATTENDANCE OVERVIEW
+        ================================================== -->
+
+        <div class="col-lg-8">
+
+            <div class="glass-card overview-card p-4">
+
+
+                <div class="overview-header">
+
+                    <h4>
+
+                        Attendance Overview
+
+                    </h4>
+
+
+                    <span class="badge bg-primary">
+
+                        Today
+
+                    </span>
+
+                </div>
+
+
+                <div class="overview-line"></div>
+
+
+                <!-- LIVE OVERVIEW -->
+
+                <div
+                    class="overview-stats"
+                    id="attendanceOverview">
+
+
+                    <!-- PRESENT -->
+
+                    <div class="overview-box overview-present">
+
+                        <div
+                            class="overview-number"
+                            id="overviewPresent">
+
+                            {{ today_attendance }}
+
+                        </div>
+
+                        <small>
+                            Present / Marked
+                        </small>
+
+                    </div>
+
+                    <!-- ABSENT -->
+
+                    <div class="overview-box overview-absent">
+
+                        <div
+                            class="overview-number"
+                            id="overviewAbsent">
+
+                            0
+
+                        </div>
+
+                        <small>
+                            Absent
+                        </small>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PROGRESS -->
+
+                <div class="attendance-progress">
+
+                    <div class="attendance-progress-header">
+
+                        <span>
+                            Today's Attendance Progress
+                        </span>
+
+                        <strong
+                            id="overviewPercentage">
+
+                            {{ attendance_percentage }}%
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="progress">
+
+                        <div
+                            id="attendanceProgressBar"
+                            class="progress-bar bg-success"
+                            role="progressbar"
+                            style="width: {{ attendance_percentage }}%;"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <div class="live-refresh-text">
+
+                        <span class="live-dot">
+
+                            Live
+
+                        </span>
+
+                        &nbsp; Updates automatically every 5 seconds.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             QUICK ACTIONS
+        ================================================== -->
+
+        <div class="col-lg-4">
+
+            <div class="glass-card quick-card p-4 h-100">
+
+                <h4>
+                    Quick Actions
+                </h4>
+
+                <hr>
+
+
+                <div class="d-grid gap-3">
+
+
+                    <a
+                        href="{{ url_for('students.index') }}"
+                        class="btn btn-primary"
+                    >
+
+                        <i class="bi bi-people-fill"></i>
+
+                        Manage Students
+
+                    </a>
+
+
+                    <a
+                        href="{{ url_for('teachers.index') }}"
+                        class="btn btn-success"
+                    >
+
+                        <i class="bi bi-person-workspace"></i>
+
+                        Manage Teachers
+
+                    </a>
+
+
+                    <a
+                        href="{{ url_for('subjects.index') }}"
+                        class="btn btn-warning"
+                    >
+
+                        <i class="bi bi-book-fill"></i>
+
+                        Manage Subjects
+
+                    </a>
+
+
+                    <a
+                        href="{{ url_for('attendance.report') }}"
+                        class="btn btn-info text-white"
+                    >
+
+                        <i class="bi bi-file-earmark-bar-graph-fill"></i>
+
+                        Attendance Report
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RECENT ATTENDANCE
+    ====================================================== -->
+
+    <div class="row mt-4">
+
+        <div class="col-12">
+
+            <div class="glass-card recent-card p-4">
+
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <h4 class="mb-0">
+
+                        Recent Attendance
+
+                    </h4>
+
+
+                    <span class="badge bg-success live-dot">
+
+                        Live
+
+                    </span>
+
+                </div>
+
+
+                <hr>
+
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    ID
+                                </th>
+
+                                <th>
+                                    Name
+                                </th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                                <th>
+                                    Method
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="recentAttendanceBody">
+
+
+                            {% if recent_attendance %}
+
+
+                                {% for row in recent_attendance %}
+
+                                <tr>
+
+                                    <td>
+                                        {{ row[0] }}
+                                    </td>
+
+                                    <td>
+                                        {{ row[1] }}
+                                    </td>
+
+                                    <td>
+                                        {{ row[2] }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if row[3] == "Face" %}
+
+                                            <span class="badge bg-success">
+                                                Face
+                                            </span>
+
+                                        {% elif row[3] == "QR" %}
+
+                                            <span class="badge bg-primary">
+                                                QR
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-secondary">
+                                                {{ row[3] }}
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row[4] == "Present" %}
+
+                                            <span class="badge bg-success">
+                                                Present
+                                            </span>
+
+                                        {% elif row[4] == "Late" %}
+
+                                            <span class="badge bg-warning text-dark">
+                                                Late
+                                            </span>
+
+                                        {% else %}
+
+                                            <span class="badge bg-danger">
+                                                Absent
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+
+                            {% else %}
+
+                                <tr>
+
+                                    <td
+                                        colspan="5"
+                                        class="text-center text-muted py-4">
+
+                                        No attendance records found.
+
+                                    </td>
+
+                                </tr>
+
+                            {% endif %}
+
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         FEEDBACK + MESSAGES
+    ====================================================== -->
+
+    <div class="row mt-4 g-4">
+
+
+        <!-- FEEDBACK -->
+
+        <div class="col-lg-6">
+
+            <div class="glass-card bottom-card p-4">
+
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <h4 class="mb-0">
+
+                        ⭐ Latest Feedback
+
+                    </h4>
+
+
+                    <span class="badge bg-warning">
+
+                        {{ total_feedback }}
+
+                    </span>
+
+                </div>
+
+
+                <hr>
+
+
+                {% if latest_feedback %}
+
+
+                    {% for feedback in latest_feedback %}
+
+                    <div class="bottom-item">
+
+                        <strong>
+
+                            {{ feedback[0] }}
+
+                        </strong>
+
+                        <br>
+
+                        <small class="text-warning">
+
+                            Rating:
+                            {{ feedback[1] }}/5
+
+                        </small>
+
+                        <p class="mt-2 mb-0">
+
+                            {{ feedback[2] }}
+
+                        </p>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                {% else %}
+
+                    <div class="text-center py-4 text-muted">
+
+                        No feedback available.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+
+        <!-- MESSAGES -->
+
+        <div class="col-lg-6">
+
+            <div class="glass-card bottom-card p-4">
+
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center">
+
+                    <h4 class="mb-0">
+
+                        📩 Latest Messages
+
+                    </h4>
+
+
+                    <span class="badge bg-primary">
+
+                        {{ total_messages }}
+
+                    </span>
+
+                </div>
+
+
+                <hr>
+
+
+                {% if latest_messages %}
+
+
+                    {% for message in latest_messages %}
+
+                    <div class="bottom-item">
+
+                        <strong>
+
+                            {{ message[0] }}
+
+                        </strong>
+
+                        <br>
+
+                        <small class="text-info">
+
+                            {{ message[1] }}
+
+                        </small>
+
+                        <br>
+
+                        <span class="badge bg-secondary mt-2">
+
+                            {{ message[2] }}
+
+                        </span>
+
+                        <p class="mt-2 mb-0">
+
+                            {{ message[3] }}
+
+                        </p>
+
+                    </div>
+
+                    {% endfor %}
+
+
+                {% else %}
+
+                    <div class="text-center py-4 text-muted">
+
+                        No contact messages found.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     ADMIN DASHBOARD JAVASCRIPT
+========================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    /* =====================================================
+       DATE + TIME
+    ====================================================== */
+
+    function updateDateTime() {
+
+        const now = new Date();
+
+
+        const clock =
+            document.getElementById("liveClock");
+
+        const date =
+            document.getElementById("liveDate");
+
+
+        if (clock) {
+
+            clock.textContent =
+                now.toLocaleTimeString(
+                    "en-US",
+                    {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit"
+                    }
+                );
+
+        }
+
+
+        if (date) {
+
+            date.textContent =
+                now.toLocaleDateString(
+                    "en-US",
+                    {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric"
+                    }
+                );
+
+        }
+
+    }
+
+
+    updateDateTime();
+
+
+    setInterval(
+        updateDateTime,
+        1000
+    );
+
+
+
+    /* =====================================================
+       LIVE DASHBOARD UPDATE
+    ====================================================== */
+
+    let isRefreshing = false;
+
+
+    async function refreshDashboard() {
+
+
+        if (isRefreshing) {
+
+            return;
+
+        }
+
+
+        isRefreshing = true;
+
+
+        try {
+
+
+            const response =
+                await fetch(
+                    window.location.href,
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "X-Requested-With":
+                                "XMLHttpRequest",
+
+                            "Cache-Control":
+                                "no-cache"
+                        },
+
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Dashboard refresh failed"
+                );
+
+            }
+
+
+            const html =
+                await response.text();
+
+
+            const parser =
+                new DOMParser();
+
+
+            const newDocument =
+                parser.parseFromString(
+                    html,
+                    "text/html"
+                );
+
+
+            /* =================================================
+               TOTAL STUDENTS
+            ================================================= */
+
+            const newStudents =
+                newDocument.getElementById(
+                    "liveTotalStudents"
+                );
+
+
+            const currentStudents =
+                document.getElementById(
+                    "liveTotalStudents"
+                );
+
+
+            if (
+                newStudents &&
+                currentStudents
+            ) {
+
+                currentStudents.textContent =
+                    newStudents.textContent.trim();
+
+            }
+
+
+            /* =================================================
+               TOTAL TEACHERS
+            ================================================= */
+
+            const newTeachers =
+                newDocument.getElementById(
+                    "liveTotalTeachers"
+                );
+
+
+            const currentTeachers =
+                document.getElementById(
+                    "liveTotalTeachers"
+                );
+
+
+            if (
+                newTeachers &&
+                currentTeachers
+            ) {
+
+                currentTeachers.textContent =
+                    newTeachers.textContent.trim();
+
+            }
+
+
+            /* =================================================
+               TOTAL SUBJECTS
+            ================================================= */
+
+            const newSubjects =
+                newDocument.getElementById(
+                    "liveTotalSubjects"
+                );
+
+
+            const currentSubjects =
+                document.getElementById(
+                    "liveTotalSubjects"
+                );
+
+
+            if (
+                newSubjects &&
+                currentSubjects
+            ) {
+
+                currentSubjects.textContent =
+                    newSubjects.textContent.trim();
+
+            }
+
+
+            /* =================================================
+               TODAY ATTENDANCE
+            ================================================= */
+
+            const newTodayAttendance =
+                newDocument.getElementById(
+                    "liveTodayAttendance"
+                );
+
+
+            const currentTodayAttendance =
+                document.getElementById(
+                    "liveTodayAttendance"
+                );
+
+
+            if (
+                newTodayAttendance &&
+                currentTodayAttendance
+            ) {
+
+                currentTodayAttendance.textContent =
+                    newTodayAttendance.textContent.trim();
+
+            }
+
+
+            /* =================================================
+               ATTENDANCE PERCENTAGE
+            ================================================= */
+
+            const newPercentage =
+                newDocument.getElementById(
+                    "liveAttendancePercentage"
+                );
+
+
+            const currentPercentage =
+                document.getElementById(
+                    "liveAttendancePercentage"
+                );
+
+
+            if (
+                newPercentage &&
+                currentPercentage
+            ) {
+
+                const percentage =
+                    newPercentage.textContent.trim();
+
+                currentPercentage.textContent =
+                    percentage;
+
+
+                const overviewPercentage =
+                    document.getElementById(
+                        "overviewPercentage"
+                    );
+
+
+                if (overviewPercentage) {
+
+                    overviewPercentage.textContent =
+                        percentage;
+
+                }
+
+
+                const progressBar =
+                    document.getElementById(
+                        "attendanceProgressBar"
+                    );
+
+
+                if (progressBar) {
+
+                    const numericPercentage =
+                        parseFloat(
+                            percentage.replace("%", "")
+                        ) || 0;
+
+
+                    progressBar.style.width =
+                        Math.min(
+                            Math.max(
+                                numericPercentage,
+                                0
+                            ),
+                            100
+                        ) + "%";
+
+                }
+
+            }
+
+
+            /* =================================================
+               OVERVIEW PRESENT
+            ================================================= */
+
+            const newPresent =
+                newDocument.getElementById(
+                    "overviewPresent"
+                );
+
+
+            const currentPresent =
+                document.getElementById(
+                    "overviewPresent"
+                );
+
+
+            if (
+                newPresent &&
+                currentPresent
+            ) {
+
+                currentPresent.textContent =
+                    newPresent.textContent.trim();
+
+            }
+
+
+            /* =================================================
+               RECENT ATTENDANCE
+            ================================================= */
+
+            const newRecentBody =
+                newDocument.getElementById(
+                    "recentAttendanceBody"
+                );
+
+
+            const currentRecentBody =
+                document.getElementById(
+                    "recentAttendanceBody"
+                );
+
+
+            if (
+                newRecentBody &&
+                currentRecentBody
+            ) {
+
+                currentRecentBody.innerHTML =
+                    newRecentBody.innerHTML;
+
+            }
+
+
+            /* =================================================
+               CALCULATE LIVE LATE / ABSENT
+               FROM RECENT TABLE
+            ================================================= */
+
+            const rows =
+                document.querySelectorAll(
+                    "#recentAttendanceBody tr"
+                );
+
+
+            let lateCount = 0;
+
+            let absentCount = 0;
+
+
+            rows.forEach(function (row) {
+
+                const text =
+                    row.textContent
+                       .trim()
+                       .toLowerCase();
+
+
+                if (text.includes("late")) {
+
+                    lateCount++;
+
+                }
+
+
+                if (text.includes("absent")) {
+
+                    absentCount++;
+
+                }
+
+            });
+
+
+            const lateElement =
+                document.getElementById(
+                    "overviewLate"
+                );
+
+
+            const absentElement =
+                document.getElementById(
+                    "overviewAbsent"
+                );
+
+
+            if (lateElement) {
+
+                lateElement.textContent =
+                    lateCount;
+
+            }
+
+
+            if (absentElement) {
+
+                absentElement.textContent =
+                    absentCount;
+
+            }
+
+
+        }
+
+        catch (error) {
+
+            console.warn(
+                "Live dashboard update:",
+                error
+            );
+
+        }
+
+        finally {
+
+            isRefreshing = false;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       REFRESH EVERY 5 SECONDS
+    ====================================================== */
+
+    setInterval(
+        refreshDashboard,
+        5000
+    );
+
+
+});
+
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Attendance Sessions{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>
+            <i class="bi bi-calendar-check"></i>
+            Attendance Sessions
+        </h2>
+
+        <a href="{{ url_for('attendance_session.create') }}"
+           class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            Start New Session
+        </a>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-body">
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Status</th>
+                        <th width="260">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for s in sessions %}
+
+                    <tr>
+
+                        <td>{{ s[0] }}</td>
+                        <td>{{ s[1] }}</td>
+                        <td>{{ s[2] }}</td>
+                        <td>{{ s[3] }}</td>
+                        <td>{{ s[4] if s[4] else "-" }}</td>
+
+                        <td>
+                            {% if s[5] == "OPEN" %}
+                                <span class="badge bg-success">OPEN</span>
+                            {% else %}
+                                <span class="badge bg-danger">CLOSED</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+
+                            {% if s[5] == "OPEN" %}
+
+                                <a href="{{ url_for('teacher_face.start_face_attendance', session_id=s[0]) }}"
+                                   class="btn btn-success btn-sm">
+                                    <i class="bi bi-camera-video"></i>
+                                    Face
+                                </a>
+
+                                <a href="{{ url_for('teacher_qr.start_qr_attendance', session_id=s[0]) }}"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-qr-code-scan"></i>
+                                    QR
+                                </a>
+
+                            {% else %}
+
+                                <span class="text-muted">
+                                    Session Closed
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            No Attendance Sessions Found
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

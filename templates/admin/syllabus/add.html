@@ -1,0 +1,150 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}
+Add Syllabus
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex align-items-center mb-4">
+
+        <a
+            href="{{ url_for('admin_syllabus.index') }}"
+            class="btn btn-outline-secondary me-3"
+        >
+            <i class="bi bi-arrow-left"></i>
+        </a>
+
+        <div>
+            <h2 class="fw-bold mb-1">
+                Add Syllabus
+            </h2>
+
+            <p class="text-muted mb-0">
+                Add syllabus for a subject.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            <form
+                method="POST"
+                action="{{ url_for('admin_syllabus.add') }}"
+            >
+
+                <!-- SUBJECT -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Subject
+                    </label>
+
+                    <select
+                        name="subject_id"
+                        class="form-select"
+                        required
+                    >
+
+                        <option value="">
+                            -- Select Subject --
+                        </option>
+
+                        {% for subject in subjects %}
+
+                        <option value="{{ subject[0] }}">
+
+                            {{ subject[4] }}
+                            —
+                            {{ subject[1] }}
+                            —
+                            {{ subject[2] }}
+                            —
+                            {{ subject[3] }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <small class="text-muted">
+                        Department and semester are automatically taken
+                        from the selected subject.
+                    </small>
+
+                </div>
+
+
+                <!-- TITLE -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Syllabus Title
+                    </label>
+
+                    <input
+                        type="text"
+                        name="title"
+                        class="form-control"
+                        placeholder="Example: Complete Course Syllabus"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="mb-4">
+
+                    <label class="form-label fw-semibold">
+                        Description / Syllabus Content
+                    </label>
+
+                    <textarea
+                        name="description"
+                        class="form-control"
+                        rows="12"
+                        placeholder="Enter syllabus details..."
+                    ></textarea>
+
+                </div>
+
+
+                <div class="d-flex gap-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-check-lg me-1"></i>
+                        Save Syllabus
+                    </button>
+
+                    <a
+                        href="{{ url_for('admin_syllabus.index') }}"
+                        class="btn btn-outline-secondary"
+                    >
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

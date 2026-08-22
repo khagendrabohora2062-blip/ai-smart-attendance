@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta http-equiv="X-UA-Compatible"
+          content="IE=edge">
+
+    <meta name="theme-color"
+          content="#2563eb">
+
+    <meta name="color-scheme"
+          content="light">
+
+    <title>
+        {% block title %}
+            AI Smart Attendance System
+        {% endblock %}
+    </title>
+
+
+    <!-- =====================================================
+         BOOTSTRAP
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+    >
+
+
+    <!-- =====================================================
+         BOOTSTRAP ICONS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    >
+
+
+    <!-- =====================================================
+         FONT AWESOME
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         ROLE BASED CSS
+    ====================================================== -->
+
+    {% if session.get("admin_id") %}
+
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/admin.css') }}?v=20260822"
+        >
+
+    {% elif session.get("teacher_id") %}
+
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/teacher.css') }}?v=20260822"
+        >
+
+    {% elif session.get("student_id") %}
+
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='css/student.css') }}?v=20260822"
+        >
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         PAGE SPECIFIC CSS
+    ====================================================== -->
+
+    {% block css %}{% endblock %}
+
+
+    <!-- =====================================================
+         GLOBAL RESPONSIVE CSS
+    ====================================================== -->
+
+    <style>
+
+        /* =====================================================
+           RESET
+        ====================================================== */
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+
+            font-family: "Poppins", sans-serif;
+
+            background: #f5f7fb;
+            color: #172554;
+
+            overflow-x: hidden;
+        }
+
+
+        body.mobile-sidebar-open {
+            overflow: hidden;
+        }
+
+
+        a {
+            text-decoration: none;
+        }
+
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+
+        button,
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+        }
+
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+
+        /* =====================================================
+           WRAPPER
+        ====================================================== */
+
+        .wrapper {
+            position: relative;
+
+            width: 100%;
+            min-height: 100vh;
+
+            overflow-x: hidden;
+        }
+
+
+        /* =====================================================
+           PUBLIC / LOGIN LAYOUT
+        ====================================================== */
+
+        .wrapper.public-layout {
+            width: 100%;
+            min-height: 100vh;
+
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(37, 99, 235, 0.08),
+                    transparent 35%
+                ),
+                radial-gradient(
+                    circle at bottom right,
+                    rgba(99, 102, 241, 0.08),
+                    transparent 35%
+                ),
+                linear-gradient(
+                    135deg,
+                    #eff6ff 0%,
+                    #f8fafc 50%,
+                    #eef2ff 100%
+                );
+        }
+
+
+        .wrapper.public-layout .main {
+            width: 100%;
+            min-height: 100vh;
+
+            margin: 0;
+            padding: 0;
+
+            background: transparent;
+        }
+
+
+        .wrapper.public-layout .content {
+            width: 100%;
+            min-height: 100vh;
+
+            margin: 0;
+            padding: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow-x: hidden;
+        }
+
+
+        .public-content-wrapper {
+            width: 100%;
+            min-height: 100vh;
+
+            padding: 30px 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        /* =====================================================
+           LOGGED-IN LAYOUT
+        ====================================================== */
+
+        .wrapper.admin-layout,
+        .wrapper.teacher-layout,
+        .wrapper.student-layout {
+
+            width: 100%;
+            min-height: 100vh;
+
+            display: flex;
+            position: relative;
+
+            overflow-x: hidden;
+        }
+
+
+        /* =====================================================
+           LOGGED-IN MAIN
+        ====================================================== */
+
+        .wrapper.admin-layout .main,
+        .wrapper.teacher-layout .main,
+        .wrapper.student-layout .main {
+
+            width: calc(100% - 260px);
+            min-width: 0;
+            min-height: 100vh;
+
+            margin-left: 260px;
+
+            display: flex;
+            flex-direction: column;
+
+            position: relative;
+
+            background: #f5f7fb;
+
+            transition:
+                width 0.25s ease,
+                margin-left 0.25s ease;
+        }
+
+
+        /* =====================================================
+           LOGGED-IN CONTENT
+        ====================================================== */
+
+        .wrapper.admin-layout .content,
+        .wrapper.teacher-layout .content,
+        .wrapper.student-layout .content {
+
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+
+            flex: 1;
+
+            padding: 24px 28px;
+
+            overflow-x: hidden;
+        }
+
+
+        /* =====================================================
+           CONTAINER
+        ====================================================== */
+
+        .content > .container,
+        .content > .container-fluid {
+
+            width: 100%;
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           BOOTSTRAP ROW SAFETY
+        ====================================================== */
+
+        .content .row {
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           CARD
+        ====================================================== */
+
+        .content .card {
+
+            width: 100%;
+            max-width: 100%;
+
+            border-radius: 14px;
+
+            overflow: hidden;
+
+            word-wrap: break-word;
+        }
+
+
+        .content .card-body {
+            padding: 20px;
+        }
+
+
+        /* =====================================================
+           TABLE
+        ====================================================== */
+
+        .table-responsive {
+
+            width: 100%;
+            max-width: 100%;
+
+            overflow-x: auto;
+
+            -webkit-overflow-scrolling: touch;
+        }
+
+
+        .table-responsive > .table {
+            min-width: 650px;
+        }
+
+
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+
+        /* =====================================================
+           FORM
+        ====================================================== */
+
+        .content .form-control,
+        .content .form-select {
+
+            width: 100%;
+
+            min-height: 42px;
+
+            border-radius: 9px;
+        }
+
+
+        /* =====================================================
+           BUTTON
+        ====================================================== */
+
+        .content .btn {
+
+            max-width: 100%;
+
+            white-space: normal;
+
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           ALERT
+        ====================================================== */
+
+        .content > .alert {
+
+            width: 100%;
+
+            border-radius: 12px;
+
+            word-break: break-word;
+        }
+
+
+        /* =====================================================
+           PUBLIC FLASH
+        ====================================================== */
+
+        .public-flash-container {
+
+            position: fixed;
+
+            top: 18px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: min(92%, 600px);
+
+            z-index: 5000;
+        }
+
+
+        .public-flash-container .alert {
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 10px 30px rgba(15, 23, 42, 0.14);
+
+            margin-bottom: 10px;
+        }
+
+
+        /* =====================================================
+           MOBILE MENU BUTTON
+        ====================================================== */
+
+        .mobile-menu-button {
+
+            display: none;
+
+            position: fixed;
+
+            top: 14px;
+            left: 14px;
+
+            width: 44px;
+            height: 44px;
+
+            padding: 0;
+
+            border: none;
+            border-radius: 11px;
+
+            background: #111827;
+            color: #ffffff;
+
+            font-size: 21px;
+
+            align-items: center;
+            justify-content: center;
+
+            cursor: pointer;
+
+            z-index: 4000;
+
+            box-shadow:
+                0 7px 22px rgba(0, 0, 0, 0.22);
+
+            transition:
+                transform 0.2s ease,
+                background 0.2s ease;
+        }
+
+
+        .mobile-menu-button:hover {
+            background: #1e293b;
+        }
+
+
+        .mobile-menu-button:active {
+            transform: scale(0.94);
+        }
+
+
+        /* =====================================================
+           SIDEBAR OVERLAY
+        ====================================================== */
+
+        .mobile-sidebar-overlay {
+
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            background:
+                rgba(15, 23, 42, 0.58);
+
+            z-index: 3000;
+
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+        }
+
+
+        .mobile-sidebar-overlay.show {
+            display: block;
+        }
+
+
+        /* =====================================================
+           SIDEBAR BASE SAFETY
+        ====================================================== */
+
+        .admin-sidebar,
+        .teacher-sidebar,
+        .student-sidebar {
+
+            flex-shrink: 0;
+        }
+
+
+        /* =====================================================
+           TABLET
+        ====================================================== */
+
+        @media (max-width: 1199px) {
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                padding: 22px 20px;
+            }
+        }
+
+
+        /* =====================================================
+           MOBILE / TABLET SIDEBAR
+        ====================================================== */
+
+        @media (max-width: 991px) {
+
+            /* Main becomes full width */
+
+            .wrapper.admin-layout,
+            .wrapper.teacher-layout,
+            .wrapper.student-layout {
+
+                display: block;
+            }
+
+
+            .wrapper.admin-layout .main,
+            .wrapper.teacher-layout .main,
+            .wrapper.student-layout .main {
+
+                width: 100%;
+                min-width: 0;
+
+                margin-left: 0;
+            }
+
+
+            /* Mobile menu */
+
+            .mobile-menu-button {
+                display: flex;
+            }
+
+
+            /* Sidebar */
+
+            .admin-sidebar,
+            .teacher-sidebar,
+            .student-sidebar {
+
+                position: fixed !important;
+
+                top: 0 !important;
+                left: 0 !important;
+
+                width: 280px !important;
+                max-width: 88vw !important;
+
+                height: 100vh !important;
+
+                z-index: 3500 !important;
+
+                transform:
+                    translateX(-110%) !important;
+
+                visibility: hidden !important;
+
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+
+                transition:
+                    transform 0.28s ease,
+                    visibility 0.28s ease;
+
+                box-shadow:
+                    none;
+            }
+
+
+            .admin-sidebar.mobile-open,
+            .teacher-sidebar.mobile-open,
+            .student-sidebar.mobile-open {
+
+                transform:
+                    translateX(0) !important;
+
+                visibility: visible !important;
+
+                box-shadow:
+                    10px 0 35px
+                    rgba(0, 0, 0, 0.28);
+            }
+
+
+            /* Content */
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                width: 100%;
+                max-width: 100%;
+
+                padding:
+                    70px 20px 24px;
+
+                overflow-x: hidden;
+            }
+
+
+            /* Public */
+
+            .wrapper.public-layout .content {
+
+                width: 100%;
+                min-height: 100vh;
+
+                padding: 0;
+            }
+
+
+            .public-content-wrapper {
+
+                min-height: 100vh;
+
+                padding:
+                    30px 18px;
+            }
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ====================================================== */
+
+        @media (max-width: 767px) {
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                padding:
+                    66px 15px 20px;
+            }
+
+
+            .public-content-wrapper {
+
+                padding:
+                    20px 14px;
+            }
+
+
+            .content .card-body {
+                padding: 16px;
+            }
+
+
+            /* Bootstrap columns full width where needed */
+
+            .content .row > [class*="col-"] {
+                margin-bottom: 12px;
+            }
+
+
+            /* Buttons */
+
+            .content .btn-group {
+                display: flex;
+
+                flex-wrap: wrap;
+
+                gap: 6px;
+            }
+
+
+            /* Table */
+
+            .table-responsive > .table {
+                min-width: 600px;
+            }
+        }
+
+
+        /* =====================================================
+           SMALL PHONE
+        ====================================================== */
+
+        @media (max-width: 576px) {
+
+            body {
+                font-size: 14px;
+            }
+
+
+            .mobile-menu-button {
+
+                top: 10px;
+                left: 10px;
+
+                width: 42px;
+                height: 42px;
+
+                border-radius: 10px;
+            }
+
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                padding:
+                    60px 10px 15px;
+            }
+
+
+            .wrapper.public-layout .content {
+
+                padding: 0;
+            }
+
+
+            .public-content-wrapper {
+
+                width: 100%;
+                min-height: 100vh;
+
+                padding:
+                    15px 10px;
+            }
+
+
+            .admin-sidebar,
+            .teacher-sidebar,
+            .student-sidebar {
+
+                width: 280px !important;
+                max-width: 88vw !important;
+            }
+
+
+            .content .card {
+                border-radius: 11px;
+            }
+
+
+            .content .card-body {
+                padding: 14px;
+            }
+
+
+            .content .form-control,
+            .content .form-select {
+
+                min-height: 44px;
+
+                font-size: 14px;
+            }
+
+
+            .content .btn {
+
+                min-height: 40px;
+
+                font-size: 13px;
+            }
+
+
+            .table-responsive > .table {
+                min-width: 560px;
+            }
+        }
+
+
+        /* =====================================================
+           VERY SMALL PHONE
+        ====================================================== */
+
+        @media (max-width: 380px) {
+
+            .mobile-menu-button {
+
+                width: 40px;
+                height: 40px;
+
+                font-size: 19px;
+            }
+
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                padding:
+                    58px 8px 12px;
+            }
+
+
+            .public-content-wrapper {
+
+                padding:
+                    10px 7px;
+            }
+        }
+
+
+        /* =====================================================
+           LANDSCAPE PHONE
+        ====================================================== */
+
+        @media (max-width: 991px) and (orientation: landscape) {
+
+            .admin-sidebar,
+            .teacher-sidebar,
+            .student-sidebar {
+
+                overflow-y: auto !important;
+            }
+
+
+            .wrapper.admin-layout .content,
+            .wrapper.teacher-layout .content,
+            .wrapper.student-layout .content {
+
+                padding-top: 64px;
+            }
+        }
+
+
+        /* =====================================================
+           FOCUS ACCESSIBILITY
+        ====================================================== */
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        textarea:focus-visible {
+
+            outline:
+                3px solid rgba(37, 99, 235, 0.30);
+
+            outline-offset: 2px;
+        }
+
+
+        /* =====================================================
+           PREVENT LONG TEXT BREAKING LAYOUT
+        ====================================================== */
+
+        .content,
+        .content * {
+
+            overflow-wrap: break-word;
+        }
+
+
+        /* =====================================================
+           NO HORIZONTAL PAGE SCROLL
+        ====================================================== */
+
+        .wrapper,
+        .main,
+        .content {
+
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           LOGIN CARD SAFETY
+        ====================================================== */
+
+        .login-container,
+        .login-card,
+        .auth-card {
+
+            width: 100%;
+            max-width: 100%;
+        }
+
+
+        /* =====================================================
+           PASSWORD FIELD / EYE ICON SAFETY
+        ====================================================== */
+
+        .password-wrapper,
+        .password-field,
+        .input-group {
+
+            position: relative;
+        }
+
+
+        .password-wrapper .toggle-password,
+        .password-wrapper .password-toggle,
+        .password-field .toggle-password,
+        .password-field .password-toggle {
+
+            position: absolute;
+
+            right: 12px;
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            border: none;
+            background: transparent;
+
+            color: #64748b;
+
+            cursor: pointer;
+
+            z-index: 5;
+
+            padding: 5px;
+        }
+
+
+        .password-wrapper input,
+        .password-field input {
+
+            padding-right: 45px;
+        }
+
+
+        /* =====================================================
+           REDUCED MOTION
+        ====================================================== */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+
+                scroll-behavior: auto !important;
+
+                transition-duration:
+                    0.01ms !important;
+
+                animation-duration:
+                    0.01ms !important;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     MAIN WRAPPER
+========================================================= -->
+
+<div class="wrapper
+
+    {% if session.get('admin_id') %}
+
+        admin-layout
+
+    {% elif session.get('teacher_id') %}
+
+        teacher-layout
+
+    {% elif session.get('student_id') %}
+
+        student-layout
+
+    {% else %}
+
+        public-layout
+
+    {% endif %}
+
+">
+
+
+    <!-- =====================================================
+         ADMIN SIDEBAR
+    ====================================================== -->
+
+    {% if session.get("admin_id") %}
+
+        {% include "layouts/admin_sidebar.html" %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         TEACHER SIDEBAR
+    ====================================================== -->
+
+    {% if session.get("teacher_id") %}
+
+        {% include "layouts/teacher_sidebar.html" %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         STUDENT SIDEBAR
+    ====================================================== -->
+
+    {% if session.get("student_id") %}
+
+        {% include "layouts/student_sidebar.html" %}
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         MOBILE OVERLAY
+    ====================================================== -->
+
+    {% if session.get("admin_id")
+       or session.get("teacher_id")
+       or session.get("student_id") %}
+
+        <div
+            class="mobile-sidebar-overlay"
+            id="mobileSidebarOverlay">
+        </div>
+
+
+        <button
+            type="button"
+            class="mobile-menu-button"
+            id="mobileMenuButton"
+            aria-label="Open menu"
+            aria-expanded="false">
+
+            <i class="bi bi-list"></i>
+
+        </button>
+
+    {% endif %}
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             ADMIN NAVBAR
+        ================================================== -->
+
+        {% if session.get("admin_id") %}
+
+            {% include "layouts/admin_navbar.html" %}
+
+        {% endif %}
+
+
+        <!-- =================================================
+             TEACHER NAVBAR
+        ================================================== -->
+
+        {% if session.get("teacher_id") %}
+
+            {% include "layouts/teacher_navbar.html" %}
+
+        {% endif %}
+
+
+        <!-- =================================================
+             STUDENT
+        ================================================== -->
+
+        {% if session.get("student_id") %}
+
+            {#
+                Student sidebar/header is already handled
+                by student_sidebar.html
+            #}
+
+        {% endif %}
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <div class="content">
+
+
+            <!-- =============================================
+                 PUBLIC FLASH MESSAGES
+            ============================================== -->
+
+            {% if not session.get("admin_id")
+               and not session.get("teacher_id")
+               and not session.get("student_id") %}
+
+                <div class="public-flash-container">
+
+                    {% with messages =
+                        get_flashed_messages(
+                            with_categories=true
+                        )
+                    %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                                <div
+                                    class="alert
+                                           alert-{{ category }}
+                                           alert-dismissible
+                                           fade show"
+                                    role="alert"
+                                >
+
+                                    {% if category == "success" %}
+
+                                        <i class="bi
+                                                  bi-check-circle-fill
+                                                  me-2">
+                                        </i>
+
+                                    {% elif category == "danger" %}
+
+                                        <i class="bi
+                                                  bi-exclamation-triangle-fill
+                                                  me-2">
+                                        </i>
+
+                                    {% elif category == "warning" %}
+
+                                        <i class="bi
+                                                  bi-exclamation-circle-fill
+                                                  me-2">
+                                        </i>
+
+                                    {% else %}
+
+                                        <i class="bi
+                                                  bi-info-circle-fill
+                                                  me-2">
+                                        </i>
+
+                                    {% endif %}
+
+                                    {{ message }}
+
+
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Close">
+                                    </button>
+
+                                </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 PUBLIC / LOGIN CONTENT
+
+                 IMPORTANT:
+                 Default empty block prevents
+                 content_public errors.
+            ============================================== -->
+
+            {% if not session.get("admin_id")
+               and not session.get("teacher_id")
+               and not session.get("student_id") %}
+
+                <div class="public-content-wrapper">
+
+                    {% block content_public %}{% endblock %}
+
+                    {#
+                        If a public page uses normal
+                        {% block content %}, it will still
+                        be available below through the
+                        compatibility block.
+                    #}
+
+                </div>
+
+            {% endif %}
+
+
+            <!-- =============================================
+                 LOGGED-IN CONTENT
+            ============================================== -->
+
+            {% if session.get("admin_id")
+               or session.get("teacher_id")
+               or session.get("student_id") %}
+
+                {% block content %}{% endblock %}
+
+            {% endif %}
+
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- =========================================================
+     BOOTSTRAP JS
+========================================================= -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+<!-- =========================================================
+     MOBILE SIDEBAR JS
+========================================================= -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const menuButton =
+            document.getElementById(
+                "mobileMenuButton"
+            );
+
+
+        const overlay =
+            document.getElementById(
+                "mobileSidebarOverlay"
+            );
+
+
+        const sidebar =
+            document.querySelector(
+                ".student-sidebar, .teacher-sidebar, .admin-sidebar"
+            );
+
+
+        /*
+         * No logged-in sidebar
+         */
+
+        if (!menuButton || !sidebar) {
+            return;
+        }
+
+
+        /* =================================================
+           OPEN SIDEBAR
+        ================================================== */
+
+        function openSidebar() {
+
+            sidebar.classList.add(
+                "mobile-open"
+            );
+
+
+            if (overlay) {
+
+                overlay.classList.add(
+                    "show"
+                );
+
+            }
+
+
+            document.body.classList.add(
+                "mobile-sidebar-open"
+            );
+
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+
+            menuButton.setAttribute(
+                "aria-label",
+                "Close menu"
+            );
+
+
+            menuButton.innerHTML =
+                '<i class="bi bi-x-lg"></i>';
+
+        }
+
+
+        /* =================================================
+           CLOSE SIDEBAR
+        ================================================== */
+
+        function closeSidebar() {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+
+            if (overlay) {
+
+                overlay.classList.remove(
+                    "show"
+                );
+
+            }
+
+
+            document.body.classList.remove(
+                "mobile-sidebar-open"
+            );
+
+
+            menuButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+
+            menuButton.setAttribute(
+                "aria-label",
+                "Open menu"
+            );
+
+
+            menuButton.innerHTML =
+                '<i class="bi bi-list"></i>';
+
+        }
+
+
+        /* =================================================
+           MENU BUTTON
+        ================================================== */
+
+        menuButton.addEventListener(
+            "click",
+            function () {
+
+                if (
+                    sidebar.classList.contains(
+                        "mobile-open"
+                    )
+                ) {
+
+                    closeSidebar();
+
+                } else {
+
+                    openSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* =================================================
+           OVERLAY
+        ================================================== */
+
+        if (overlay) {
+
+            overlay.addEventListener(
+                "click",
+                closeSidebar
+            );
+
+        }
+
+
+        /* =================================================
+           CLOSE WHEN LINK CLICKED
+        ================================================== */
+
+        sidebar.addEventListener(
+            "click",
+            function (event) {
+
+                const link =
+                    event.target.closest("a");
+
+
+                if (
+                    link &&
+                    window.innerWidth <= 991
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* =================================================
+           ESCAPE
+        ================================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key === "Escape") {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        /* =================================================
+           RESIZE
+        ================================================== */
+
+        window.addEventListener(
+            "resize",
+            function () {
+
+                if (window.innerWidth > 991) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+
+<!-- =========================================================
+     PAGE JAVASCRIPT
+========================================================= -->
+
+{% block js %}{% endblock %}
+
+
+</body>
+</html>

@@ -1,0 +1,189 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+Add Attendance Session
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow">
+
+                <div class="card-header bg-dark text-white">
+
+                    <h4 class="mb-0">
+                        Create Attendance Session
+                    </h4>
+
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Subject
+                            </label>
+
+                            <select
+                                name="subject_id"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    Select Subject
+                                </option>
+
+                                {% for subject in subjects %}
+
+                                <option value="{{ subject[0] }}">
+                                    {{ subject[1] }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Teacher
+                            </label>
+
+                            <select
+                                name="teacher_id"
+                                class="form-select"
+                                required>
+
+                                <option value="">
+                                    Select Teacher
+                                </option>
+
+                                {% for teacher in teachers %}
+
+                                <option value="{{ teacher[0] }}">
+                                    {{ teacher[1] }}
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Session Date
+                            </label>
+
+                            <input
+                                type="date"
+                                name="session_date"
+                                class="form-control"
+                                required>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+                                        Start Time
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        name="start_time"
+                                        class="form-control"
+                                        required>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <div class="mb-3">
+
+                                    <label class="form-label">
+                                        End Time
+                                    </label>
+
+                                    <input
+                                        type="time"
+                                        name="end_time"
+                                        class="form-control"
+                                        required>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mb-4">
+
+                            <label class="form-label">
+                                Session Status
+                            </label>
+
+                            <select
+                                name="session_status"
+                                class="form-select">
+
+                                <option value="OPEN">
+                                    OPEN
+                                </option>
+
+                                <option value="CLOSED">
+                                    CLOSED
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            Create Session
+
+                        </button>
+
+                        <a
+                            href="{{ url_for('attendance.index') }}"
+                            class="btn btn-secondary">
+
+                            Back
+
+                        </a>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
