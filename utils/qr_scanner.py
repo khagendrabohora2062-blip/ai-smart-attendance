@@ -1,6 +1,24 @@
 import cv2
-import winsound
+import sys
 
+
+# =========================================================
+# SOUND / BEEP
+# =========================================================
+
+def beep(frequency=1200, duration=300):
+    """
+    Windows मा beep बजाउँछ।
+    Linux/Render मा silently skip हुन्छ।
+    """
+    if sys.platform == "win32":
+        import winsound
+        winsound.Beep(frequency, duration)
+
+
+# =========================================================
+# QR SCANNER
+# =========================================================
 
 def start_qr_scanner(callback=None):
 
@@ -25,9 +43,10 @@ def start_qr_scanner(callback=None):
 
         data, bbox, _ = detector.detectAndDecode(frame)
 
-        # ==========================
+        # =================================================
         # Draw QR Box
-        # ==========================
+        # =================================================
+
         if bbox is not None:
 
             bbox = bbox.astype(int)
@@ -42,9 +61,10 @@ def start_qr_scanner(callback=None):
                     3
                 )
 
-        # ==========================
+        # =================================================
         # QR Detected
-        # ==========================
+        # =================================================
+
         if data:
 
             qr_data = data.strip()
@@ -53,7 +73,8 @@ def start_qr_scanner(callback=None):
 
                 scanned_codes.add(qr_data)
 
-                winsound.Beep(1200, 300)
+                # Windows मा मात्र sound
+                beep(1200, 300)
 
                 result = None
 
@@ -67,6 +88,7 @@ def start_qr_scanner(callback=None):
                     else:
                         color = (0, 0, 255)
 
+                    # Message
                     cv2.putText(
                         frame,
                         result["message"],
@@ -77,6 +99,7 @@ def start_qr_scanner(callback=None):
                         2
                     )
 
+                    # Student ID
                     cv2.putText(
                         frame,
                         f"ID : {result['student_id']}",
@@ -87,6 +110,7 @@ def start_qr_scanner(callback=None):
                         2
                     )
 
+                    # Student Name
                     cv2.putText(
                         frame,
                         f"Name : {result['name']}",
@@ -104,9 +128,10 @@ def start_qr_scanner(callback=None):
 
                     cv2.waitKey(1500)
 
-        # ==========================
+        # =================================================
         # Instructions
-        # ==========================
+        # =================================================
+
         cv2.putText(
             frame,
             "Continuous QR Scanner",
@@ -148,5 +173,4 @@ def start_qr_scanner(callback=None):
             break
 
     cap.release()
-
     cv2.destroyAllWindows()
