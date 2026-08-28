@@ -1,7 +1,12 @@
 import os
+from dotenv import load_dotenv
+
+# Load variables from .env
+load_dotenv()
 
 
 class Config:
+
     # =========================================================
     # SECRET KEY
     # =========================================================
@@ -12,17 +17,17 @@ class Config:
     )
 
     # =========================================================
-    # MYSQL DATABASE
+    # MYSQL DATABASE — TiDB Cloud
     # =========================================================
 
     MYSQL_HOST = os.getenv(
         "MYSQL_HOST",
-        "localhost"
+        "gateway01.ap-southeast-1.prod.aws.tidbcloud.com"
     )
 
     MYSQL_USER = os.getenv(
         "MYSQL_USER",
-        "root"
+        "fa2WUDKvTiRY9ei.root"
     )
 
     MYSQL_PASSWORD = os.getenv(
@@ -38,10 +43,26 @@ class Config:
     MYSQL_PORT = int(
         os.getenv(
             "MYSQL_PORT",
-            "3306"
+            "4000"
         )
     )
 
-    MYSQL_CURSORCLASS = "Cursor"
+    # =========================================================
+    # MYSQL SETTINGS
+    # =========================================================
 
+    MYSQL_CURSORCLASS = "Cursor"
     MYSQL_AUTOCOMMIT = True
+
+    # =========================================================
+    # TiDB Cloud SSL
+    # =========================================================
+
+    MYSQL_CUSTOM_OPTIONS = {
+        "ssl": {
+            "ca": os.getenv(
+                "MYSQL_SSL_CA",
+                ""
+            )
+        }
+    }

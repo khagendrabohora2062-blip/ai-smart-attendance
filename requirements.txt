@@ -1,11 +1,11 @@
 Flask
 Flask-MySQLdb
 gunicorn
-
 numpy
 opencv-python-headless
 Pillow
-
 qrcode
 openpyxl
 reportlab
+python-dotenv
+PyMySQL
