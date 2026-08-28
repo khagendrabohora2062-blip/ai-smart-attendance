@@ -12,7 +12,6 @@ from flask import (
 from extensions import mysql
 from datetime import date
 from openpyxl import Workbook
-
 from reportlab.platypus import (
     SimpleDocTemplate,
     Table,
@@ -20,11 +19,11 @@ from reportlab.platypus import (
     Paragraph,
     Spacer
 )
-
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 import io
+import uuid
 
 
 # ============================================================
@@ -39,11 +38,67 @@ teacher_attendance = Blueprint(
 
 
 # ============================================================
-# HELPER
+# TEACHER LOGIN CHECK
 # ============================================================
 
 def teacher_logged_in():
     return "teacher_id" in session
+
+
+# ============================================================
+# GENERATE UNIQUE SESSION ID
+# ============================================================
+
+def generate_session_id(cursor):
+
+    while True:
+
+        new_id = uuid.uuid4().int % 2147483647
+
+        if new_id <= 0:
+            continue
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM attendance_sessions
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        if not cursor.fetchone():
+            return new_id
+
+
+# ============================================================
+# GENERATE UNIQUE ATTENDANCE ID
+# IMPORTANT:
+# attendance.id IS NOT AUTO_INCREMENT IN YOUR TiDB
+# ============================================================
+
+def generate_attendance_id(cursor):
+
+    while True:
+
+        new_id = uuid.uuid4().int % 2147483647
+
+        if new_id <= 0:
+            continue
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM attendance
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        if not cursor.fetchone():
+            return new_id
 
 
 # ============================================================
@@ -69,179 +124,156 @@ def index():
 
     try:
 
+        teacher_id = session["teacher_id"]
+
         # ====================================================
         # TEACHER SUBJECTS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 subject_code,
                 subject_name,
                 semester,
                 department
-
             FROM subjects
-
-            WHERE teacher_id=%s
-
-            ORDER BY
-                semester,
-                subject_name
-        """, (
-            session["teacher_id"],
-        ))
+            WHERE teacher_id = %s
+            ORDER BY semester, subject_name
+            """,
+            (teacher_id,)
+        )
 
         subjects = cursor.fetchall()
 
-
         # ====================================================
         # ATTENDANCE SESSIONS
-        # PRESENT + ABSENT ONLY
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 s.id,
-
                 sub.subject_code,
-
                 sub.subject_name,
-
                 s.session_date,
-
                 s.start_time,
-
                 s.end_time,
-
                 s.session_status,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a
-                    WHERE a.session_id=s.id
+                    WHERE a.session_id = s.id
                 ) AS total_attendance,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a
-                    WHERE a.session_id=s.id
-                    AND a.status='Present'
+                    WHERE a.session_id = s.id
+                    AND a.status = 'Present'
                 ) AS present_count,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a
-                    WHERE a.session_id=s.id
-                    AND a.status='Absent'
+                    WHERE a.session_id = s.id
+                    AND a.status = 'Absent'
                 ) AS absent_count
 
             FROM attendance_sessions s
 
             INNER JOIN subjects sub
-                ON s.subject_id=sub.id
+                ON s.subject_id = sub.id
 
-            WHERE s.teacher_id=%s
+            WHERE s.teacher_id = %s
 
             ORDER BY
                 s.session_date DESC,
                 s.id DESC
-        """, (
-            session["teacher_id"],
-        ))
+            """,
+            (teacher_id,)
+        )
 
         sessions = cursor.fetchall()
-
 
         # ====================================================
         # TOTAL SESSIONS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance_sessions
-
-            WHERE teacher_id=%s
-        """, (
-            session["teacher_id"],
-        ))
+            WHERE teacher_id = %s
+            """,
+            (teacher_id,)
+        )
 
         result = cursor.fetchone()
-
         total_sessions = result[0] if result else 0
-
 
         # ====================================================
         # OPEN SESSIONS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance_sessions
-
-            WHERE teacher_id=%s
-
-            AND session_status='OPEN'
-        """, (
-            session["teacher_id"],
-        ))
+            WHERE teacher_id = %s
+            AND session_status = 'OPEN'
+            """,
+            (teacher_id,)
+        )
 
         result = cursor.fetchone()
-
         open_sessions = result[0] if result else 0
-
 
         # ====================================================
         # TOTAL ATTENDANCE
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance a
 
             INNER JOIN attendance_sessions s
-                ON a.session_id=s.id
+                ON a.session_id = s.id
 
-            WHERE s.teacher_id=%s
-        """, (
-            session["teacher_id"],
-        ))
+            WHERE s.teacher_id = %s
+            """,
+            (teacher_id,)
+        )
 
         result = cursor.fetchone()
-
         total_attendance = result[0] if result else 0
-
 
     except Exception as e:
 
         mysql.connection.rollback()
+
+        print(
+            "ATTENDANCE DASHBOARD ERROR:",
+            str(e)
+        )
 
         flash(
             f"Attendance loading error: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return render_template(
         "teacher/attendance/index.html",
-
         subjects=subjects,
-
         sessions=sessions,
-
         total_sessions=total_sessions,
-
         open_sessions=open_sessions,
-
         total_attendance=total_attendance
     )
 
@@ -250,7 +282,10 @@ def index():
 # OPEN ATTENDANCE SESSION PAGE
 # ============================================================
 
-@teacher_attendance.route("/open", methods=["GET"])
+@teacher_attendance.route(
+    "/open",
+    methods=["GET"]
+)
 def open_session_page():
 
     if not teacher_logged_in():
@@ -264,40 +299,39 @@ def open_session_page():
 
     try:
 
-        cursor.execute("""
+        teacher_id = session["teacher_id"]
+
+        cursor.execute(
+            """
             SELECT
                 id,
                 subject_code,
                 subject_name,
                 semester,
                 department
-
             FROM subjects
-
-            WHERE teacher_id=%s
-
-            ORDER BY
-                semester,
-                subject_name
-        """, (
-            session["teacher_id"],
-        ))
+            WHERE teacher_id = %s
+            ORDER BY semester, subject_name
+            """,
+            (teacher_id,)
+        )
 
         subjects = cursor.fetchall()
 
-
     except Exception as e:
+
+        print(
+            "OPEN SESSION PAGE ERROR:",
+            str(e)
+        )
 
         flash(
             f"Unable to load subjects: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return render_template(
         "teacher/attendance/open_session.html",
@@ -309,7 +343,10 @@ def open_session_page():
 # CREATE / OPEN ATTENDANCE SESSION
 # ============================================================
 
-@teacher_attendance.route("/open", methods=["POST"])
+@teacher_attendance.route(
+    "/open",
+    methods=["POST"]
+)
 def open_session():
 
     if not teacher_logged_in():
@@ -317,13 +354,15 @@ def open_session():
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     subject_id = request.form.get("subject_id")
-
     start_time = request.form.get("start_time")
-
     end_time = request.form.get("end_time")
 
+    # ========================================================
+    # VALIDATE SUBJECT
+    # ========================================================
 
     if not subject_id:
 
@@ -338,6 +377,26 @@ def open_session():
             )
         )
 
+    try:
+
+        subject_id = int(subject_id)
+
+    except (TypeError, ValueError):
+
+        flash(
+            "Invalid subject selected.",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "teacher_attendance.open_session_page"
+            )
+        )
+
+    # ========================================================
+    # VALIDATE START TIME
+    # ========================================================
 
     if not start_time:
 
@@ -352,9 +411,7 @@ def open_session():
             )
         )
 
-
     cursor = mysql.connection.cursor()
-
 
     try:
 
@@ -362,31 +419,31 @@ def open_session():
         # VERIFY SUBJECT
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 subject_code,
-                subject_name
-
+                subject_name,
+                semester,
+                department
             FROM subjects
-
-            WHERE id=%s
-
-            AND teacher_id=%s
-
+            WHERE id = %s
+            AND teacher_id = %s
             LIMIT 1
-        """, (
-            subject_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                subject_id,
+                teacher_id
+            )
+        )
 
         subject = cursor.fetchone()
-
 
         if not subject:
 
             flash(
-                "Invalid subject selected.",
+                "Invalid subject selected or this subject is not assigned to you.",
                 "danger"
             )
 
@@ -396,47 +453,46 @@ def open_session():
                 )
             )
 
+        subject_db_id = subject[0]
+        subject_name = subject[2]
 
         # ====================================================
-        # CHECK SAME SUBJECT TODAY
+        # CHECK TODAY'S SESSION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 session_status
-
             FROM attendance_sessions
-
-            WHERE teacher_id=%s
-
-            AND subject_id=%s
-
-            AND session_date=%s
-
+            WHERE teacher_id = %s
+            AND subject_id = %s
+            AND session_date = %s
             LIMIT 1
-        """, (
-            session["teacher_id"],
-            subject_id,
-            date.today()
-        ))
+            """,
+            (
+                teacher_id,
+                subject_db_id,
+                date.today()
+            )
+        )
 
         existing_session = cursor.fetchone()
-
 
         if existing_session:
 
             if existing_session[1] == "OPEN":
 
                 flash(
-                    "This subject already has an OPEN attendance session today.",
+                    f"{subject_name} already has an OPEN attendance session today.",
                     "warning"
                 )
 
             else:
 
                 flash(
-                    "Attendance session for this subject has already been created today.",
+                    f"Attendance session for {subject_name} has already been created today.",
                     "warning"
                 )
 
@@ -446,14 +502,21 @@ def open_session():
                 )
             )
 
+        # ====================================================
+        # GENERATE SESSION ID
+        # ====================================================
+
+        new_session_id = generate_session_id(cursor)
 
         # ====================================================
         # CREATE SESSION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO attendance_sessions
             (
+                id,
                 teacher_id,
                 subject_id,
                 session_date,
@@ -461,7 +524,6 @@ def open_session():
                 end_time,
                 session_status
             )
-
             VALUES
             (
                 %s,
@@ -469,40 +531,43 @@ def open_session():
                 %s,
                 %s,
                 %s,
+                %s,
                 'OPEN'
             )
-        """, (
-            session["teacher_id"],
-            subject_id,
-            date.today(),
-            start_time,
-            end_time
-        ))
-
+            """,
+            (
+                new_session_id,
+                teacher_id,
+                subject_db_id,
+                date.today(),
+                start_time,
+                end_time
+            )
+        )
 
         mysql.connection.commit()
 
-
         flash(
-            f"Attendance session opened for {subject[2]}.",
+            f"Attendance session opened for {subject_name}.",
             "success"
         )
-
 
     except Exception as e:
 
         mysql.connection.rollback()
+
+        print(
+            "OPEN ATTENDANCE SESSION ERROR:",
+            str(e)
+        )
 
         flash(
             f"Error opening attendance session: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return redirect(
         url_for(
@@ -513,17 +578,11 @@ def open_session():
 
 # ============================================================
 # CLOSE ATTENDANCE SESSION
-#
-# When session closes:
-# - Existing Present attendance remains Present
-# - Students from same semester + department
-#   without attendance are automatically marked Absent
-# - attendance_method = MANUAL
-# - Late is NOT used
 # ============================================================
 
 @teacher_attendance.route(
-    "/close/<int:session_id>"
+    "/close/<int:session_id>",
+    methods=["POST"]
 )
 def close_session(session_id):
 
@@ -532,15 +591,18 @@ def close_session(session_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
+
     cursor = mysql.connection.cursor()
 
     try:
 
         # ====================================================
-        # GET SESSION + SUBJECT DETAILS
+        # GET SESSION DETAILS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 s.id,
                 s.subject_id,
@@ -554,20 +616,18 @@ def close_session(session_id):
             INNER JOIN subjects sub
                 ON s.subject_id = sub.id
 
-            WHERE s.id=%s
-            AND s.teacher_id=%s
+            WHERE s.id = %s
+            AND s.teacher_id = %s
 
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         attendance_session = cursor.fetchone()
-
-        # ====================================================
-        # SESSION NOT FOUND
-        # ====================================================
 
         if not attendance_session:
 
@@ -577,12 +637,10 @@ def close_session(session_id):
             )
 
             return redirect(
-                url_for("teacher_attendance.index")
+                url_for(
+                    "teacher_attendance.index"
+                )
             )
-
-        # ====================================================
-        # SESSION DATA
-        # ====================================================
 
         session_id_db = attendance_session[0]
         subject_id = attendance_session[1]
@@ -604,120 +662,176 @@ def close_session(session_id):
             )
 
             return redirect(
-                url_for("teacher_attendance.index")
-            )
-
-        # ====================================================
-        # AUTOMATIC ABSENT
-        #
-        # Only students belonging to:
-        #   Same semester
-        #   Same department
-        #
-        # Students already having attendance are skipped.
-        # ====================================================
-
-        cursor.execute("""
-            INSERT INTO attendance
-            (
-                session_id,
-                student_id,
-                attendance_date,
-                attendance_time,
-                attendance_method,
-                status,
-                remarks
-            )
-
-            SELECT
-                %s,
-                st.id,
-                %s,
-                CURTIME(),
-                'MANUAL',
-                'Absent',
-                'Automatically marked absent when session was closed'
-
-            FROM students st
-
-            WHERE st.semester=%s
-
-            AND (
-                st.department=%s
-                OR (
-                    st.department IS NULL
-                    AND %s IS NULL
+                url_for(
+                    "teacher_attendance.index"
                 )
             )
 
-            AND NOT EXISTS (
-                SELECT 1
+        # ====================================================
+        # GET ALL ELIGIBLE STUDENTS
+        #
+        # Same semester + same department
+        # ====================================================
 
-                FROM attendance a
-
-                WHERE a.session_id=%s
-                AND a.student_id=st.id
+        cursor.execute(
+            """
+            SELECT
+                id
+            FROM students
+            WHERE semester = %s
+            AND
+            (
+                department = %s
+                OR
+                (
+                    department IS NULL
+                    AND %s IS NULL
+                )
             )
-        """, (
-            session_id_db,
-            session_date,
-            semester,
-            department,
-            department,
-            session_id_db
-        ))
+            """,
+            (
+                semester,
+                department,
+                department
+            )
+        )
+
+        students = cursor.fetchall()
+
+        # ====================================================
+        # AUTOMATICALLY MARK ABSENT
+        #
+        # IMPORTANT:
+        # attendance.id is NOT AUTO_INCREMENT
+        #
+        # Therefore generate ID for EVERY absent record.
+        # ====================================================
+
+        absent_count = 0
+
+        for student in students:
+
+            student_db_id = student[0]
+
+            # ----------------------------------------------
+            # CHECK WHETHER ALREADY MARKED
+            # ----------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT id
+                FROM attendance
+                WHERE session_id = %s
+                AND student_id = %s
+                LIMIT 1
+                """,
+                (
+                    session_id_db,
+                    student_db_id
+                )
+            )
+
+            already_marked = cursor.fetchone()
+
+            if already_marked:
+                continue
+
+            # ----------------------------------------------
+            # GENERATE ATTENDANCE ID
+            # ----------------------------------------------
+
+            attendance_id = generate_attendance_id(cursor)
+
+            # ----------------------------------------------
+            # INSERT ABSENT
+            # ----------------------------------------------
+
+            cursor.execute(
+                """
+                INSERT INTO attendance
+                (
+                    id,
+                    session_id,
+                    student_id,
+                    attendance_date,
+                    attendance_time,
+                    attendance_method,
+                    status,
+                    remarks
+                )
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    CURTIME(),
+                    'MANUAL',
+                    'Absent',
+                    'Automatically marked absent when session was closed'
+                )
+                """,
+                (
+                    attendance_id,
+                    session_id_db,
+                    student_db_id,
+                    session_date
+                )
+            )
+
+            absent_count += 1
 
         # ====================================================
         # CLOSE SESSION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE attendance_sessions
-
             SET
-                session_status='CLOSED',
-                end_time=CURTIME()
-
-            WHERE id=%s
-            AND teacher_id=%s
-        """, (
-            session_id_db,
-            session["teacher_id"]
-        ))
-
-        # ====================================================
-        # COMMIT EVERYTHING
-        # ====================================================
+                session_status = 'CLOSED',
+                end_time = CURTIME()
+            WHERE id = %s
+            AND teacher_id = %s
+            """,
+            (
+                session_id_db,
+                teacher_id
+            )
+        )
 
         mysql.connection.commit()
 
         # ====================================================
-        # GET FINAL COUNTS
+        # FINAL COUNTS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 COALESCE(
-                    SUM(status='Present'),
+                    SUM(status = 'Present'),
                     0
                 ) AS present_count,
 
                 COALESCE(
-                    SUM(status='Absent'),
+                    SUM(status = 'Absent'),
                     0
                 ) AS absent_count
 
             FROM attendance
 
-            WHERE session_id=%s
-        """, (
-            session_id_db,
-        ))
+            WHERE session_id = %s
+            """,
+            (
+                session_id_db,
+            )
+        )
 
         counts = cursor.fetchone()
 
         present_count = counts[0] or 0
-        absent_count = counts[1] or 0
+        final_absent_count = counts[1] or 0
 
         # ====================================================
         # SUCCESS
@@ -726,7 +840,7 @@ def close_session(session_id):
         flash(
             f"{subject_name} attendance closed successfully. "
             f"Present: {present_count}, "
-            f"Absent: {absent_count}",
+            f"Absent: {final_absent_count}",
             "success"
         )
 
@@ -745,12 +859,14 @@ def close_session(session_id):
         )
 
     finally:
-
         cursor.close()
 
     return redirect(
-        url_for("teacher_attendance.index")
+        url_for(
+            "teacher_attendance.index"
+        )
     )
+
 
 # ============================================================
 # DELETE SESSION
@@ -767,33 +883,27 @@ def delete_session(session_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     cursor = mysql.connection.cursor()
 
-
     try:
 
-        # ====================================================
-        # VERIFY SESSION
-        # ====================================================
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id
-
             FROM attendance_sessions
-
-            WHERE id=%s
-
-            AND teacher_id=%s
-
+            WHERE id = %s
+            AND teacher_id = %s
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         attendance_session = cursor.fetchone()
-
 
         if not attendance_session:
 
@@ -803,38 +913,40 @@ def delete_session(session_id):
             )
 
             return redirect(
-                url_for("teacher_attendance.index")
+                url_for(
+                    "teacher_attendance.index"
+                )
             )
-
 
         # ====================================================
         # DELETE ATTENDANCE
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM attendance
-
-            WHERE session_id=%s
-        """, (
-            session_id,
-        ))
-
+            WHERE session_id = %s
+            """,
+            (
+                session_id,
+            )
+        )
 
         # ====================================================
         # DELETE SESSION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             DELETE FROM attendance_sessions
-
-            WHERE id=%s
-
-            AND teacher_id=%s
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
-
+            WHERE id = %s
+            AND teacher_id = %s
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         if cursor.rowcount == 0:
 
@@ -851,30 +963,29 @@ def delete_session(session_id):
                 )
             )
 
-
         mysql.connection.commit()
-
 
         flash(
             "Attendance session deleted successfully.",
             "success"
         )
 
-
     except Exception as e:
 
         mysql.connection.rollback()
+
+        print(
+            "SESSION DELETE ERROR:",
+            str(e)
+        )
 
         flash(
             f"Session deletion error: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return redirect(
         url_for(
@@ -888,7 +999,8 @@ def delete_session(session_id):
 # ============================================================
 
 @teacher_attendance.route(
-    "/absent/<int:session_id>/<int:student_id>"
+    "/absent/<int:session_id>/<int:student_id>",
+    methods=["POST"]
 )
 def mark_absent(session_id, student_id):
 
@@ -897,9 +1009,9 @@ def mark_absent(session_id, student_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     cursor = mysql.connection.cursor()
-
 
     try:
 
@@ -907,23 +1019,30 @@ def mark_absent(session_id, student_id):
         # VERIFY SESSION
         # ====================================================
 
-        cursor.execute("""
-            SELECT id
+        cursor.execute(
+            """
+            SELECT
+                s.id,
+                s.session_status,
+                sub.semester,
+                sub.department
+            FROM attendance_sessions s
 
-            FROM attendance_sessions
+            INNER JOIN subjects sub
+                ON s.subject_id = sub.id
 
-            WHERE id=%s
-
-            AND teacher_id=%s
+            WHERE s.id = %s
+            AND s.teacher_id = %s
 
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         attendance_session = cursor.fetchone()
-
 
         if not attendance_session:
 
@@ -933,31 +1052,55 @@ def mark_absent(session_id, student_id):
             )
 
             return redirect(
-                url_for("teacher_attendance.index")
+                url_for(
+                    "teacher_attendance.index"
+                )
             )
 
+        session_status = attendance_session[1]
+        session_semester = attendance_session[2]
+        session_department = attendance_session[3]
+
+        # ====================================================
+        # DO NOT ALLOW AFTER CLOSED
+        # ====================================================
+
+        if session_status == "CLOSED":
+
+            flash(
+                "This attendance session is already closed.",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "teacher_attendance.report",
+                    session_id=session_id
+                )
+            )
 
         # ====================================================
         # VERIFY STUDENT
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 student_id,
-                full_name
-
+                full_name,
+                semester,
+                department
             FROM students
-
-            WHERE id=%s
-
+            WHERE id = %s
             LIMIT 1
-        """, (
-            student_id,
-        ))
+            """,
+            (
+                student_id,
+            )
+        )
 
         student = cursor.fetchone()
-
 
         if not student:
 
@@ -973,30 +1116,57 @@ def mark_absent(session_id, student_id):
                 )
             )
 
+        student_semester = student[3]
+        student_department = student[4]
+
+        same_department = (
+            student_department == session_department
+        )
+
+        if (
+            student_department is None
+            and session_department is None
+        ):
+            same_department = True
+
+        if (
+            student_semester != session_semester
+            or not same_department
+        ):
+
+            flash(
+                "This student does not belong to this attendance session.",
+                "danger"
+            )
+
+            return redirect(
+                url_for(
+                    "teacher_attendance.report",
+                    session_id=session_id
+                )
+            )
 
         # ====================================================
-        # CHECK EXISTING
+        # CHECK EXISTING ATTENDANCE
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 status
-
             FROM attendance
-
-            WHERE session_id=%s
-
-            AND student_id=%s
-
+            WHERE session_id = %s
+            AND student_id = %s
             LIMIT 1
-        """, (
-            session_id,
-            student_id
-        ))
+            """,
+            (
+                session_id,
+                student_id
+            )
+        )
 
         existing = cursor.fetchone()
-
 
         if existing:
 
@@ -1012,14 +1182,21 @@ def mark_absent(session_id, student_id):
                 )
             )
 
+        # ====================================================
+        # GENERATE ATTENDANCE ID
+        # ====================================================
+
+        attendance_id = generate_attendance_id(cursor)
 
         # ====================================================
         # INSERT ABSENT
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO attendance
             (
+                id,
                 session_id,
                 student_id,
                 attendance_date,
@@ -1028,9 +1205,9 @@ def mark_absent(session_id, student_id):
                 status,
                 remarks
             )
-
             VALUES
             (
+                %s,
                 %s,
                 %s,
                 CURDATE(),
@@ -1039,35 +1216,37 @@ def mark_absent(session_id, student_id):
                 'Absent',
                 'Marked absent manually by teacher'
             )
-        """, (
-            session_id,
-            student_id
-        ))
-
+            """,
+            (
+                attendance_id,
+                session_id,
+                student_id
+            )
+        )
 
         mysql.connection.commit()
-
 
         flash(
             f"{student[2]} marked Absent.",
             "success"
         )
 
-
     except Exception as e:
 
         mysql.connection.rollback()
+
+        print(
+            "MANUAL ABSENT ERROR:",
+            str(e)
+        )
 
         flash(
             f"Error marking absent: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return redirect(
         url_for(
@@ -1089,82 +1268,77 @@ def reports():
             url_for("teacher_auth.login")
         )
 
-
     cursor = mysql.connection.cursor()
 
     reports_data = []
 
-
     try:
 
-        cursor.execute("""
+        teacher_id = session["teacher_id"]
+
+        cursor.execute(
+            """
             SELECT
-
                 s.id,
-
                 sub.subject_code,
-
                 sub.subject_name,
-
                 s.session_date,
-
                 s.start_time,
-
                 s.end_time,
-
                 s.session_status,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a1
-                    WHERE a1.session_id=s.id
+                    WHERE a1.session_id = s.id
                 ) AS total_attendance,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a2
-                    WHERE a2.session_id=s.id
-                    AND a2.status='Present'
+                    WHERE a2.session_id = s.id
+                    AND a2.status = 'Present'
                 ) AS present_count,
 
                 (
                     SELECT COUNT(*)
                     FROM attendance a3
-                    WHERE a3.session_id=s.id
-                    AND a3.status='Absent'
+                    WHERE a3.session_id = s.id
+                    AND a3.status = 'Absent'
                 ) AS absent_count
 
             FROM attendance_sessions s
 
             INNER JOIN subjects sub
-                ON s.subject_id=sub.id
+                ON s.subject_id = sub.id
 
-            WHERE s.teacher_id=%s
+            WHERE s.teacher_id = %s
 
             ORDER BY
                 s.session_date DESC,
                 s.id DESC
-        """, (
-            session["teacher_id"],
-        ))
+            """,
+            (
+                teacher_id,
+            )
+        )
 
         reports_data = cursor.fetchall()
 
-
     except Exception as e:
 
-        mysql.connection.rollback()
+        print(
+            "REPORTS LOADING ERROR:",
+            str(e)
+        )
 
         flash(
             f"Reports loading error: {e}",
             "danger"
         )
 
-
     finally:
-
         cursor.close()
-
 
     return render_template(
         "teacher/reports.html",
@@ -1186,9 +1360,9 @@ def report(session_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     cursor = mysql.connection.cursor()
-
 
     try:
 
@@ -1196,40 +1370,33 @@ def report(session_id):
         # SESSION INFORMATION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 s.id,
-
                 sub.subject_code,
-
                 sub.subject_name,
-
                 s.session_date,
-
                 s.start_time,
-
                 s.end_time,
-
                 s.session_status
-
             FROM attendance_sessions s
 
             INNER JOIN subjects sub
-                ON s.subject_id=sub.id
+                ON s.subject_id = sub.id
 
-            WHERE s.id=%s
-
-            AND s.teacher_id=%s
+            WHERE s.id = %s
+            AND s.teacher_id = %s
 
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         session_info = cursor.fetchone()
-
 
         if not session_info:
 
@@ -1244,119 +1411,170 @@ def report(session_id):
                 )
             )
 
-
         # ====================================================
         # ATTENDANCE RECORDS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 students.id,
-
                 students.student_id,
-
                 students.full_name,
-
                 students.department,
-
                 attendance.attendance_date,
-
                 attendance.attendance_time,
-
                 attendance.attendance_method,
-
                 attendance.status,
-
                 attendance.remarks
 
             FROM attendance
 
             INNER JOIN students
-                ON attendance.student_id=students.id
+                ON attendance.student_id = students.id
 
-            WHERE attendance.session_id=%s
+            WHERE attendance.session_id = %s
 
-            ORDER BY
-                students.full_name ASC
-        """, (
-            session_id,
-        ))
+            ORDER BY students.full_name ASC
+            """,
+            (
+                session_id,
+            )
+        )
 
         records = cursor.fetchall()
 
-
         # ====================================================
-        # PRESENT COUNT
+        # PRESENT
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance
-
-            WHERE session_id=%s
-
-            AND status='Present'
-        """, (
-            session_id,
-        ))
+            WHERE session_id = %s
+            AND status = 'Present'
+            """,
+            (
+                session_id,
+            )
+        )
 
         present = cursor.fetchone()[0]
 
-
         # ====================================================
-        # ABSENT COUNT
+        # ABSENT
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance
-
-            WHERE session_id=%s
-
-            AND status='Absent'
-        """, (
-            session_id,
-        ))
+            WHERE session_id = %s
+            AND status = 'Absent'
+            """,
+            (
+                session_id,
+            )
+        )
 
         absent = cursor.fetchone()[0]
 
-
         # ====================================================
-        # TOTAL COUNT
+        # TOTAL ATTENDANCE RECORDS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM attendance
-
-            WHERE session_id=%s
-        """, (
-            session_id,
-        ))
+            WHERE session_id = %s
+            """,
+            (
+                session_id,
+            )
+        )
 
         total = cursor.fetchone()[0]
 
+        # ====================================================
+        # SUBJECT DETAILS
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                sub.semester,
+                sub.department
+
+            FROM attendance_sessions s
+
+            INNER JOIN subjects sub
+                ON s.subject_id = sub.id
+
+            WHERE s.id = %s
+            AND s.teacher_id = %s
+
+            LIMIT 1
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
+
+        subject_details = cursor.fetchone()
+
+        semester = (
+            subject_details[0]
+            if subject_details
+            else None
+        )
+
+        department = (
+            subject_details[1]
+            if subject_details
+            else None
+        )
 
         # ====================================================
-        # TOTAL STUDENTS
+        # TOTAL EXPECTED STUDENTS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*)
-
             FROM students
-        """)
+
+            WHERE semester = %s
+
+            AND
+            (
+                department = %s
+                OR
+                (
+                    department IS NULL
+                    AND %s IS NULL
+                )
+            )
+            """,
+            (
+                semester,
+                department,
+                department
+            )
+        )
 
         total_students = cursor.fetchone()[0]
-
 
     except Exception as e:
 
         mysql.connection.rollback()
+
+        print(
+            "REPORT LOADING ERROR:",
+            str(e)
+        )
 
         flash(
             f"Report loading error: {e}",
@@ -1369,26 +1587,19 @@ def report(session_id):
             )
         )
 
-
     finally:
-
         cursor.close()
-
 
     return render_template(
         "teacher/attendance/report.html",
-
         session_info=session_info,
-
         records=records,
-
         present=present,
-
         absent=absent,
-
         total=total,
-
-        total_students=total_students
+        total_students=total_students,
+        semester=semester,
+        department=department
     )
 
 
@@ -1406,50 +1617,42 @@ def export_excel(session_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     cursor = mysql.connection.cursor()
 
-
     try:
 
-        # ====================================================
-        # SESSION INFORMATION
-        # ====================================================
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 s.id,
-
                 sub.subject_code,
-
                 sub.subject_name,
-
+                sub.semester,
+                sub.department,
                 s.session_date,
-
                 s.start_time,
-
                 s.end_time,
-
                 s.session_status
 
             FROM attendance_sessions s
 
             INNER JOIN subjects sub
-                ON s.subject_id=sub.id
+                ON s.subject_id = sub.id
 
-            WHERE s.id=%s
-
-            AND s.teacher_id=%s
+            WHERE s.id = %s
+            AND s.teacher_id = %s
 
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         session_info = cursor.fetchone()
-
 
         if not session_info:
 
@@ -1464,47 +1667,40 @@ def export_excel(session_id):
                 )
             )
 
-
-        # ====================================================
-        # ATTENDANCE RECORDS
-        # ====================================================
-
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 students.student_id,
-
                 students.full_name,
-
                 students.department,
-
                 attendance.attendance_date,
-
                 attendance.attendance_time,
-
                 attendance.attendance_method,
-
                 attendance.status,
-
                 attendance.remarks
 
             FROM attendance
 
             INNER JOIN students
-                ON attendance.student_id=students.id
+                ON attendance.student_id = students.id
 
-            WHERE attendance.session_id=%s
+            WHERE attendance.session_id = %s
 
-            ORDER BY
-                students.full_name
-        """, (
-            session_id,
-        ))
+            ORDER BY students.full_name
+            """,
+            (
+                session_id,
+            )
+        )
 
         rows = cursor.fetchall()
 
-
     except Exception as e:
+
+        print(
+            "EXCEL EXPORT ERROR:",
+            str(e)
+        )
 
         flash(
             f"Excel export error: {e}",
@@ -1518,11 +1714,8 @@ def export_excel(session_id):
             )
         )
 
-
     finally:
-
         cursor.close()
-
 
     # ========================================================
     # CREATE EXCEL
@@ -1534,7 +1727,6 @@ def export_excel(session_id):
 
     sheet.title = "Attendance Report"
 
-
     sheet.append([
         "AI Smart Attendance System"
     ])
@@ -1544,7 +1736,6 @@ def export_excel(session_id):
     ])
 
     sheet.append([])
-
 
     sheet.append([
         "Subject Code",
@@ -1557,31 +1748,39 @@ def export_excel(session_id):
     ])
 
     sheet.append([
+        "Semester",
+        session_info[3]
+    ])
+
+    sheet.append([
+        "Department",
+        session_info[4] or "-"
+    ])
+
+    sheet.append([
         "Date",
-        str(session_info[3])
-    ])
-
-    sheet.append([
-        "Start Time",
-        str(session_info[4])
-    ])
-
-    sheet.append([
-        "End Time",
         str(session_info[5])
     ])
 
     sheet.append([
+        "Start Time",
+        str(session_info[6])
+    ])
+
+    sheet.append([
+        "End Time",
+        str(session_info[7])
+    ])
+
+    sheet.append([
         "Session Status",
-        session_info[6]
+        session_info[8]
     ])
 
     sheet.append([])
 
-
     # ========================================================
-    # EXCEL HEADERS
-    # PRESENT / ABSENT ONLY
+    # TABLE HEADERS
     # ========================================================
 
     sheet.append([
@@ -1595,6 +1794,9 @@ def export_excel(session_id):
         "Remarks"
     ])
 
+    # ========================================================
+    # RECORDS
+    # ========================================================
 
     for row in rows:
 
@@ -1609,27 +1811,32 @@ def export_excel(session_id):
             row[7] or "-"
         ])
 
-
     # ========================================================
     # COLUMN WIDTHS
     # ========================================================
 
     widths = {
         "A": 18,
-        "B": 25,
+        "B": 28,
         "C": 20,
         "D": 15,
         "E": 15,
         "F": 20,
         "G": 15,
-        "H": 40
+        "H": 45
     }
-
 
     for column, width in widths.items():
 
-        sheet.column_dimensions[column].width = width
+        sheet.column_dimensions[
+            column
+        ].width = width
 
+    sheet.freeze_panes = "A13"
+
+    # ========================================================
+    # CREATE FILE
+    # ========================================================
 
     output = io.BytesIO()
 
@@ -1637,16 +1844,12 @@ def export_excel(session_id):
 
     output.seek(0)
 
-
     return send_file(
         output,
-
         as_attachment=True,
-
         download_name=(
             f"Attendance_Report_{session_id}.xlsx"
         ),
-
         mimetype=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
@@ -1668,9 +1871,9 @@ def export_pdf(session_id):
             url_for("teacher_auth.login")
         )
 
+    teacher_id = session["teacher_id"]
 
     cursor = mysql.connection.cursor()
-
 
     try:
 
@@ -1678,40 +1881,36 @@ def export_pdf(session_id):
         # SESSION INFORMATION
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 s.id,
-
                 sub.subject_code,
-
                 sub.subject_name,
-
+                sub.semester,
+                sub.department,
                 s.session_date,
-
                 s.start_time,
-
                 s.end_time,
-
                 s.session_status
 
             FROM attendance_sessions s
 
             INNER JOIN subjects sub
-                ON s.subject_id=sub.id
+                ON s.subject_id = sub.id
 
-            WHERE s.id=%s
-
-            AND s.teacher_id=%s
+            WHERE s.id = %s
+            AND s.teacher_id = %s
 
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
 
         session_info = cursor.fetchone()
-
 
         if not session_info:
 
@@ -1726,47 +1925,43 @@ def export_pdf(session_id):
                 )
             )
 
-
         # ====================================================
         # ATTENDANCE RECORDS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 students.student_id,
-
                 students.full_name,
-
                 students.department,
-
                 attendance.attendance_date,
-
                 attendance.attendance_time,
-
                 attendance.attendance_method,
-
-                attendance.status,
-
-                attendance.remarks
+                attendance.status
 
             FROM attendance
 
             INNER JOIN students
-                ON attendance.student_id=students.id
+                ON attendance.student_id = students.id
 
-            WHERE attendance.session_id=%s
+            WHERE attendance.session_id = %s
 
-            ORDER BY
-                students.full_name
-        """, (
-            session_id,
-        ))
+            ORDER BY students.full_name
+            """,
+            (
+                session_id,
+            )
+        )
 
         rows = cursor.fetchall()
 
-
     except Exception as e:
+
+        print(
+            "PDF EXPORT ERROR:",
+            str(e)
+        )
 
         flash(
             f"PDF export error: {e}",
@@ -1780,11 +1975,8 @@ def export_pdf(session_id):
             )
         )
 
-
     finally:
-
         cursor.close()
-
 
     # ========================================================
     # CREATE PDF
@@ -1792,24 +1984,17 @@ def export_pdf(session_id):
 
     buffer = io.BytesIO()
 
-
     doc = SimpleDocTemplate(
         buffer,
-
         rightMargin=25,
-
         leftMargin=25,
-
         topMargin=30,
-
         bottomMargin=30
     )
-
 
     styles = getSampleStyleSheet()
 
     elements = []
-
 
     elements.append(
         Paragraph(
@@ -1818,11 +2003,9 @@ def export_pdf(session_id):
         )
     )
 
-
     elements.append(
         Spacer(1, 8)
     )
-
 
     elements.append(
         Paragraph(
@@ -1831,11 +2014,9 @@ def export_pdf(session_id):
         )
     )
 
-
     elements.append(
-        Spacer(1, 8)
+        Spacer(1, 10)
     )
-
 
     elements.append(
         Paragraph(
@@ -1844,7 +2025,6 @@ def export_pdf(session_id):
         )
     )
 
-
     elements.append(
         Paragraph(
             f"<b>Subject:</b> {session_info[2]}",
@@ -1852,59 +2032,67 @@ def export_pdf(session_id):
         )
     )
 
-
     elements.append(
         Paragraph(
-            f"<b>Date:</b> {session_info[3]}",
+            f"<b>Semester:</b> {session_info[3]}",
             styles["Normal"]
         )
     )
 
-
     elements.append(
         Paragraph(
-            f"<b>Start:</b> {session_info[4]}",
+            f"<b>Department:</b> {session_info[4] or '-'}",
             styles["Normal"]
         )
     )
 
-
     elements.append(
         Paragraph(
-            f"<b>End:</b> {session_info[5]}",
+            f"<b>Date:</b> {session_info[5]}",
             styles["Normal"]
         )
     )
 
-
     elements.append(
         Paragraph(
-            f"<b>Status:</b> {session_info[6]}",
+            f"<b>Start:</b> {session_info[6]}",
             styles["Normal"]
         )
     )
 
+    elements.append(
+        Paragraph(
+            f"<b>End:</b> {session_info[7]}",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"<b>Status:</b> {session_info[8]}",
+            styles["Normal"]
+        )
+    )
 
     elements.append(
         Spacer(1, 15)
     )
 
-
     # ========================================================
     # PDF TABLE
-    # PRESENT / ABSENT ONLY
     # ========================================================
 
-    data = [[
-        "Student ID",
-        "Student Name",
-        "Department",
-        "Date",
-        "Time",
-        "Method",
-        "Status"
-    ]]
-
+    data = [
+        [
+            "Student ID",
+            "Student Name",
+            "Department",
+            "Date",
+            "Time",
+            "Method",
+            "Status"
+        ]
+    ]
 
     for row in rows:
 
@@ -1918,7 +2106,6 @@ def export_pdf(session_id):
             str(row[6])
         ])
 
-
     if len(data) == 1:
 
         data.append([
@@ -1931,100 +2118,84 @@ def export_pdf(session_id):
             "-"
         ])
 
-
     table = Table(
         data,
         repeatRows=1
     )
 
-
     table.setStyle(
-        TableStyle([
-
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.darkblue
-            ),
-
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white
-            ),
-
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.5,
-                colors.grey
-            ),
-
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold"
-            ),
-
-            (
-                "ALIGN",
-                (0, 0),
-                (-1, -1),
-                "CENTER"
-            ),
-
-            (
-                "VALIGN",
-                (0, 0),
-                (-1, -1),
-                "MIDDLE"
-            ),
-
-            (
-                "FONTSIZE",
-                (0, 0),
-                (-1, -1),
-                7
-            ),
-
-            (
-                "BOTTOMPADDING",
-                (0, 0),
-                (-1, 0),
-                8
-            ),
-
-            (
-                "TOPPADDING",
-                (0, 0),
-                (-1, 0),
-                8
-            )
-
-        ])
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.darkblue
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white
+                ),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.5,
+                    colors.grey
+                ),
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+                (
+                    "ALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "CENTER"
+                ),
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "MIDDLE"
+                ),
+                (
+                    "FONTSIZE",
+                    (0, 0),
+                    (-1, -1),
+                    7
+                ),
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, 0),
+                    8
+                ),
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, 0),
+                    8
+                )
+            ]
+        )
     )
 
-
     elements.append(table)
-
 
     doc.build(elements)
 
     buffer.seek(0)
 
-
     return send_file(
         buffer,
-
         as_attachment=True,
-
         download_name=(
             f"Attendance_Report_{session_id}.pdf"
         ),
-
         mimetype="application/pdf"
     )

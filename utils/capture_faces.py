@@ -1,19 +1,27 @@
-import cv2
+﻿import cv2
 import os
-import time
+import numpy as np
 
 
-# ============================================================
-# FACE CAPTURE / REGISTRATION
-# ============================================================
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
 
-def capture_faces(student_id, total_images=50):
 
-    # ========================================================
-    # DATASET FOLDER
-    # ========================================================
+CASCADE_PATH = os.path.join(
+    cv2.data.haarcascades,
+    "haarcascade_frontalface_default.xml"
+)
 
-    dataset_path = "dataset"
+
+def capture_face_image(student_id, image_bytes, image_number):
+
+    dataset_path = os.path.join(
+        BASE_DIR,
+        "dataset"
+    )
 
     student_folder = os.path.join(
         dataset_path,
@@ -25,320 +33,144 @@ def capture_faces(student_id, total_images=50):
         exist_ok=True
     )
 
-    # ========================================================
-    # REMOVE OLD IMAGES
-    # ========================================================
-
-    for file in os.listdir(student_folder):
-
-        file_path = os.path.join(
-            student_folder,
-            file
+    if not os.path.exists(CASCADE_PATH):
+        raise Exception(
+            "Haar Cascade file not found: "
+            + CASCADE_PATH
         )
 
-        if os.path.isfile(file_path):
-
-            if file.lower().endswith(
-                (".jpg", ".jpeg", ".png")
-            ):
-                try:
-                    os.remove(file_path)
-                except Exception as e:
-                    print(
-                        "Could not remove:",
-                        file,
-                        e
-                    )
-
-    # ========================================================
-    # LOAD HAAR CASCADE
-    # ========================================================
-
     face_detector = cv2.CascadeClassifier(
-        cv2.data.haarcascades +
-        "haarcascade_frontalface_default.xml"
+        CASCADE_PATH
     )
 
     if face_detector.empty():
-
         raise Exception(
-            "Failed to load Haar Cascade."
+            "Failed to load Haar Cascade: "
+            + CASCADE_PATH
         )
-
-    # ========================================================
-    # OPEN CAMERA
-    # ========================================================
-
-    camera = cv2.VideoCapture(0)
-
-    if not camera.isOpened():
-
-        raise Exception(
-            "Unable to open camera."
-        )
-
-    camera.set(
-        cv2.CAP_PROP_FRAME_WIDTH,
-        640
-    )
-
-    camera.set(
-        cv2.CAP_PROP_FRAME_HEIGHT,
-        480
-    )
-
-    count = 0
-
-    last_capture_time = 0
-
-    capture_delay = 0.30
 
     try:
+        image_number = int(image_number)
+    except (TypeError, ValueError):
+        return {
+            "success": False,
+            "message": "Invalid image number.",
+            "count": 0
+        }
 
-        # ====================================================
-        # CAMERA LOOP
-        # ====================================================
+    if image_number <= 0:
+        return {
+            "success": False,
+            "message": "Image number must be greater than 0.",
+            "count": 0
+        }
 
-        while True:
+    if not image_bytes:
+        return {
+            "success": False,
+            "message": "No image received.",
+            "count": 0
+        }
 
-            success, frame = camera.read()
-
-            if not success:
-                break
-
-            gray = cv2.cvtColor(
-                frame,
-                cv2.COLOR_BGR2GRAY
-            )
-
-            # =================================================
-            # FACE DETECTION
-            # =================================================
-
-            faces = face_detector.detectMultiScale(
-                gray,
-                scaleFactor=1.2,
-                minNeighbors=6,
-                minSize=(100, 100)
-            )
-
-            # =================================================
-            # NO FACE
-            # =================================================
-
-            if len(faces) == 0:
-
-                cv2.putText(
-                    frame,
-                    "Show ONE face to camera",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75,
-                    (0, 0, 255),
-                    2
-                )
-
-            # =================================================
-            # MORE THAN ONE FACE
-            # =================================================
-
-            elif len(faces) > 1:
-
-                cv2.putText(
-                    frame,
-                    "ONLY ONE FACE ALLOWED",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75,
-                    (0, 0, 255),
-                    2
-                )
-
-                cv2.putText(
-                    frame,
-                    "Other people move away",
-                    (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.65,
-                    (0, 0, 255),
-                    2
-                )
-
-                # Draw all detected faces
-                for (x, y, w, h) in faces:
-
-                    cv2.rectangle(
-                        frame,
-                        (x, y),
-                        (x + w, y + h),
-                        (0, 0, 255),
-                        2
-                    )
-
-            # =================================================
-            # EXACTLY ONE FACE
-            # =================================================
-
-            else:
-
-                (x, y, w, h) = faces[0]
-
-                # Draw face
-                cv2.rectangle(
-                    frame,
-                    (x, y),
-                    (x + w, y + h),
-                    (0, 255, 0),
-                    2
-                )
-
-                # =================================================
-                # FACE SIZE CHECK
-                # =================================================
-
-                if w < 120 or h < 120:
-
-                    cv2.putText(
-                        frame,
-                        "Move closer to camera",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7,
-                        (0, 255, 255),
-                        2
-                    )
-
-                else:
-
-                    current_time = time.time()
-
-                    # =============================================
-                    # CAPTURE WITH DELAY
-                    # =============================================
-
-                    if (
-                        current_time -
-                        last_capture_time
-                    ) >= capture_delay:
-
-                        face = gray[
-                            y:y + h,
-                            x:x + w
-                        ]
-
-                        # Resize all images to same size
-                        face = cv2.resize(
-                            face,
-                            (200, 200)
-                        )
-
-                        count += 1
-
-                        image_path = os.path.join(
-                            student_folder,
-                            f"{count}.jpg"
-                        )
-
-                        cv2.imwrite(
-                            image_path,
-                            face
-                        )
-
-                        last_capture_time = (
-                            current_time
-                        )
-
-                    # =============================================
-                    # CAPTURE STATUS
-                    # =============================================
-
-                    cv2.putText(
-                        frame,
-                        f"Captured: {count}/{total_images}",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.75,
-                        (0, 255, 0),
-                        2
-                    )
-
-                    cv2.putText(
-                        frame,
-                        "Move head slightly",
-                        (10, 60),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (255, 255, 0),
-                        2
-                    )
-
-                    cv2.putText(
-                        frame,
-                        "Press Q or ESC to Cancel",
-                        (10, 90),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (255, 255, 0),
-                        2
-                    )
-
-            # =================================================
-            # SHOW CAMERA
-            # =================================================
-
-            cv2.imshow(
-                "AI Smart Attendance - Face Registration",
-                frame
-            )
-
-            # =================================================
-            # KEY
-            # =================================================
-
-            key = cv2.waitKey(1) & 0xFF
-
-            if key == ord("q") or key == 27:
-
-                break
-
-            if count >= total_images:
-
-                break
-
-    finally:
-
-        camera.release()
-
-        cv2.destroyAllWindows()
-
-    return count
-
-
-# ============================================================
-# TERMINAL TEST
-# ============================================================
-
-if __name__ == "__main__":
-
-    student_id = input(
-        "Enter Student Database ID: "
-    ).strip()
-
-    print()
-    print("==============================")
-    print("Starting Face Capture...")
-    print("ONLY ONE PERSON IN FRONT OF CAMERA")
-    print("==============================")
-    print()
-
-    total = capture_faces(
-        student_id,
-        total_images=50
+    image_array = np.frombuffer(
+        image_bytes,
+        dtype=np.uint8
     )
 
-    print()
-    print("==============================")
-    print("Face Capture Completed")
-    print("Student ID :", student_id)
-    print("Images     :", total)
-    print("==============================")
+    frame = cv2.imdecode(
+        image_array,
+        cv2.IMREAD_COLOR
+    )
+
+    if frame is None:
+        return {
+            "success": False,
+            "message": "Invalid camera image.",
+            "count": 0
+        }
+
+    gray = cv2.cvtColor(
+        frame,
+        cv2.COLOR_BGR2GRAY
+    )
+
+    gray = cv2.equalizeHist(gray)
+
+    faces = face_detector.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(100, 100)
+    )
+
+    if len(faces) == 0:
+        return {
+            "success": False,
+            "message": "No face detected. Look directly at the camera.",
+            "count": 0
+        }
+
+    if len(faces) > 1:
+        return {
+            "success": False,
+            "message": "Multiple faces detected. Only one person should be in front of the camera.",
+            "count": 0
+        }
+
+    x, y, w, h = faces[0]
+
+    if w < 120 or h < 120:
+        return {
+            "success": False,
+            "message": "Face is too small. Move closer to the camera.",
+            "count": 0
+        }
+
+    margin = int(min(w, h) * 0.15)
+
+    x1 = max(0, x - margin)
+    y1 = max(0, y - margin)
+    x2 = min(gray.shape[1], x + w + margin)
+    y2 = min(gray.shape[0], y + h + margin)
+
+    face = gray[y1:y2, x1:x2]
+
+    if face.size == 0:
+        return {
+            "success": False,
+            "message": "Unable to crop detected face.",
+            "count": 0
+        }
+
+    face = cv2.resize(
+        face,
+        (200, 200),
+        interpolation=cv2.INTER_AREA
+    )
+
+    image_path = os.path.join(
+        student_folder,
+        f"{image_number}.jpg"
+    )
+
+    if not cv2.imwrite(image_path, face):
+        raise Exception(
+            "Failed to save face image: "
+            + image_path
+        )
+
+    image_count = 0
+
+    for filename in os.listdir(student_folder):
+        if filename.lower().endswith(
+            (".jpg", ".jpeg", ".png")
+        ):
+            image_count += 1
+
+    return {
+        "success": True,
+        "message": "Face captured successfully.",
+        "count": image_count,
+        "image_number": image_number,
+        "path": image_path
+    }

@@ -26,17 +26,15 @@ TRAINER_PATH = "trainer/trainer.yml"
 # LBPH distance:
 # LOWER = BETTER MATCH
 
-# Old code had:
-# confidence < 60
-
-# We use stricter threshold.
 MAX_DISTANCE = 45.0
 
 # Same student should be recognized several times
 # before attendance is marked.
+
 REQUIRED_CONFIRMATIONS = 3
 
 # Maximum time allowed between confirmations.
+
 CONFIRMATION_TIMEOUT = 3.0
 
 
@@ -104,9 +102,7 @@ def save_face_attendance(
             )
         )
 
-        attendance_session = (
-            cursor.fetchone()
-        )
+        attendance_session = cursor.fetchone()
 
         if not attendance_session:
 
@@ -115,13 +111,9 @@ def save_face_attendance(
                 "Session not found"
             )
 
-        db_session_id = (
-            attendance_session[0]
-        )
+        db_session_id = attendance_session[0]
 
-        session_status = (
-            attendance_session[1]
-        )
+        session_status = attendance_session[1]
 
         # ====================================================
         # SESSION MUST BE OPEN
@@ -163,6 +155,24 @@ def save_face_attendance(
             )
 
         # ====================================================
+        # GENERATE NEXT ATTENDANCE ID
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                COALESCE(MAX(id), 0) + 1
+            FROM attendance
+            """
+        )
+
+        next_id_result = cursor.fetchone()
+
+        next_attendance_id = (
+            next_id_result[0]
+        )
+
+        # ====================================================
         # INSERT ATTENDANCE
         # ====================================================
 
@@ -170,6 +180,7 @@ def save_face_attendance(
             """
             INSERT INTO attendance
             (
+                id,
                 student_id,
                 session_id,
                 attendance_date,
@@ -182,6 +193,7 @@ def save_face_attendance(
             (
                 %s,
                 %s,
+                %s,
                 CURDATE(),
                 CURTIME(),
                 'FACE',
@@ -190,6 +202,7 @@ def save_face_attendance(
             )
             """,
             (
+                next_attendance_id,
                 student_db_id,
                 db_session_id,
                 "Attendance marked using face recognition"
@@ -204,6 +217,10 @@ def save_face_attendance(
 
         print(
             "FACE ATTENDANCE SAVED"
+        )
+
+        print(
+            f"Attendance ID : {next_attendance_id}"
         )
 
         print(
@@ -417,15 +434,6 @@ def recognize_face(session_id):
 
     # ========================================================
     # CONFIRMATION TRACKING
-    #
-    # Example:
-    #
-    # Student 12
-    # frame 1 -> 1
-    # frame 2 -> 2
-    # frame 3 -> 3
-    #
-    # THEN attendance is saved.
     # ========================================================
 
     candidate_student = None
@@ -538,10 +546,6 @@ def recognize_face(session_id):
 
             elif len(faces) > 1:
 
-                # IMPORTANT:
-                # Do NOT recognize when multiple faces
-                # are present.
-
                 candidate_student = None
 
                 candidate_count = 0
@@ -594,9 +598,9 @@ def recognize_face(session_id):
                     h
                 ) = faces[0]
 
-                # =================================================
+                # =============================================
                 # FACE IMAGE
-                # =================================================
+                # =============================================
 
                 face_image = gray[
                     y:y + h,
@@ -608,9 +612,9 @@ def recognize_face(session_id):
                     (200, 200)
                 )
 
-                # =================================================
+                # =============================================
                 # PREDICT
-                # =================================================
+                # =============================================
 
                 label, distance = (
                     recognizer.predict(
@@ -618,9 +622,9 @@ def recognize_face(session_id):
                     )
                 )
 
-                # =================================================
+                # =============================================
                 # STRICT MATCH
-                # =================================================
+                # =============================================
 
                 if distance <= MAX_DISTANCE:
 
@@ -628,9 +632,9 @@ def recognize_face(session_id):
                         label
                     )
 
-                    # =============================================
+                    # =========================================
                     # STUDENT FOUND
-                    # =============================================
+                    # =========================================
 
                     if student:
 
@@ -642,9 +646,9 @@ def recognize_face(session_id):
 
                         department = student[3]
 
-                        # =========================================
+                        # =====================================
                         # CONFIRMATION
-                        # =========================================
+                        # =====================================
 
                         current_time = time.time()
 
@@ -671,9 +675,9 @@ def recognize_face(session_id):
                             current_time
                         )
 
-                        # =========================================
+                        # =====================================
                         # STATUS
-                        # =========================================
+                        # =====================================
 
                         if db_id in marked_students:
 
@@ -687,9 +691,9 @@ def recognize_face(session_id):
                                 f"{REQUIRED_CONFIRMATIONS}"
                             )
 
-                        # =========================================
+                        # =====================================
                         # MARK ATTENDANCE
-                        # =========================================
+                        # =====================================
 
                         if (
                             candidate_count
@@ -734,9 +738,9 @@ def recognize_face(session_id):
                                         db_id
                                     )
 
-                        # =========================================
+                        # =====================================
                         # COLOR
-                        # =========================================
+                        # =====================================
 
                         if status == "Present":
 
@@ -762,9 +766,9 @@ def recognize_face(session_id):
                                 255
                             )
 
-                        # =========================================
+                        # =====================================
                         # FACE BOX
-                        # =========================================
+                        # =====================================
 
                         cv2.rectangle(
                             frame,
@@ -774,9 +778,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                        # =========================================
+                        # =====================================
                         # NAME
-                        # =========================================
+                        # =====================================
 
                         cv2.putText(
                             frame,
@@ -788,9 +792,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                        # =========================================
+                        # =====================================
                         # STUDENT ID
-                        # =========================================
+                        # =====================================
 
                         cv2.putText(
                             frame,
@@ -802,9 +806,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                        # =========================================
+                        # =====================================
                         # DEPARTMENT
-                        # =========================================
+                        # =====================================
 
                         cv2.putText(
                             frame,
@@ -816,9 +820,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                        # =========================================
+                        # =====================================
                         # STATUS
-                        # =========================================
+                        # =====================================
 
                         cv2.putText(
                             frame,
@@ -830,9 +834,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                        # =========================================
+                        # =====================================
                         # DISTANCE
-                        # =========================================
+                        # =====================================
 
                         cv2.putText(
                             frame,
@@ -844,9 +848,9 @@ def recognize_face(session_id):
                             1
                         )
 
-                    # =============================================
+                    # =========================================
                     # LABEL DOES NOT EXIST IN DATABASE
-                    # =============================================
+                    # =========================================
 
                     else:
 
@@ -878,9 +882,9 @@ def recognize_face(session_id):
                             2
                         )
 
-                # =================================================
+                # =============================================
                 # DISTANCE TOO HIGH
-                # =================================================
+                # =============================================
 
                 else:
 

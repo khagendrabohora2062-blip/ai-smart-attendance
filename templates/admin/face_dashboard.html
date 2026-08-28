@@ -17,40 +17,146 @@ Face Recognition
         {% if messages %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }} alert-dismissible fade show">
-
                     {{ message }}
-
                     <button class="btn-close"
                             data-bs-dismiss="alert"></button>
-
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <div class="row">
 
-        <!-- Register Face -->
+    <!-- ===================================================== -->
+    <!-- FACE REGISTRATION -->
+    <!-- ===================================================== -->
 
-        <div class="col-md-4">
+    <div class="card shadow mb-4">
 
-            <div class="card shadow mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="bi bi-person-bounding-box"></i>
+                Register Student Face
+            </h4>
+        </div>
 
-                <div class="card-body text-center">
+        <div class="card-body">
 
-                    <i class="bi bi-person-bounding-box display-3 text-success"></i>
+            <div class="row">
 
-                    <h4 class="mt-3">
+                <!-- Student ID -->
 
-                        Register Face
+                <div class="col-md-4 mb-3">
 
-                    </h4>
+                    <label class="form-label">
+                        Student ID
+                    </label>
 
-                    <p>
+                    <input
+                        type="number"
+                        id="studentId"
+                        class="form-control"
+                        placeholder="Enter Student ID"
+                        min="1"
+                    >
 
-                        Go to the Student page, register the student's face, and capture 50 face images.
+                </div>
 
+
+                <!-- Start Button -->
+
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+
+                    <button
+                        type="button"
+                        id="startCameraBtn"
+                        class="btn btn-success w-100"
+                    >
+                        <i class="bi bi-camera-video-fill"></i>
+                        Start Camera
+                    </button>
+
+                </div>
+
+
+                <!-- Stop Button -->
+
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+
+                    <button
+                        type="button"
+                        id="stopCameraBtn"
+                        class="btn btn-danger w-100"
+                        disabled
+                    >
+                        <i class="bi bi-stop-circle"></i>
+                        Stop Camera
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CAMERA -->
+            <!-- ================================================= -->
+
+            <div
+                id="cameraSection"
+                class="text-center"
+                style="display:none;"
+            >
+
+                <video
+                    id="camera"
+                    width="640"
+                    height="480"
+                    autoplay
+                    playsinline
+                    muted
+                    class="img-fluid rounded border"
+                ></video>
+
+                <canvas
+                    id="canvas"
+                    width="640"
+                    height="480"
+                    style="display:none;"
+                ></canvas>
+
+
+                <div class="mt-3">
+
+                    <h5>
+                        Face Registration
+                    </h5>
+
+                    <p id="captureStatus">
+                        Preparing camera...
                     </p>
+
+                    <div class="progress mb-3">
+
+                        <div
+                            id="progressBar"
+                            class="progress-bar"
+                            role="progressbar"
+                            style="width:0%;"
+                        >
+                            0%
+                        </div>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        id="captureBtn"
+                        class="btn btn-primary"
+                        disabled
+                    >
+                        <i class="bi bi-camera"></i>
+                        Start Capture
+                    </button>
 
                 </div>
 
@@ -58,9 +164,16 @@ Face Recognition
 
         </div>
 
-        <!-- Train Model -->
+    </div>
 
-        <div class="col-md-4">
+
+    <!-- ===================================================== -->
+    <!-- TRAIN MODEL -->
+    <!-- ===================================================== -->
+
+    <div class="row">
+
+        <div class="col-md-6">
 
             <div class="card shadow mb-4">
 
@@ -69,22 +182,20 @@ Face Recognition
                     <i class="bi bi-cpu display-3 text-primary"></i>
 
                     <h4 class="mt-3">
-
                         Train Face Model
-
                     </h4>
 
                     <p>
-
-                        After adding a new student, click "Train Model" to update the face recognition system.
-
+                        After registering student faces,
+                        train the face recognition model.
                     </p>
 
-                    <a href="{{ url_for('face.train_model') }}"
-                       class="btn btn-primary">
-
+                    <a
+                        href="{{ url_for('face.train_model') }}"
+                        class="btn btn-primary"
+                    >
+                        <i class="bi bi-cpu"></i>
                         Train Model
-
                     </a>
 
                 </div>
@@ -93,9 +204,12 @@ Face Recognition
 
         </div>
 
-        <!-- Attendance -->
 
-        <div class="col-md-4">
+        <!-- ================================================= -->
+        <!-- ATTENDANCE -->
+        <!-- ================================================= -->
+
+        <div class="col-md-6">
 
             <div class="card shadow mb-4">
 
@@ -104,22 +218,20 @@ Face Recognition
                     <i class="bi bi-camera-video-fill display-3 text-danger"></i>
 
                     <h4 class="mt-3">
-
                         Start Attendance
-
                     </h4>
 
                     <p>
-
-                        Open the camera and mark attendance.
-
+                        Open face attendance from the
+                        attendance session.
                     </p>
 
-                    <a href="{{ url_for('face.start_face_attendance') }}"
-                       class="btn btn-danger">
-
+                    <a
+                        href="{{ url_for('face.start_face_attendance') }}"
+                        class="btn btn-danger"
+                    >
+                        <i class="bi bi-camera-video"></i>
                         Start Attendance
-
                     </a>
 
                 </div>
@@ -131,5 +243,364 @@ Face Recognition
     </div>
 
 </div>
+
+
+<!-- ========================================================= -->
+<!-- CAMERA JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+let stream = null;
+
+let captureTimer = null;
+
+let imageCount = 0;
+
+const TOTAL_IMAGES = 50;
+
+
+const video = document.getElementById("camera");
+
+const canvas = document.getElementById("canvas");
+
+const studentIdInput = document.getElementById("studentId");
+
+const startCameraBtn = document.getElementById("startCameraBtn");
+
+const stopCameraBtn = document.getElementById("stopCameraBtn");
+
+const captureBtn = document.getElementById("captureBtn");
+
+const cameraSection = document.getElementById("cameraSection");
+
+const captureStatus = document.getElementById("captureStatus");
+
+const progressBar = document.getElementById("progressBar");
+
+
+// =============================================================
+// START CAMERA
+// =============================================================
+
+startCameraBtn.addEventListener("click", async function () {
+
+    const studentId = studentIdInput.value.trim();
+
+    if (!studentId) {
+
+        alert("Please enter Student ID.");
+
+        return;
+    }
+
+
+    try {
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: {
+                    ideal: 640
+                },
+                height: {
+                    ideal: 480
+                },
+                facingMode: "user"
+            },
+            audio: false
+        });
+
+
+        video.srcObject = stream;
+
+        cameraSection.style.display = "block";
+
+        startCameraBtn.disabled = true;
+
+        stopCameraBtn.disabled = false;
+
+        captureBtn.disabled = false;
+
+        captureStatus.innerText =
+            "Camera ready. Click Start Capture.";
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to access camera. " +
+            "Please allow camera permission in your browser."
+        );
+
+    }
+
+});
+
+
+// =============================================================
+// STOP CAMERA
+// =============================================================
+
+function stopCamera() {
+
+    if (captureTimer) {
+
+        clearInterval(captureTimer);
+
+        captureTimer = null;
+
+    }
+
+
+    if (stream) {
+
+        stream.getTracks().forEach(
+            track => track.stop()
+        );
+
+        stream = null;
+
+    }
+
+
+    video.srcObject = null;
+
+    cameraSection.style.display = "none";
+
+    startCameraBtn.disabled = false;
+
+    stopCameraBtn.disabled = true;
+
+    captureBtn.disabled = false;
+
+}
+
+
+stopCameraBtn.addEventListener(
+    "click",
+    stopCamera
+);
+
+
+// =============================================================
+// CAPTURE 50 IMAGES
+// =============================================================
+
+captureBtn.addEventListener("click", function () {
+
+    if (!stream) {
+
+        alert("Please start the camera first.");
+
+        return;
+    }
+
+
+    imageCount = 0;
+
+    captureBtn.disabled = true;
+
+    captureStatus.innerText =
+        "Capturing face images...";
+
+
+    captureTimer = setInterval(
+        captureImage,
+        500
+    );
+
+});
+
+
+// =============================================================
+// CAPTURE ONE IMAGE
+// =============================================================
+
+async function captureImage() {
+
+    if (imageCount >= TOTAL_IMAGES) {
+
+        finishCapture();
+
+        return;
+    }
+
+
+    const studentId =
+        studentIdInput.value.trim();
+
+
+    if (!studentId) {
+
+        stopCamera();
+
+        return;
+    }
+
+
+    const context =
+        canvas.getContext("2d");
+
+
+    canvas.width =
+        video.videoWidth;
+
+    canvas.height =
+        video.videoHeight;
+
+
+    context.drawImage(
+        video,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    canvas.toBlob(
+        async function (blob) {
+
+            if (!blob) {
+
+                return;
+            }
+
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "image",
+                blob,
+                `face_${imageCount + 1}.jpg`
+            );
+
+
+            formData.append(
+                "student_id",
+                studentId
+            );
+
+
+            formData.append(
+                "image_number",
+                imageCount + 1
+            );
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "{{ url_for('face.capture_image') }}",
+                        {
+                            method: "POST",
+                            body: formData
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (result.success) {
+
+                    imageCount++;
+
+                    const percentage =
+                        Math.round(
+                            (imageCount / TOTAL_IMAGES) * 100
+                        );
+
+
+                    progressBar.style.width =
+                        percentage + "%";
+
+                    progressBar.innerText =
+                        percentage + "%";
+
+
+                    captureStatus.innerText =
+                        `Captured ${imageCount}/${TOTAL_IMAGES}`;
+
+                }
+                else {
+
+                    captureStatus.innerText =
+                        result.message;
+
+                }
+
+
+                if (
+                    imageCount >= TOTAL_IMAGES
+                ) {
+
+                    finishCapture();
+
+                }
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                captureStatus.innerText =
+                    "Error uploading image.";
+
+            }
+
+        },
+        "image/jpeg",
+        0.90
+    );
+
+}
+
+
+// =============================================================
+// FINISH CAPTURE
+// =============================================================
+
+function finishCapture() {
+
+    if (captureTimer) {
+
+        clearInterval(captureTimer);
+
+        captureTimer = null;
+
+    }
+
+
+    captureStatus.innerText =
+        "50 face images captured successfully.";
+
+    progressBar.style.width =
+        "100%";
+
+    progressBar.innerText =
+        "100%";
+
+
+    captureBtn.disabled = true;
+
+    stopCamera();
+
+    alert(
+        "50 face images captured successfully. " +
+        "Now click Train Model."
+    );
+
+}
+
+</script>
 
 {% endblock %}

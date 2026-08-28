@@ -2,7 +2,7 @@ Flask
 Flask-MySQLdb
 gunicorn
 numpy
-opencv-python-headless==4.10.0.84
+opencv-contrib-python==4.10.0.84
 Pillow
 qrcode
 openpyxl

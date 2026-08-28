@@ -1,4 +1,3 @@
-
 from flask import (
     Blueprint,
     render_template,
@@ -11,12 +10,61 @@ from flask import (
 
 from extensions import mysql
 
+import uuid
+
+
+# ============================================================
+# Attendance Session Blueprint
+# ============================================================
 
 attendance_session = Blueprint(
     "attendance_session",
     __name__,
     url_prefix="/attendance-session"
 )
+
+
+# ============================================================
+# Teacher Login Check
+# ============================================================
+
+def teacher_logged_in():
+    return "teacher_id" in session
+
+
+# ============================================================
+# Generate Unique Attendance Session ID
+# ============================================================
+
+def generate_session_id(cursor):
+    """
+    attendance_sessions.id is currently NOT AUTO_INCREMENT.
+
+    Therefore a unique positive integer ID is generated
+    manually before INSERT.
+    """
+
+    while True:
+
+        # Generate a positive 32-bit integer
+        new_id = uuid.uuid4().int % 2147483647
+
+        # ID must be greater than zero
+        if new_id <= 0:
+            continue
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM attendance_sessions
+            WHERE id=%s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        if cursor.fetchone() is None:
+            return new_id
 
 
 # ============================================================
@@ -30,7 +78,7 @@ def index():
     # Teacher Login Check
     # --------------------------------------------------------
 
-    if "teacher_id" not in session:
+    if not teacher_logged_in():
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -39,13 +87,17 @@ def index():
 
     try:
 
+        teacher_id = session["teacher_id"]
+
         # ----------------------------------------------------
         # Get Teacher's Sessions
         # ----------------------------------------------------
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 attendance_sessions.id,
+                subjects.subject_code,
                 subjects.subject_name,
                 subjects.semester,
                 subjects.department,
@@ -61,10 +113,12 @@ def index():
 
             WHERE attendance_sessions.teacher_id=%s
 
-            ORDER BY attendance_sessions.id DESC
-        """, (
-            session["teacher_id"],
-        ))
+            ORDER BY
+                attendance_sessions.session_date DESC,
+                attendance_sessions.id DESC
+            """,
+            (teacher_id,)
+        )
 
         sessions = cursor.fetchall()
 
@@ -83,7 +137,6 @@ def index():
         sessions = []
 
     finally:
-
         cursor.close()
 
     return render_template(
@@ -106,7 +159,7 @@ def create():
     # Teacher Login Check
     # --------------------------------------------------------
 
-    if "teacher_id" not in session:
+    if not teacher_logged_in():
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -115,13 +168,21 @@ def create():
 
     try:
 
-        # ====================================================
-        # GET TEACHER ASSIGNED SUBJECTS
-        # ====================================================
+        # ----------------------------------------------------
+        # Current Teacher
+        # ----------------------------------------------------
 
-        cursor.execute("""
+        teacher_id = session["teacher_id"]
+
+        # ----------------------------------------------------
+        # Get Teacher Assigned Subjects
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
             SELECT
                 id,
+                subject_code,
                 subject_name,
                 semester,
                 department
@@ -130,24 +191,28 @@ def create():
 
             WHERE teacher_id=%s
 
-            ORDER BY semester, subject_name
-        """, (
-            session["teacher_id"],
-        ))
+            ORDER BY
+                semester,
+                subject_name
+            """,
+            (teacher_id,)
+        )
 
         subjects = cursor.fetchall()
 
         # ====================================================
-        # POST - CREATE SESSION
+        # POST
         # ====================================================
 
         if request.method == "POST":
 
-            subject_id = request.form.get("subject_id")
+            # ------------------------------------------------
+            # Get Subject ID
+            # ------------------------------------------------
 
-            # ------------------------------------------------
-            # Subject Selection Validation
-            # ------------------------------------------------
+            subject_id = request.form.get(
+                "subject_id"
+            )
 
             if not subject_id:
 
@@ -162,13 +227,36 @@ def create():
                     )
                 )
 
+            # ------------------------------------------------
+            # Validate Subject ID
+            # ------------------------------------------------
+
+            try:
+
+                subject_id = int(subject_id)
+
+            except (TypeError, ValueError):
+
+                flash(
+                    "Invalid subject selected.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "attendance_session.create"
+                    )
+                )
+
             # =================================================
-            # VERIFY SUBJECT BELONGS TO CURRENT TEACHER
+            # Verify Subject Belongs To Teacher
             # =================================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     id,
+                    subject_code,
                     subject_name,
                     semester,
                     department
@@ -179,15 +267,17 @@ def create():
                 AND teacher_id=%s
 
                 LIMIT 1
-            """, (
-                subject_id,
-                session["teacher_id"]
-            ))
+                """,
+                (
+                    subject_id,
+                    teacher_id
+                )
+            )
 
             subject = cursor.fetchone()
 
             # ------------------------------------------------
-            # Invalid Subject
+            # Subject Not Found
             # ------------------------------------------------
 
             if not subject:
@@ -209,24 +299,17 @@ def create():
             # ------------------------------------------------
 
             subject_db_id = subject[0]
-            subject_name = subject[1]
-            semester = subject[2]
-            department = subject[3]
+            subject_code = subject[1]
+            subject_name = subject[2]
+            semester = subject[3]
+            department = subject[4]
 
             # =================================================
-            # DUPLICATE SESSION PROTECTION
-            #
-            # Same:
-            #   Teacher
-            #   Subject
-            #   Date
-            #
-            # = Only ONE session per day
-            #
-            # CLOSED session also counts.
+            # Check Today's Existing Session
             # =================================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     id,
                     session_status
@@ -238,12 +321,18 @@ def create():
                 AND session_date=CURDATE()
 
                 LIMIT 1
-            """, (
-                session["teacher_id"],
-                subject_db_id
-            ))
+                """,
+                (
+                    teacher_id,
+                    subject_db_id
+                )
+            )
 
             existing_session = cursor.fetchone()
+
+            # ------------------------------------------------
+            # Existing Session Found
+            # ------------------------------------------------
 
             if existing_session:
 
@@ -273,33 +362,27 @@ def create():
                 )
 
             # =================================================
-            # IMPORTANT
-            #
-            # DO NOT CLOSE OTHER OPEN SESSIONS HERE.
-            #
-            # Different subjects can have separate sessions.
-            #
-            # Example:
-            #
-            # Mathematics → OPEN
-            # DBMS        → OPEN
-            # Network     → OPEN
-            #
-            # Actual closing is handled by
-            # teacher_attendance.py
+            # Generate Manual Session ID
             # =================================================
 
+            new_session_id = generate_session_id(
+                cursor
+            )
+
             # =================================================
-            # CREATE NEW ATTENDANCE SESSION
+            # Create Attendance Session
             # =================================================
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO attendance_sessions
                 (
+                    id,
                     subject_id,
                     teacher_id,
                     session_date,
                     start_time,
+                    end_time,
                     session_status
                 )
 
@@ -307,25 +390,28 @@ def create():
                 (
                     %s,
                     %s,
+                    %s,
                     CURDATE(),
                     CURTIME(),
+                    NULL,
                     'OPEN'
                 )
-            """, (
-                subject_db_id,
-                session["teacher_id"]
-            ))
-
-            new_session_id = cursor.lastrowid
+                """,
+                (
+                    new_session_id,
+                    subject_db_id,
+                    teacher_id
+                )
+            )
 
             # =================================================
-            # COMMIT
+            # Commit
             # =================================================
 
             mysql.connection.commit()
 
             # =================================================
-            # SUCCESS MESSAGE
+            # Success
             # =================================================
 
             flash(
@@ -341,7 +427,7 @@ def create():
             )
 
         # ====================================================
-        # GET REQUEST
+        # GET
         # ====================================================
 
         return render_template(
@@ -352,7 +438,7 @@ def create():
     except Exception as e:
 
         # ----------------------------------------------------
-        # Rollback on Error
+        # Rollback
         # ----------------------------------------------------
 
         mysql.connection.rollback()
@@ -363,7 +449,7 @@ def create():
         )
 
         flash(
-            f"Session Error: {e}",
+            f"Error opening attendance session: {e}",
             "danger"
         )
 
@@ -376,3 +462,143 @@ def create():
     finally:
 
         cursor.close()
+
+
+# ============================================================
+# Close Attendance Session
+# ============================================================
+
+@attendance_session.route(
+    "/close/<int:session_id>",
+    methods=["POST"]
+)
+def close(session_id):
+
+    # --------------------------------------------------------
+    # Teacher Login Check
+    # --------------------------------------------------------
+
+    if not teacher_logged_in():
+        return redirect(
+            url_for("teacher_auth.login")
+        )
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        teacher_id = session["teacher_id"]
+
+        # ====================================================
+        # Find Session
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                subject_id,
+                session_status
+
+            FROM attendance_sessions
+
+            WHERE id=%s
+            AND teacher_id=%s
+
+            LIMIT 1
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
+
+        attendance = cursor.fetchone()
+
+        # ----------------------------------------------------
+        # Session Not Found
+        # ----------------------------------------------------
+
+        if not attendance:
+
+            flash(
+                "Attendance session not found.",
+                "danger"
+            )
+
+            return redirect(
+                url_for(
+                    "attendance_session.index"
+                )
+            )
+
+        # ====================================================
+        # Check Session Status
+        # ====================================================
+
+        current_status = attendance[2]
+
+        if current_status == "CLOSED":
+
+            flash(
+                "This attendance session is already closed.",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "attendance_session.index"
+                )
+            )
+
+        # ====================================================
+        # Close Session
+        # ====================================================
+
+        cursor.execute(
+            """
+            UPDATE attendance_sessions
+
+            SET
+                end_time=CURTIME(),
+                session_status='CLOSED'
+
+            WHERE id=%s
+            AND teacher_id=%s
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
+
+        mysql.connection.commit()
+
+        flash(
+            "Attendance session closed successfully.",
+            "success"
+        )
+
+    except Exception as e:
+
+        mysql.connection.rollback()
+
+        print(
+            "ATTENDANCE SESSION CLOSE ERROR:",
+            str(e)
+        )
+
+        flash(
+            f"Error closing attendance session: {e}",
+            "danger"
+        )
+
+    finally:
+
+        cursor.close()
+
+    return redirect(
+        url_for(
+            "attendance_session.index"
+        )
+    )

@@ -206,7 +206,60 @@
 
         </a>
 
+            <!-- ====================================================
+     SYLLABUS
+==================================================== -->
 
+<a
+    href="{{ url_for('teacher_syllabus.index') }}"
+    class="teacher-nav-link
+    {% if request.endpoint and
+          request.endpoint.startswith('teacher_syllabus.') %}
+        active
+    {% endif %}"
+>
+
+    <span class="teacher-nav-icon">
+
+        <i class="bi bi-journal-bookmark-fill"></i>
+
+    </span>
+
+    <span class="teacher-nav-text">
+
+        Syllabus
+
+    </span>
+
+</a>
+
+
+<!-- ====================================================
+     COLLEGE NOTICES
+==================================================== -->
+
+<a
+    href="{{ url_for('teacher_notice.index') }}"
+    class="teacher-nav-link
+    {% if request.endpoint and
+          request.endpoint.startswith('teacher_notice.') %}
+        active
+    {% endif %}"
+>
+
+    <span class="teacher-nav-icon">
+
+        <i class="bi bi-megaphone-fill"></i>
+
+    </span>
+
+    <span class="teacher-nav-text">
+
+        College Notices
+
+    </span>
+
+</a>
         <!-- ====================================================
              ASSIGNMENTS
         ==================================================== -->

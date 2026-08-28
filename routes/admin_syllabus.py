@@ -76,14 +76,14 @@ def allowed_file(filename):
 # NORMALIZE SEMESTER
 #
 # Examples:
-#   4
-#   "4"
-#   "4th"
-#   "4th Semester"
-#   "4 Semester"
+# 4
+# "4"
+# "4th"
+# "4th Semester"
+# "4 Semester"
 #
 # All become:
-#   "4"
+# "4"
 # ==========================================================
 
 def normalize_semester(value):
@@ -122,6 +122,41 @@ def normalize_department(value):
         return ""
 
     return str(value).strip().lower()
+
+
+# ==========================================================
+# GENERATE UNIQUE SYLLABUS ID
+#
+# TiDB:
+# syllabus.id is NOT AUTO_INCREMENT
+#
+# Therefore we manually generate a unique integer ID.
+# ==========================================================
+
+def generate_syllabus_id(cursor):
+
+    while True:
+
+        # Generate positive INT value
+        new_id = uuid.uuid4().int % 2147483647
+
+        if new_id <= 0:
+            continue
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM syllabus
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        existing = cursor.fetchone()
+
+        if existing is None:
+            return new_id
 
 
 # ==========================================================
@@ -167,6 +202,7 @@ def index():
                 s.file_path,
                 s.created_at,
                 s.updated_at
+
             FROM syllabus s
 
             LEFT JOIN subjects sub
@@ -183,11 +219,8 @@ def index():
         # ==================================================
         # LOAD SUBJECTS
         #
-        # IMPORTANT:
-        # Do NOT filter subjects here.
-        #
-        # JavaScript will filter them according to
-        # selected department + semester.
+        # JavaScript can filter:
+        # department + semester
         # ==================================================
 
         cursor.execute(
@@ -198,6 +231,7 @@ def index():
                 subject_name,
                 semester,
                 department
+
             FROM subjects
 
             ORDER BY
@@ -218,7 +252,10 @@ def index():
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
     # ======================================================
@@ -379,8 +416,11 @@ def upload():
                 subject_name,
                 semester,
                 department
+
             FROM subjects
+
             WHERE id = %s
+
             LIMIT 1
             """,
             (subject_id,)
@@ -439,12 +479,6 @@ def upload():
 
         # ==================================================
         # SEMESTER VALIDATION
-        #
-        # This fixes:
-        #
-        # "4th Semester" != "4"
-        # "4th Semester" != "4th"
-        #
         # ==================================================
 
         if selected_semester != database_semester:
@@ -530,6 +564,12 @@ def upload():
     )
 
 
+    # ======================================================
+    # DATABASE + FILE
+    # ======================================================
+
+    cursor = None
+
     try:
 
         # ==================================================
@@ -542,15 +582,39 @@ def upload():
 
 
         # ==================================================
-        # DATABASE INSERT
+        # OPEN DATABASE CURSOR
         # ==================================================
 
         cursor = mysql.connection.cursor()
+
+
+        # ==================================================
+        # GENERATE MANUAL ID
+        #
+        # IMPORTANT FOR TiDB
+        # ==================================================
+
+        syllabus_id = generate_syllabus_id(
+            cursor
+        )
+
+
+        # ==================================================
+        # DATABASE INSERT
+        #
+        # IMPORTANT:
+        # id is explicitly inserted.
+        #
+        # This fixes:
+        #
+        # Field 'id' doesn't have a default value
+        # ==================================================
 
         cursor.execute(
             """
             INSERT INTO syllabus
             (
+                id,
                 department,
                 semester,
                 subject_id,
@@ -568,16 +632,25 @@ def upload():
                 %s,
                 %s,
                 %s,
+                %s,
                 %s
             )
             """,
             (
+                syllabus_id,
+
                 subject_department,
+
                 subject_semester,
+
                 subject_db_id,
+
                 title,
+
                 description,
+
                 unique_name,
+
                 os.path.join(
                     "uploads",
                     "syllabus",
@@ -587,10 +660,24 @@ def upload():
         )
 
 
+        # ==================================================
+        # COMMIT
+        # ==================================================
+
         mysql.connection.commit()
 
-        cursor.close()
 
+        # ==================================================
+        # CLOSE CURSOR
+        # ==================================================
+
+        cursor.close()
+        cursor = None
+
+
+        # ==================================================
+        # SUCCESS MESSAGE
+        # ==================================================
 
         flash(
             (
@@ -604,16 +691,8 @@ def upload():
     except Exception as e:
 
         # --------------------------------------------------
-        # DELETE PDF IF DATABASE INSERT FAILED
+        # ROLLBACK DATABASE
         # --------------------------------------------------
-
-        if os.path.exists(file_path):
-
-            try:
-                os.remove(file_path)
-            except Exception:
-                pass
-
 
         try:
             mysql.connection.rollback()
@@ -621,17 +700,45 @@ def upload():
             pass
 
 
+        # --------------------------------------------------
+        # CLOSE CURSOR
+        # --------------------------------------------------
+
         try:
-            cursor.close()
+
+            if cursor:
+                cursor.close()
+
         except Exception:
             pass
 
+
+        # --------------------------------------------------
+        # DELETE PDF IF DATABASE INSERT FAILED
+        # --------------------------------------------------
+
+        if os.path.exists(file_path):
+
+            try:
+                os.remove(file_path)
+
+            except Exception:
+                pass
+
+
+        # --------------------------------------------------
+        # ERROR MESSAGE
+        # --------------------------------------------------
 
         flash(
             f"Syllabus upload error: {e}",
             "danger"
         )
 
+
+    # ======================================================
+    # REDIRECT
+    # ======================================================
 
     return redirect(
         url_for(
@@ -704,8 +811,11 @@ def delete(id):
             """
             SELECT
                 file_name
+
             FROM syllabus
+
             WHERE id = %s
+
             LIMIT 1
             """,
             (id,)
@@ -742,6 +852,7 @@ def delete(id):
         cursor.execute(
             """
             DELETE FROM syllabus
+
             WHERE id = %s
             """,
             (id,)
@@ -772,6 +883,7 @@ def delete(id):
             ):
 
                 try:
+
                     os.remove(
                         physical_file
                     )
@@ -779,6 +891,10 @@ def delete(id):
                 except Exception:
                     pass
 
+
+        # ==================================================
+        # SUCCESS MESSAGE
+        # ==================================================
 
         flash(
             "Syllabus deleted successfully.",
@@ -788,11 +904,21 @@ def delete(id):
 
     except Exception as e:
 
+        # --------------------------------------------------
+        # ROLLBACK
+        # --------------------------------------------------
+
         try:
+
             mysql.connection.rollback()
+
         except Exception:
             pass
 
+
+        # --------------------------------------------------
+        # ERROR MESSAGE
+        # --------------------------------------------------
 
         flash(
             f"Syllabus delete error: {e}",
@@ -802,7 +928,10 @@ def delete(id):
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
     return redirect(

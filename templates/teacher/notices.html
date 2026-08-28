@@ -1,0 +1,625 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}College Notices{% endblock %}
+
+{% block content %}
+
+<style>
+    .notice-page {
+        padding: 10px 0 35px;
+    }
+
+    /* =========================
+       HEADER
+    ========================== */
+
+    .notice-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .notice-title {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .notice-title i {
+        color: #2563eb;
+        margin-right: 8px;
+    }
+
+    .notice-subtitle {
+        margin: 7px 0 0;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .notice-count {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+
+    /* =========================
+       NOTICE CARD
+    ========================== */
+
+    .notice-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .notice-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(0, 0, 0, 0.08);
+    }
+
+
+    /* =========================
+       CARD HEADER
+    ========================== */
+
+    .notice-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px 22px 10px;
+    }
+
+    .notice-card-title {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .notice-card-title i {
+        color: #2563eb;
+        margin-right: 7px;
+    }
+
+    .notice-date {
+        color: #64748b;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+
+    /* =========================
+       DESCRIPTION
+    ========================== */
+
+    .notice-body {
+        padding: 8px 22px 18px;
+        color: #475569;
+        line-height: 1.7;
+        font-size: 14px;
+        white-space: pre-line;
+    }
+
+
+    /* =========================
+       NOTICE IMAGE
+    ========================== */
+
+    .notice-image {
+        display: block;
+        width: calc(100% - 44px);
+        max-height: 360px;
+        object-fit: contain;
+        margin: 0 22px 18px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+
+    /* =========================
+       META BADGES
+    ========================== */
+
+    .notice-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding: 0 22px 18px;
+    }
+
+    .notice-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .notice-important {
+        background: #fef2f2;
+        color: #dc2626;
+        border-color: #fecaca;
+    }
+
+    .notice-normal {
+        background: #f0fdf4;
+        color: #15803d;
+        border-color: #bbf7d0;
+    }
+
+    .notice-target {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+
+
+    /* =========================
+       ACTION BUTTONS
+    ========================== */
+
+    .notice-actions {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        flex-wrap: wrap;
+        padding: 0 22px 20px;
+    }
+
+    .notice-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 8px 13px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .notice-action:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+
+    /* View */
+
+    .view-notice-btn {
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+    }
+
+    .view-notice-btn:hover {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+
+    /* Image */
+
+    .download-image-btn {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+
+    .download-image-btn:hover {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+
+    /* PDF */
+
+    .download-pdf-btn {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+
+    .download-pdf-btn:hover {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+
+    /* =========================
+       NO NOTICE
+    ========================== */
+
+    .no-notices {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 65px 20px;
+        text-align: center;
+        color: #64748b;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .no-notices i {
+        display: block;
+        font-size: 50px;
+        color: #94a3b8;
+        margin-bottom: 15px;
+    }
+
+    .no-notices h5 {
+        color: #334155;
+        font-weight: 700;
+        margin-bottom: 7px;
+    }
+
+    .no-notices p {
+        font-size: 14px;
+    }
+
+
+    /* =========================
+       MOBILE
+    ========================== */
+
+    @media (max-width: 768px) {
+
+        .notice-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .notice-title {
+            font-size: 24px;
+        }
+
+        .notice-card-header {
+            flex-direction: column;
+        }
+
+        .notice-date {
+            white-space: normal;
+        }
+
+        .notice-image {
+            width: calc(100% - 30px);
+            margin-left: 15px;
+            margin-right: 15px;
+        }
+
+        .notice-meta {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .notice-actions {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        .notice-action {
+            width: 100%;
+        }
+    }
+</style>
+
+
+<div class="notice-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="notice-header">
+
+        <div>
+
+            <h2 class="notice-title">
+                <i class="bi bi-megaphone-fill"></i>
+                College Notices
+            </h2>
+
+            <p class="notice-subtitle">
+                Important announcements and notices from the college administration.
+            </p>
+
+        </div>
+
+
+        {% if notices %}
+
+            <div class="notice-count">
+
+                <i class="bi bi-bell-fill me-1"></i>
+
+                {{ notices|length }}
+
+                Notice{% if notices|length != 1 %}s{% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         NOTICE LIST
+    ====================================================== -->
+
+    {% if notices %}
+
+        {% for notice in notices %}
+
+            <div class="notice-card">
+
+                <!-- =================================================
+                     NOTICE HEADER
+                ================================================== -->
+
+                <div class="notice-card-header">
+
+                    <div>
+
+                        <h4 class="notice-card-title">
+
+                            <i class="bi bi-info-circle-fill"></i>
+
+                            {{ notice[1] }}
+
+                        </h4>
+
+                    </div>
+
+
+                    {% if notice[8] %}
+
+                        <div class="notice-date">
+
+                            <i class="bi bi-calendar3 me-1"></i>
+
+                            {{ notice[8] }}
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     NOTICE DESCRIPTION
+                ================================================== -->
+
+                {% if notice[2] %}
+
+                    <div class="notice-body">
+
+                        {{ notice[2] }}
+
+                    </div>
+
+                {% endif %}
+
+
+                <!-- =================================================
+                     NOTICE IMAGE
+                ================================================== -->
+
+                {% if notice[3] %}
+
+                    <img
+                        src="{{ url_for(
+                            'static',
+                            filename='uploads/notices/' ~ notice[3]
+                        ) }}"
+                        alt="{{ notice[1] }}"
+                        class="notice-image"
+                    >
+
+                {% endif %}
+
+
+                <!-- =================================================
+                     NOTICE META
+                ================================================== -->
+
+                <div class="notice-meta">
+
+                    <!-- Notice Type -->
+
+                    {% if notice[7] %}
+
+                        {% set notice_type = notice[7]|string|upper %}
+
+                        {% if notice_type in [
+                            'IMPORTANT',
+                            'URGENT',
+                            'HIGH'
+                        ] %}
+
+                            <span class="notice-badge notice-important">
+
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                                {{ notice[7] }}
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="notice-badge notice-normal">
+
+                                <i class="bi bi-check-circle-fill"></i>
+
+                                {{ notice[7] }}
+
+                            </span>
+
+                        {% endif %}
+
+                    {% endif %}
+
+
+                    <!-- Department -->
+
+                    {% if notice[6] %}
+
+                        <span class="notice-badge notice-target">
+
+                            <i class="bi bi-building"></i>
+
+                            {{ notice[6] }}
+
+                        </span>
+
+                    {% else %}
+
+                        <span class="notice-badge notice-target">
+
+                            <i class="bi bi-globe2"></i>
+
+                            All Departments
+
+                        </span>
+
+                    {% endif %}
+
+
+                    <!-- Semester -->
+
+                    {% if notice[5] %}
+
+                        <span class="notice-badge notice-target">
+
+                            <i class="bi bi-mortarboard-fill"></i>
+
+                            Semester {{ notice[5] }}
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- =================================================
+                     ACTION BUTTONS
+                ================================================== -->
+
+                <div class="notice-actions">
+
+                    <!-- VIEW NOTICE -->
+
+                    <a
+                        href="{{ url_for(
+                            'teacher_notice.view',
+                            notice_id=notice[0]
+                        ) }}"
+                        class="notice-action view-notice-btn"
+                    >
+
+                        <i class="bi bi-eye-fill"></i>
+
+                        View Notice
+
+                    </a>
+
+
+                    <!-- DOWNLOAD IMAGE -->
+
+                    {% if notice[3] %}
+
+                        <a
+                            href="{{ url_for(
+                                'teacher_notice.download_image',
+                                notice_id=notice[0]
+                            ) }}"
+                            class="notice-action download-image-btn"
+                        >
+
+                            <i class="bi bi-image"></i>
+
+                            Download Image
+
+                        </a>
+
+                    {% endif %}
+
+
+                    <!-- DOWNLOAD PDF -->
+
+                    {% if notice[4] %}
+
+                        <a
+                            href="{{ url_for(
+                                'teacher_notice.download_pdf',
+                                notice_id=notice[0]
+                            ) }}"
+                            class="notice-action download-pdf-btn"
+                        >
+
+                            <i class="bi bi-file-earmark-pdf-fill"></i>
+
+                            Download PDF
+
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+
+    {% else %}
+
+        <!-- =================================================
+             NO NOTICE
+        ================================================== -->
+
+        <div class="no-notices">
+
+            <i class="bi bi-bell-slash"></i>
+
+            <h5>
+                No College Notices
+            </h5>
+
+            <p class="mb-0">
+                There are currently no important notices or announcements
+                from the college administration.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -149,6 +149,9 @@ def create_app():
 
     from routes.feedback import feedback
 
+    from routes.teacher_syllabus import teacher_syllabus
+    from routes.teacher_notice import teacher_notice
+
     # =====================================================
     # REGISTER BLUEPRINTS
     # =====================================================
@@ -235,6 +238,10 @@ def create_app():
     # -----------------------------------------------------
 
     app.register_blueprint(feedback)
+
+
+    app.register_blueprint(teacher_syllabus)
+    app.register_blueprint(teacher_notice)
 
     # =====================================================
     # RETURN APPLICATION
