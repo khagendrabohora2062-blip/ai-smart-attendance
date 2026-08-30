@@ -9,7 +9,6 @@ from flask import (
 )
 
 from extensions import mysql
-
 import uuid
 
 
@@ -40,10 +39,10 @@ def generate_subject_id(cursor):
     """
     Generates a unique positive integer ID.
 
-    This is used because the current database table has:
-        id INT NOT NULL PRIMARY KEY
+    Current database:
+        subjects.id INT NOT NULL PRIMARY KEY
 
-    but does NOT have AUTO_INCREMENT.
+    AUTO_INCREMENT is not available, so ID is generated manually.
     """
 
     while True:
@@ -63,9 +62,7 @@ def generate_subject_id(cursor):
             (new_id,)
         )
 
-        existing = cursor.fetchone()
-
-        if not existing:
+        if not cursor.fetchone():
             return new_id
 
 
@@ -91,6 +88,7 @@ def index():
                 s.subject_name,
                 s.semester,
                 s.department,
+                s.teacher_id,
                 t.full_name,
                 s.theory_full_marks,
                 s.practical_full_marks,
@@ -303,7 +301,7 @@ def add_subject():
                 )
 
             # ------------------------------------------------
-            # MARKS VALIDATION
+            # MARK VALIDATION
             # ------------------------------------------------
 
             if theory <= 0:
@@ -391,7 +389,7 @@ def add_subject():
                         teacher_id
                     )
 
-                except ValueError:
+                except (ValueError, TypeError):
 
                     flash(
                         "Invalid teacher selected.",
@@ -424,7 +422,7 @@ def add_subject():
                     )
 
             # ------------------------------------------------
-            # GENERATE ID
+            # GENERATE MANUAL ID
             # ------------------------------------------------
 
             subject_id = generate_subject_id(
@@ -433,6 +431,9 @@ def add_subject():
 
             # ------------------------------------------------
             # INSERT SUBJECT
+            #
+            # IMPORTANT:
+            # Each database column appears ONLY ONCE.
             # ------------------------------------------------
 
             cursor.execute(
@@ -446,24 +447,25 @@ def add_subject():
                     department,
                     teacher_id,
 
-                    theory_full_marks,
-                    practical_full_marks,
+                    theory_internal_full_marks,
                     theory_external_full_marks,
+
+                    practical_internal_full_marks,
                     practical_external_full_marks,
 
-                    theory_internal_full_marks,
-                    practical_internal_full_marks,
-
                     theory_full_marks,
                     practical_full_marks,
+
                     full_marks,
                     pass_marks,
 
                     internal_theory_full_marks,
                     internal_practical_full_marks,
+
                     external_theory_full_marks,
                     external_practical_full_marks
                 )
+
                 VALUES
                 (
                     %s,
@@ -475,6 +477,10 @@ def add_subject():
 
                     %s,
                     %s,
+
+                    %s,
+                    %s,
+
                     %s,
                     %s,
 
@@ -483,11 +489,7 @@ def add_subject():
 
                     %s,
                     %s,
-                    %s,
-                    %s,
 
-                    %s,
-                    %s,
                     %s,
                     %s
                 )
@@ -500,21 +502,27 @@ def add_subject():
                     department,
                     teacher_value,
 
+                    # Theory internal/external
                     theory,
+                    theory,
+
+                    # Practical internal/external
                     practical,
+                    practical,
+
+                    # Main full marks
                     theory,
                     practical,
 
-                    theory,
-                    practical,
-
-                    theory,
-                    practical,
+                    # Total/pass
                     full_marks,
                     pass_mark,
 
+                    # Internal marks
                     theory,
                     practical,
+
+                    # External marks
                     theory,
                     practical
                 )
@@ -643,7 +651,7 @@ def edit_subject(id):
             ).strip()
 
             # ------------------------------------------------
-            # REQUIRED
+            # REQUIRED VALIDATION
             # ------------------------------------------------
 
             if not subject_code:
@@ -664,6 +672,48 @@ def edit_subject(id):
 
                 flash(
                     "Subject Name is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not theory_full_marks:
+
+                flash(
+                    "Theory Full Marks is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not practical_full_marks:
+
+                flash(
+                    "Practical Full Marks is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not pass_marks:
+
+                flash(
+                    "Pass Marks is required.",
                     "danger"
                 )
 
@@ -769,7 +819,7 @@ def edit_subject(id):
                 )
 
             # ------------------------------------------------
-            # DUPLICATE SUBJECT CODE
+            # CHECK DUPLICATE SUBJECT CODE
             # ------------------------------------------------
 
             cursor.execute(
@@ -814,7 +864,7 @@ def edit_subject(id):
                         teacher_id
                     )
 
-                except ValueError:
+                except (ValueError, TypeError):
 
                     flash(
                         "Invalid teacher selected.",
@@ -853,7 +903,7 @@ def edit_subject(id):
                     )
 
             # ------------------------------------------------
-            # CHECK SUBJECT
+            # CHECK SUBJECT EXISTS
             # ------------------------------------------------
 
             cursor.execute(
@@ -878,12 +928,13 @@ def edit_subject(id):
                 )
 
             # ------------------------------------------------
-            # UPDATE
+            # UPDATE SUBJECT
             # ------------------------------------------------
 
             cursor.execute(
                 """
                 UPDATE subjects
+
                 SET
                     subject_code = %s,
                     subject_name = %s,
@@ -891,14 +942,14 @@ def edit_subject(id):
                     department = %s,
                     teacher_id = %s,
 
-                    theory_full_marks = %s,
-                    practical_full_marks = %s,
-
                     theory_internal_full_marks = %s,
                     theory_external_full_marks = %s,
 
                     practical_internal_full_marks = %s,
                     practical_external_full_marks = %s,
+
+                    theory_full_marks = %s,
+                    practical_full_marks = %s,
 
                     full_marks = %s,
                     pass_marks = %s,
@@ -918,24 +969,31 @@ def edit_subject(id):
                     department,
                     teacher_value,
 
-                    theory,
-                    practical,
-
+                    # Theory internal/external
                     theory,
                     theory,
 
+                    # Practical internal/external
                     practical,
                     practical,
 
+                    # Main full marks
+                    theory,
+                    practical,
+
+                    # Total/pass
                     full_marks,
                     pass_mark,
 
+                    # Internal
                     theory,
                     practical,
 
+                    # External
                     theory,
                     practical,
 
+                    # Subject ID
                     id
                 )
             )
@@ -965,10 +1023,23 @@ def edit_subject(id):
                 department,
                 teacher_id,
 
+                theory_internal_full_marks,
+                theory_external_full_marks,
+
+                practical_internal_full_marks,
+                practical_external_full_marks,
+
                 theory_full_marks,
                 practical_full_marks,
+
                 full_marks,
-                pass_marks
+                pass_marks,
+
+                internal_theory_full_marks,
+                internal_practical_full_marks,
+
+                external_theory_full_marks,
+                external_practical_full_marks
 
             FROM subjects
 
