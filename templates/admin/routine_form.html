@@ -41,6 +41,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
+
                 <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm"
                      role="alert">
 
@@ -62,17 +63,21 @@
                     <button type="button"
                             class="btn-close"
                             data-bs-dismiss="alert"
-                            aria-label="Close"></button>
+                            aria-label="Close">
+                    </button>
+
                 </div>
+
             {% endfor %}
         {% endif %}
     {% endwith %}
 
 
     <!-- =========================================================
-         MAIN FORM CARD
+         MAIN CARD
     ========================================================== -->
     <div class="card border-0 shadow-sm rounded-4 routine-main-card">
+
         <div class="card-body p-4 p-lg-5">
 
             <form method="POST"
@@ -86,16 +91,21 @@
                 <div class="routine-section">
 
                     <div class="routine-section-title">
+
                         <div class="routine-section-icon blue">
                             <i class="bi bi-mortarboard-fill"></i>
                         </div>
 
                         <div>
-                            <h5 class="fw-bold mb-0">Class Information</h5>
+                            <h5 class="fw-bold mb-0">
+                                Class Information
+                            </h5>
+
                             <small class="text-muted">
                                 Select semester, department and section
                             </small>
                         </div>
+
                     </div>
 
 
@@ -103,10 +113,13 @@
 
                         <!-- SEMESTER -->
                         <div class="col-lg-4 col-md-6">
+
                             <label for="semester"
                                    class="form-label fw-semibold">
+
                                 Semester
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <select name="semester"
@@ -114,39 +127,39 @@
                                     class="form-select"
                                     required>
 
-                                <option value="">Select Semester</option>
+                                <option value="">
+                                    Select Semester
+                                </option>
 
-                                {% if semesters %}
-                                    {% for sem in semesters %}
-                                        {% set semester_value = sem[0] %}
+                                {% for sem in range(1, 9) %}
 
-                                        <option value="{{ semester_value }}"
-                                            {% if routine_data
-                                               and routine_data[1]|string|trim
-                                                  == semester_value|string|trim %}
-                                                selected
-                                            {% endif %}>
-                                            Semester {{ semester_value }}
-                                        </option>
-                                    {% endfor %}
-                                {% else %}
-                                    {% for sem in range(1, 9) %}
-                                        <option value="{{ sem }}"
-                                            {% if routine_data
-                                               and routine_data[1]|string|trim
-                                                  == sem|string|trim %}
-                                                selected
-                                            {% endif %}>
-                                            Semester {{ sem }}
-                                        </option>
-                                    {% endfor %}
-                                {% endif %}
+                                    <option value="{{ sem }}"
+                                        {% if routine_data and
+                                           routine_data[1]|string|trim|lower ==
+                                           sem|string|lower %}
+                                            selected
+                                        {% endif %}>
+
+                                        {% if sem == 1 %}
+                                            Semester 1 (1st)
+                                        {% elif sem == 2 %}
+                                            Semester 2 (2nd)
+                                        {% elif sem == 3 %}
+                                            Semester 3 (3rd)
+                                        {% else %}
+                                            Semester {{ sem }} ({{ sem }}th)
+                                        {% endif %}
+
+                                    </option>
+
+                                {% endfor %}
 
                             </select>
 
                             <div class="invalid-feedback">
                                 Please select a semester.
                             </div>
+
                         </div>
 
 
@@ -155,8 +168,10 @@
 
                             <label for="department"
                                    class="form-label fw-semibold">
+
                                 Department
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             {% set current_department =
@@ -170,16 +185,22 @@
                                     class="form-select"
                                     required>
 
-                                <option value="">Select Department</option>
+                                <option value="">
+                                    Select Department
+                                </option>
 
                                 {% for department in departments %}
+
                                     <option value="{{ department[0] }}"
-                                        {% if current_department|string|trim|lower
-                                           == department[0]|string|trim|lower %}
+                                        {% if current_department|string|trim|lower ==
+                                           department[0]|string|trim|lower %}
                                             selected
                                         {% endif %}>
+
                                         {{ department[0] }}
+
                                     </option>
+
                                 {% endfor %}
 
                             </select>
@@ -200,7 +221,9 @@
 
                             <label for="section"
                                    class="form-label fw-semibold">
+
                                 Section / Batch
+
                             </label>
 
                             <input type="text"
@@ -214,6 +237,7 @@
                         </div>
 
                     </div>
+
                 </div>
 
 
@@ -232,7 +256,10 @@
                         </div>
 
                         <div>
-                            <h5 class="fw-bold mb-0">Schedule</h5>
+                            <h5 class="fw-bold mb-0">
+                                Schedule
+                            </h5>
+
                             <small class="text-muted">
                                 Set the day and class time
                             </small>
@@ -248,8 +275,10 @@
 
                             <label for="day"
                                    class="form-label fw-semibold">
+
                                 Day
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <select name="day"
@@ -257,7 +286,9 @@
                                     class="form-select"
                                     required>
 
-                                <option value="">Select Day</option>
+                                <option value="">
+                                    Select Day
+                                </option>
 
                                 {% for day in [
                                     'Sunday',
@@ -270,12 +301,14 @@
                                 ] %}
 
                                     <option value="{{ day }}"
-                                        {% if routine_data
-                                           and routine_data[4]|string|trim
-                                              == day|string|trim %}
+                                        {% if routine_data and
+                                           routine_data[4]|string|trim|lower ==
+                                           day|string|trim|lower %}
                                             selected
                                         {% endif %}>
+
                                         {{ day }}
+
                                     </option>
 
                                 {% endfor %}
@@ -294,8 +327,10 @@
 
                             <label for="start_time"
                                    class="form-label fw-semibold">
+
                                 Start Time
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <input type="time"
@@ -317,8 +352,10 @@
 
                             <label for="end_time"
                                    class="form-label fw-semibold">
+
                                 End Time
                                 <span class="text-danger">*</span>
+
                             </label>
 
                             <input type="time"
@@ -340,8 +377,11 @@
                     <!-- TIME PREVIEW -->
                     <div id="timePreview"
                          class="routine-time-preview d-none mt-3">
+
                         <i class="bi bi-clock me-2"></i>
+
                         <span id="timePreviewText"></span>
+
                     </div>
 
                 </div>
@@ -381,16 +421,22 @@
 
                             <label for="subject_id"
                                    class="form-label fw-semibold">
+
                                 Subject
                                 <span class="text-danger">*</span>
+
                             </label>
+
 
                             <select name="subject_id"
                                     id="subject_id"
                                     class="form-select"
                                     required>
 
-                                <option value="">Select Subject</option>
+                                <option value="">
+                                    Select Subject
+                                </option>
+
 
                                 {% for subject in subjects %}
 
@@ -399,9 +445,10 @@
                                             data-department="{{ subject[4] or '' }}"
                                             data-teacher="{{ subject[6] or 'No teacher assigned' }}"
                                             data-teacher-id="{{ subject[5] or '' }}"
-                                        {% if routine_data
-                                           and routine_data[7]|string|trim
-                                              == subject[0]|string|trim %}
+
+                                        {% if routine_data and
+                                           routine_data[7]|string|trim ==
+                                           subject[0]|string|trim %}
                                             selected
                                         {% endif %}>
 
@@ -421,10 +468,14 @@
 
                             </select>
 
+
                             <small id="subjectHelp"
                                    class="text-muted">
+
                                 Select semester and department to filter subjects.
+
                             </small>
+
 
                             <div class="invalid-feedback">
                                 Please select a subject.
@@ -439,6 +490,7 @@
                             <label class="form-label fw-semibold">
                                 Assigned Teacher
                             </label>
+
 
                             <div id="teacherDisplay"
                                  class="teacher-display">
@@ -491,7 +543,9 @@
                         </div>
 
                         <div>
-                            <h5 class="fw-bold mb-0">Classroom</h5>
+                            <h5 class="fw-bold mb-0">
+                                Classroom
+                            </h5>
 
                             <small class="text-muted">
                                 Enter room or laboratory information
@@ -507,7 +561,9 @@
 
                             <label for="room"
                                    class="form-label fw-semibold">
+
                                 Room / Lab
+
                             </label>
 
                             <input type="text"
@@ -549,6 +605,7 @@
                        class="btn btn-light border px-4 routine-cancel-btn">
 
                         <i class="bi bi-x-lg me-1"></i>
+
                         Cancel
 
                     </a>
@@ -577,6 +634,7 @@
             </form>
 
         </div>
+
     </div>
 
 </div>
@@ -584,7 +642,7 @@
 
 <!-- =========================================================
      JAVASCRIPT
-========================================================= -->
+========================================================== -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -613,6 +671,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const subjectStatus =
         document.getElementById("subjectStatus");
 
+    const subjectHelp =
+        document.getElementById("subjectHelp");
+
     const routineForm =
         document.getElementById("routineForm");
 
@@ -620,38 +681,93 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("submitBtn");
 
 
-    /*
-     * =========================================================
-     * EDIT MODE
-     * =========================================================
-     */
+    /* =========================================================
+       ORIGINAL SUBJECT
+    ========================================================== */
 
     const originalSubjectId =
         subject.value || "";
 
 
-    /*
-     * =========================================================
-     * HELPERS
-     * =========================================================
-     */
+    /* =========================================================
+       NORMALIZE SEMESTER
+    ========================================================== */
 
-    function normalize(value) {
-        return String(value || "")
+    function normalizeSemester(value) {
+
+        let v = String(value || "")
             .trim()
             .toLowerCase();
+
+        if (!v) {
+            return "";
+        }
+
+        v = v.replace(/\s+/g, " ");
+
+
+        let match =
+            v.match(/(?:semester|sem)\s*(1|2|3|4|5|6|7|8)/);
+
+        if (match) {
+            return match[1];
+        }
+
+
+        match =
+            v.match(
+                /^(1|2|3|4|5|6|7|8)(?:st|nd|rd|th)?(?:\s*semester)?$/
+            );
+
+        if (match) {
+            return match[1];
+        }
+
+
+        match =
+            v.match(/\b(1|2|3|4|5|6|7|8)\b/);
+
+        if (match) {
+            return match[1];
+        }
+
+        return v;
     }
 
 
+    /* =========================================================
+       NORMALIZE DEPARTMENT
+    ========================================================== */
+
+    function normalizeDepartment(value) {
+
+        return String(value || "")
+            .trim()
+            .replace(/\s+/g, " ")
+            .toLowerCase();
+
+    }
+
+
+    /* =========================================================
+       ESCAPE HTML
+    ========================================================== */
+
     function escapeHtml(value) {
+
         return String(value || "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+
     }
 
+
+    /* =========================================================
+       FORMAT TIME
+    ========================================================== */
 
     function formatTime(time) {
 
@@ -672,17 +788,16 @@ document.addEventListener("DOMContentLoaded", function () {
         const period =
             hour >= 12 ? "PM" : "AM";
 
-        hour = hour % 12 || 12;
+        hour =
+            hour % 12 || 12;
 
         return `${hour}:${minute} ${period}`;
     }
 
 
-    /*
-     * =========================================================
-     * FIND ORIGINAL SUBJECT
-     * =========================================================
-     */
+    /* =========================================================
+       FIND ORIGINAL SUBJECT
+    ========================================================== */
 
     function getOriginalSubjectOption() {
 
@@ -690,39 +805,63 @@ document.addEventListener("DOMContentLoaded", function () {
             return null;
         }
 
-        return Array.from(subject.options).find(
-            function (option) {
+        return Array.from(subject.options)
+            .find(function (option) {
+
                 return String(option.value) ===
                        String(originalSubjectId);
-            }
-        );
+
+            }) || null;
+
     }
 
 
-    /*
-     * =========================================================
-     * FILTER SUBJECTS
-     *
-     * IMPORTANT:
-     * Existing subject is NEVER removed in edit mode.
-     * =========================================================
-     */
+    /* =========================================================
+       SUBJECT WARNING
+    ========================================================== */
+
+    function showSubjectWarning(message) {
+
+        subjectStatus.className =
+            "subject-status mt-3 alert alert-warning border-0";
+
+        subjectStatus.innerHTML = `
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            ${escapeHtml(message)}
+        `;
+    }
+
+
+    function hideSubjectStatus() {
+
+        subjectStatus.className =
+            "subject-status d-none mt-3";
+
+        subjectStatus.innerHTML = "";
+
+    }
+
+
+    /* =========================================================
+       FILTER SUBJECTS
+    ========================================================== */
 
     function filterSubjects() {
 
         const selectedSemester =
-            normalize(semester.value);
+            normalizeSemester(semester.value);
 
         const selectedDepartment =
-            normalize(department.value);
+            normalizeDepartment(department.value);
+
 
         let visibleCount = 0;
 
 
-        Array.from(subject.options).forEach(
-            function (option, index) {
+        Array.from(subject.options)
+            .forEach(function (option, index) {
 
-                // Placeholder
+                /* Placeholder */
                 if (index === 0) {
 
                     option.hidden = false;
@@ -732,37 +871,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
                 const optionSemester =
-                    normalize(option.dataset.semester);
+                    normalizeSemester(
+                        option.dataset.semester
+                    );
+
 
                 const optionDepartment =
-                    normalize(option.dataset.department);
+                    normalizeDepartment(
+                        option.dataset.department
+                    );
 
 
-                let show = true;
-
-
-                /*
-                 * Semester filter
-                 */
+                /* No filter selected */
                 if (
-                    selectedSemester &&
-                    optionSemester &&
-                    optionSemester !== selectedSemester
+                    !selectedSemester &&
+                    !selectedDepartment
                 ) {
-                    show = false;
+
+                    option.hidden = false;
+
+                    visibleCount++;
+
+                    return;
                 }
 
 
-                /*
-                 * If selected department exists,
-                 * subject must have same department.
-                 */
-                if (
-                    selectedDepartment &&
-                    optionDepartment !== selectedDepartment
-                ) {
-                    show = false;
+                let semesterMatch = true;
+                let departmentMatch = true;
+
+
+                /* Semester matching */
+                if (selectedSemester) {
+
+                    semesterMatch =
+                        optionSemester ===
+                        selectedSemester;
+
                 }
+
+
+                /* Department matching */
+                if (selectedDepartment) {
+
+                    departmentMatch =
+                        optionDepartment ===
+                        selectedDepartment;
+
+                }
+
+
+                const show =
+                    semesterMatch &&
+                    departmentMatch;
 
 
                 option.hidden = !show;
@@ -772,17 +932,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     visibleCount++;
                 }
 
-            }
-        );
+            });
 
 
-        /*
-         * =====================================================
-         * EDIT MODE FIX
-         *
-         * Always keep current/original subject visible.
-         * =====================================================
-         */
+        /* =====================================================
+           EDIT MODE FIX
+        ====================================================== */
 
         const originalOption =
             getOriginalSubjectOption();
@@ -792,38 +947,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        /*
-         * =====================================================
-         * KEEP CURRENT SELECTION
-         * =====================================================
-         */
-
-        const selectedOption =
-            subject.options[subject.selectedIndex];
-
-
-        /*
-         * Only clear hidden subject in NEW mode.
-         *
-         * In EDIT mode, never clear the existing subject
-         * automatically.
-         */
-        if (
-            selectedOption &&
-            selectedOption.value &&
-            selectedOption.hidden &&
-            !originalSubjectId
-        ) {
-            subject.value = "";
-            teacherInput.value = "";
-        }
-
-
-        /*
-         * =====================================================
-         * SUBJECT STATUS
-         * =====================================================
-         */
+        /* =====================================================
+           STATUS
+        ====================================================== */
 
         if (
             selectedSemester &&
@@ -832,33 +958,66 @@ document.addEventListener("DOMContentLoaded", function () {
             !originalOption
         ) {
 
-            subjectStatus.className =
-                "subject-status mt-3 alert alert-warning border-0";
+            showSubjectWarning(
+                "No subjects found for the selected semester and department. Please check the Subjects database."
+            );
 
-            subjectStatus.innerHTML = `
-                <i class="bi bi-exclamation-circle-fill me-2"></i>
-                No subjects found for the selected semester and department.
-            `;
+            subjectHelp.textContent =
+                "No matching subject found.";
 
         } else {
 
-            subjectStatus.className =
-                "subject-status d-none mt-3";
+            hideSubjectStatus();
 
-            subjectStatus.innerHTML = "";
+            if (visibleCount > 0) {
+
+                subjectHelp.textContent =
+                    visibleCount +
+                    " subject(s) available for the selected class.";
+
+            } else if (
+                !selectedSemester ||
+                !selectedDepartment
+            ) {
+
+                subjectHelp.textContent =
+                    "Select semester and department to filter subjects.";
+
+            }
 
         }
 
 
-        updateTeacher();
+        /* =====================================================
+           UPDATE TEACHER
+        ====================================================== */
+
+        const selectedOption =
+            subject.options[subject.selectedIndex];
+
+
+        if (
+            selectedOption &&
+            selectedOption.value
+        ) {
+
+            updateTeacher();
+
+        } else if (originalOption) {
+
+            subject.value =
+                originalSubjectId;
+
+            updateTeacher();
+
+        }
+
     }
 
 
-    /*
-     * =========================================================
-     * UPDATE TEACHER
-     * =========================================================
-     */
+    /* =========================================================
+       UPDATE TEACHER
+    ========================================================== */
 
     function updateTeacher() {
 
@@ -866,9 +1025,7 @@ document.addEventListener("DOMContentLoaded", function () {
             subject.options[subject.selectedIndex];
 
 
-        /*
-         * No subject selected
-         */
+        /* No subject */
         if (
             !selected ||
             !selected.value
@@ -888,10 +1045,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 </div>
             `;
 
-            /*
-             * Do not destroy existing teacher value
-             * while edit page is initializing.
-             */
             if (!originalSubjectId) {
                 teacherInput.value = "";
             }
@@ -900,29 +1053,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        /*
-         * Read teacher information directly
-         * from selected subject option.
-         */
         const teacher =
             selected.dataset.teacher ||
             "No teacher assigned";
+
 
         const teacherId =
             selected.dataset.teacherId ||
             "";
 
 
-        /*
-         * IMPORTANT:
-         * Teacher ID comes from subject.
-         */
-        teacherInput.value = teacherId;
+        /* Set teacher ID */
+        teacherInput.value =
+            teacherId;
 
 
-        /*
-         * No teacher assigned
-         */
+        /* No teacher */
         if (!teacherId) {
 
             teacherDisplay.innerHTML = `
@@ -943,9 +1089,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        /*
-         * Teacher found
-         */
+        /* Teacher found */
         teacherDisplay.innerHTML = `
             <div class="teacher-selected">
 
@@ -969,14 +1113,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             </div>
         `;
+
     }
 
 
-    /*
-     * =========================================================
-     * TIME PREVIEW
-     * =========================================================
-     */
+    /* =========================================================
+       TIME PREVIEW
+    ========================================================== */
 
     function updateTimePreview() {
 
@@ -986,23 +1129,28 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
 
             timePreview.classList.add("d-none");
-            timePreview.classList.remove("time-invalid");
+
+            timePreview.classList.remove(
+                "time-invalid"
+            );
 
             return;
         }
 
 
-        /*
-         * HTML time input uses HH:MM,
-         * so string comparison is safe.
-         */
+        /* HH:MM string comparison is safe */
         if (
             startTime.value >=
             endTime.value
         ) {
 
-            timePreview.classList.remove("d-none");
-            timePreview.classList.add("time-invalid");
+            timePreview.classList.remove(
+                "d-none"
+            );
+
+            timePreview.classList.add(
+                "time-invalid"
+            );
 
             timePreviewText.innerHTML = `
                 <strong>Invalid time:</strong>
@@ -1021,18 +1169,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         timePreviewText.innerHTML = `
             Class time:
-            <strong>${formatTime(startTime.value)}</strong>
+            <strong>
+                ${formatTime(startTime.value)}
+            </strong>
             -
-            <strong>${formatTime(endTime.value)}</strong>
+            <strong>
+                ${formatTime(endTime.value)}
+            </strong>
         `;
+
     }
 
 
-    /*
-     * =========================================================
-     * SUBJECT API FALLBACK
-     * =========================================================
-     */
+    /* =========================================================
+       API FALLBACK
+    ========================================================== */
 
     async function loadSubjectsFromAPI() {
 
@@ -1043,9 +1194,6 @@ document.addEventListener("DOMContentLoaded", function () {
             String(department.value || "").trim();
 
 
-        /*
-         * API is only needed when both filters exist.
-         */
         if (
             !selectedSemester ||
             !selectedDepartment
@@ -1054,28 +1202,43 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
 
-        /*
-         * Check existing non-hidden subjects.
-         */
-        const visibleOptions =
-            Array.from(subject.options).filter(
-                function (option) {
+        /* Check existing matching subjects */
+        const matchingOptions =
+            Array.from(subject.options)
+                .filter(function (option, index) {
+
+                    if (index === 0) {
+                        return false;
+                    }
+
+                    const sem =
+                        normalizeSemester(
+                            option.dataset.semester
+                        );
+
+                    const dept =
+                        normalizeDepartment(
+                            option.dataset.department
+                        );
+
                     return (
-                        option.value &&
-                        !option.hidden
+                        sem ===
+                        normalizeSemester(selectedSemester)
+                        &&
+                        dept ===
+                        normalizeDepartment(selectedDepartment)
                     );
-                }
-            );
+
+                });
 
 
-        if (visibleOptions.length > 0) {
+        /* Already available */
+        if (matchingOptions.length > 0) {
             return;
         }
 
 
-        /*
-         * API fallback
-         */
+        /* API fallback */
         try {
 
             const apiUrl =
@@ -1102,10 +1265,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
             if (!response.ok) {
+
                 throw new Error(
                     "Subject API returned HTTP " +
                     response.status
                 );
+
             }
 
 
@@ -1122,73 +1287,73 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            /*
-             * Add only subjects that are not already present.
-             */
-            result.subjects.forEach(
-                function (item) {
+            result.subjects.forEach(function (item) {
 
-                    const itemId =
-                        String(item.id || "");
+                const itemId =
+                    String(item.id || "");
 
 
-                    if (!itemId) {
-                        return;
-                    }
-
-
-                    const alreadyExists =
-                        Array.from(subject.options).some(
-                            function (option) {
-                                return String(option.value) === itemId;
-                            }
-                        );
-
-
-                    if (alreadyExists) {
-                        return;
-                    }
-
-
-                    const option =
-                        document.createElement("option");
-
-
-                    option.value =
-                        item.id;
-
-
-                    option.textContent =
-                        `${item.subject_code || ""} - ` +
-                        `${item.subject_name || ""}` +
-                        `${item.semester ? " | Sem " + item.semester : ""}` +
-                        `${item.department ? " | " + item.department : ""}`;
-
-
-                    option.dataset.semester =
-                        item.semester || "";
-
-
-                    option.dataset.department =
-                        item.department || "";
-
-
-                    option.dataset.teacher =
-                        item.teacher_name ||
-                        "No teacher assigned";
-
-
-                    option.dataset.teacherId =
-                        item.teacher_id || "";
-
-
-                    subject.appendChild(option);
-
+                if (!itemId) {
+                    return;
                 }
-            );
 
 
+                /* Prevent duplicate option */
+                const alreadyExists =
+                    Array.from(subject.options)
+                        .some(function (option) {
+
+                            return String(option.value) ===
+                                   itemId;
+
+                        });
+
+
+                if (alreadyExists) {
+                    return;
+                }
+
+
+                const option =
+                    document.createElement("option");
+
+
+                option.value =
+                    item.id;
+
+
+                option.textContent =
+                    `${item.subject_code || ""} - ` +
+                    `${item.subject_name || ""}` +
+                    `${item.semester ? " | Sem " + item.semester : ""}` +
+                    `${item.department ? " | " + item.department : ""}`;
+
+
+                option.dataset.semester =
+                    item.semester || "";
+
+
+                option.dataset.department =
+                    item.department || "";
+
+
+                option.dataset.teacher =
+                    item.teacher_name ||
+                    "No teacher assigned";
+
+
+                option.dataset.teacherId =
+                    item.teacher_id || "";
+
+
+                subject.appendChild(option);
+
+            });
+
+
+            /* Filter newly loaded subjects */
             filterSubjects();
+
 
         } catch (error) {
 
@@ -1198,14 +1363,13 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
         }
+
     }
 
 
-    /*
-     * =========================================================
-     * EVENTS
-     * =========================================================
-     */
+    /* =========================================================
+       EVENTS
+    ========================================================== */
 
     semester.addEventListener(
         "change",
@@ -1237,10 +1401,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             updateTeacher();
 
-            /*
-             * If user manually changes subject in edit mode,
-             * validation should use the newly selected teacher.
-             */
+            hideSubjectStatus();
+
         }
     );
 
@@ -1269,11 +1431,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-    /*
-     * =========================================================
-     * FORM VALIDATION
-     * =========================================================
-     */
+    /* =========================================================
+       FORM VALIDATION
+    ========================================================== */
 
     routineForm.addEventListener(
         "submit",
@@ -1282,19 +1442,13 @@ document.addEventListener("DOMContentLoaded", function () {
             let valid = true;
 
 
-            /*
-             * Native required validation
-             */
+            /* Native validation */
             if (!routineForm.checkValidity()) {
-
                 valid = false;
-
             }
 
 
-            /*
-             * Time validation
-             */
+            /* Time validation */
             if (
                 startTime.value &&
                 endTime.value &&
@@ -1303,47 +1457,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 valid = false;
 
-                endTime.classList.add("is-invalid");
+                endTime.classList.add(
+                    "is-invalid"
+                );
 
-                timePreview.classList.remove("d-none");
+                timePreview.classList.remove(
+                    "d-none"
+                );
 
-                timePreview.classList.add("time-invalid");
+                timePreview.classList.add(
+                    "time-invalid"
+                );
 
                 timePreviewText.innerHTML = `
                     <strong>Invalid time:</strong>
                     End time must be later than start time.
                 `;
 
-                endTime.focus();
-
             } else {
 
-                endTime.classList.remove("is-invalid");
+                endTime.classList.remove(
+                    "is-invalid"
+                );
 
             }
 
 
-            /*
-             * Subject validation
-             */
+            /* Subject validation */
             if (!subject.value) {
 
                 valid = false;
 
-                subject.classList.add("is-invalid");
+                subject.classList.add(
+                    "is-invalid"
+                );
 
             } else {
 
-                subject.classList.remove("is-invalid");
+                subject.classList.remove(
+                    "is-invalid"
+                );
 
             }
 
 
-            /*
-             * Teacher validation
-             *
-             * Only validate if a subject has been selected.
-             */
+            /* Teacher validation */
             if (
                 subject.value &&
                 !teacherInput.value
@@ -1362,12 +1520,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
 
-            /*
-             * Stop submit when invalid.
-             */
+            /* Stop submit if invalid */
             if (!valid) {
 
                 event.preventDefault();
+
                 event.stopPropagation();
 
             }
@@ -1378,61 +1535,54 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
 
-            /*
-             * Prevent accidental double submit.
-             *
-             * Only disable after validation succeeds.
-             */
-            if (valid && submitBtn) {
+            /* Prevent double submit */
+            if (
+                valid &&
+                submitBtn
+            ) {
 
                 submitBtn.disabled = true;
+
 
                 const isEdit =
                     Boolean(originalSubjectId);
 
-                submitBtn.innerHTML = isEdit
+
+                submitBtn.innerHTML =
+                    isEdit
                     ? `
                         <span class="spinner-border spinner-border-sm me-1"
                               role="status"
-                              aria-hidden="true"></span>
+                              aria-hidden="true">
+                        </span>
                         Updating...
                       `
                     : `
                         <span class="spinner-border spinner-border-sm me-1"
                               role="status"
-                              aria-hidden="true"></span>
+                              aria-hidden="true">
+                        </span>
                         Saving...
                       `;
+
             }
 
         }
     );
 
 
-    /*
-     * =========================================================
-     * INITIAL LOAD
-     * =========================================================
-     */
+    /* =========================================================
+       INITIAL LOAD
+    ========================================================== */
 
-    /*
-     * IMPORTANT:
-     * First update teacher from existing selected subject.
-     * Then filter without destroying edit selection.
-     */
     updateTeacher();
 
     filterSubjects();
 
-    updateTeacher();
-
     updateTimePreview();
 
 
-    /*
-     * Run once more after DOM/browser has finished
-     * restoring selected values.
-     */
+    /* Browser/Jinja selected values restore भएपछि */
     setTimeout(
         function () {
 
@@ -1452,7 +1602,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 <!-- =========================================================
      STYLE
-========================================================= -->
+========================================================== -->
 <style>
 
     /* =========================================================
@@ -1469,6 +1619,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .routine-back-btn {
+
         width: 44px;
         height: 44px;
 
@@ -1485,6 +1636,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-back-btn:hover {
+
         transform: translateX(-2px);
 
         box-shadow:
@@ -1493,6 +1645,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-title-icon {
+
         width: 46px;
         height: 46px;
 
@@ -1502,7 +1655,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         border-radius: 12px;
 
-        background: rgba(13, 110, 253, .10);
+        background:
+            rgba(13, 110, 253, .10);
 
         color: #0d6efd;
 
@@ -1515,10 +1669,11 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .routine-main-card {
+
         overflow: hidden;
 
-        border: 1px solid
-            rgba(0, 0, 0, .04) !important;
+        border:
+            1px solid rgba(0, 0, 0, .04) !important;
     }
 
 
@@ -1532,6 +1687,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-section-title {
+
         display: flex;
         align-items: center;
 
@@ -1542,6 +1698,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-section-icon {
+
         width: 40px;
         height: 40px;
 
@@ -1558,25 +1715,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-section-icon.blue {
-        background: rgba(13, 110, 253, .10);
+
+        background:
+            rgba(13, 110, 253, .10);
+
         color: #0d6efd;
     }
 
 
     .routine-section-icon.green {
-        background: rgba(25, 135, 84, .10);
+
+        background:
+            rgba(25, 135, 84, .10);
+
         color: #198754;
     }
 
 
     .routine-section-icon.purple {
-        background: rgba(111, 66, 193, .10);
+
+        background:
+            rgba(111, 66, 193, .10);
+
         color: #6f42c1;
     }
 
 
     .routine-section-icon.orange {
-        background: rgba(255, 193, 7, .14);
+
+        background:
+            rgba(255, 193, 7, .14);
+
         color: #d39e00;
     }
 
@@ -1592,6 +1761,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     .form-control,
     .form-select {
+
         min-height: 44px;
 
         border-radius: 10px;
@@ -1606,6 +1776,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     .form-control:focus,
     .form-select:focus {
+
         border-color: #86b7fe;
 
         box-shadow:
@@ -1616,6 +1787,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     .form-control:hover,
     .form-select:hover {
+
         border-color: #b8c2cc;
     }
 
@@ -1625,16 +1797,20 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .teacher-display {
+
         min-height: 44px;
+
         width: 100%;
 
-        border: 1px solid #dee2e6;
+        border:
+            1px solid #dee2e6;
 
         border-radius: 10px;
 
         background: #f8f9fa;
 
         display: flex;
+
         align-items: center;
 
         padding: 7px 10px;
@@ -1642,7 +1818,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-placeholder {
+
         display: flex;
+
         align-items: center;
 
         gap: 9px;
@@ -1654,9 +1832,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-selected {
+
         width: 100%;
 
         display: flex;
+
         align-items: center;
 
         gap: 10px;
@@ -1664,31 +1844,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-icon {
+
         width: 30px;
         height: 30px;
 
         flex-shrink: 0;
 
         display: flex;
+
         align-items: center;
         justify-content: center;
 
         border-radius: 50%;
 
-        background: rgba(13, 110, 253, .10);
+        background:
+            rgba(13, 110, 253, .10);
 
         color: #0d6efd;
     }
 
 
     .teacher-icon.warning {
-        background: rgba(255, 193, 7, .15);
+
+        background:
+            rgba(255, 193, 7, .15);
+
         color: #b58100;
     }
 
 
     .teacher-info {
+
         display: flex;
+
         flex-direction: column;
 
         min-width: 0;
@@ -1696,6 +1884,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-label {
+
         font-size: 10px;
 
         color: #6c757d;
@@ -1705,6 +1894,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-name {
+
         font-weight: 600;
 
         font-size: 14px;
@@ -1720,6 +1910,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .teacher-check {
+
         margin-left: auto;
 
         color: #198754;
@@ -1733,23 +1924,28 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .routine-time-preview {
+
         padding: 10px 14px;
 
         border-radius: 10px;
 
-        background: rgba(25, 135, 84, .08);
+        background:
+            rgba(25, 135, 84, .08);
 
         color: #146c43;
 
         font-size: 14px;
 
-        border: 1px solid
+        border:
+            1px solid
             rgba(25, 135, 84, .12);
     }
 
 
     .routine-time-preview.time-invalid {
-        background: rgba(220, 53, 69, .08);
+
+        background:
+            rgba(220, 53, 69, .08);
 
         color: #b02a37;
 
@@ -1772,7 +1968,9 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .routine-info {
-        background: rgba(13, 110, 253, .07);
+
+        background:
+            rgba(13, 110, 253, .07);
 
         color: #084298;
     }
@@ -1783,6 +1981,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================================== */
 
     .btn {
+
         border-radius: 10px;
 
         min-height: 44px;
@@ -1790,6 +1989,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-submit-btn {
+
         min-width: 145px;
 
         font-weight: 600;
@@ -1797,6 +1997,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     .routine-cancel-btn {
+
         min-width: 105px;
 
         font-weight: 500;
@@ -1828,17 +2029,20 @@ document.addEventListener("DOMContentLoaded", function () {
     @media (max-width: 768px) {
 
         .container-fluid {
+
             padding-left: 14px !important;
             padding-right: 14px !important;
         }
 
 
         .routine-main-card .card-body {
+
             padding: 20px !important;
         }
 
 
         .routine-title-icon {
+
             width: 42px;
             height: 42px;
 
@@ -1847,6 +2051,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
         .routine-section-icon {
+
             width: 36px;
             height: 36px;
 
@@ -1866,6 +2071,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         .routine-submit-btn,
         .routine-cancel-btn {
+
             flex: 1;
 
             min-width: 120px;
@@ -1883,12 +2089,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         .routine-form-page
         .d-flex.justify-content-end {
+
             flex-direction: column;
         }
 
 
         .routine-submit-btn,
         .routine-cancel-btn {
+
             width: 100%;
         }
 

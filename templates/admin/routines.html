@@ -6,283 +6,361 @@ Routine Management - AI Smart Attendance System
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 routine-page">
 
-    <!-- =====================================================
-         HEADER
-    ====================================================== -->
+```
+<!-- =====================================================
+     HEADER
+====================================================== -->
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<div class="routine-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
 
-        <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-3">
 
-            <div
-                class="d-flex align-items-center justify-content-center rounded-3"
-                style="
-                    width:48px;
-                    height:48px;
-                    background:rgba(13,110,253,.10);
-                    color:#0d6efd;
-                "
-            >
-                <i class="bi bi-calendar3-week fs-4"></i>
-            </div>
-
-            <div>
-                <h3 class="mb-0 fw-bold">
-                    Routine Management
-                </h3>
-
-                <p class="text-muted mb-0">
-                    Manage class schedules, subjects, teachers and classrooms
-                </p>
-            </div>
-
+        <div class="routine-header-icon">
+            <i class="bi bi-calendar3-week"></i>
         </div>
 
-        <!-- ADD ROUTINE -->
+        <div>
+            <h3 class="mb-1 fw-bold">
+                Routine Management
+            </h3>
 
-        <a
-            href="{{ url_for('routine.add') }}"
-            class="btn btn-primary px-4"
-        >
-            <i class="bi bi-plus-circle me-1"></i>
-            Add Routine
-        </a>
+            <p class="text-muted mb-0">
+                Manage class schedules, subjects, teachers and classrooms
+            </p>
+        </div>
 
     </div>
 
+    <a
+        href="{{ url_for('routine.add') }}"
+        class="btn btn-primary px-4 add-routine-btn"
+    >
+        <i class="bi bi-plus-circle me-1"></i>
+        Add Routine
+    </a>
 
-    <!-- =====================================================
-         FLASH MESSAGES
-    ====================================================== -->
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-
-        {% if messages %}
-
-            {% for category, message in messages %}
-
-                <div
-                    class="alert alert-{{ category }}
-                           alert-dismissible fade show
-                           border-0 shadow-sm rounded-3"
-                    role="alert"
-                >
-
-                    <i
-                        class="
-                        {% if category == 'success' %}
-                            bi bi-check-circle-fill
-                        {% elif category == 'danger' %}
-                            bi bi-exclamation-triangle-fill
-                        {% elif category == 'warning' %}
-                            bi bi-exclamation-circle-fill
-                        {% else %}
-                            bi bi-info-circle-fill
-                        {% endif %}
-                        me-2
-                        "
-                    ></i>
-
-                    {{ message }}
-
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="alert"
-                    ></button>
-
-                </div>
-
-            {% endfor %}
-
-        {% endif %}
-
-    {% endwith %}
+</div>
 
 
-    <!-- =====================================================
-         FILTER CARD
-    ====================================================== -->
+<!-- =====================================================
+     FLASH MESSAGES
+====================================================== -->
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
+{% with messages = get_flashed_messages(with_categories=true) %}
 
-        <div class="card-body p-4">
+    {% if messages %}
 
-            <div class="d-flex align-items-center mb-3">
+        {% for category, message in messages %}
 
-                <div
-                    class="d-flex align-items-center justify-content-center rounded-3 me-2"
-                    style="
-                        width:38px;
-                        height:38px;
-                        background:rgba(13,110,253,.10);
-                        color:#0d6efd;
+            <div
+                class="alert alert-{{ category }}
+                       alert-dismissible fade show
+                       border-0 shadow-sm rounded-3 mb-3"
+                role="alert"
+            >
+
+                <i
+                    class="
+                    {% if category == 'success' %}
+                        bi bi-check-circle-fill
+                    {% elif category == 'danger' %}
+                        bi bi-exclamation-triangle-fill
+                    {% elif category == 'warning' %}
+                        bi bi-exclamation-circle-fill
+                    {% else %}
+                        bi bi-info-circle-fill
+                    {% endif %}
+                    me-2
                     "
-                >
-                    <i class="bi bi-funnel-fill"></i>
-                </div>
+                ></i>
 
-                <div>
-
-                    <h6 class="fw-bold mb-0">
-                        Filter Routine
-                    </h6>
-
-                    <small class="text-muted">
-                        Quickly find class schedules
-                    </small>
-
-                </div>
-
-            </div>
-
-
-            <div class="row g-3">
-
-                <!-- SEMESTER -->
-
-                <div class="col-lg-3 col-md-6">
-
-                    <label
-                        for="filterSemester"
-                        class="form-label fw-semibold"
-                    >
-                        Semester
-                    </label>
-
-                    <select
-                        id="filterSemester"
-                        class="form-select"
-                    >
-
-                        <option value="">
-                            All Semesters
-                        </option>
-
-                        {% for sem in semesters %}
-
-                            <option value="{{ sem[0] }}">
-                                Semester {{ sem[0] }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- DEPARTMENT -->
-
-                <div class="col-lg-3 col-md-6">
-
-                    <label
-                        for="filterDepartment"
-                        class="form-label fw-semibold"
-                    >
-                        Department
-                    </label>
-
-                    <select
-                        id="filterDepartment"
-                        class="form-select"
-                    >
-
-                        <option value="">
-                            All Departments
-                        </option>
-
-                        {% for department in departments %}
-
-                            <option value="{{ department[0] }}">
-                                {{ department[0] }}
-                            </option>
-
-                        {% endfor %}
-
-                    </select>
-
-                </div>
-
-
-                <!-- DAY -->
-
-                <div class="col-lg-3 col-md-6">
-
-                    <label
-                        for="filterDay"
-                        class="form-label fw-semibold"
-                    >
-                        Day
-                    </label>
-
-                    <select
-                        id="filterDay"
-                        class="form-select"
-                    >
-
-                        <option value="">
-                            All Days
-                        </option>
-
-                        <option value="Sunday">Sunday</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- SEARCH -->
-
-                <div class="col-lg-3 col-md-6">
-
-                    <label
-                        for="routineSearch"
-                        class="form-label fw-semibold"
-                    >
-                        Search
-                    </label>
-
-                    <div class="input-group">
-
-                        <span class="input-group-text bg-white">
-                            <i class="bi bi-search"></i>
-                        </span>
-
-                        <input
-                            type="text"
-                            id="routineSearch"
-                            class="form-control"
-                            placeholder="Subject, teacher, room..."
-                        >
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- RESET -->
-
-            <div class="mt-3">
+                {{ message }}
 
                 <button
                     type="button"
-                    id="resetFilters"
-                    class="btn btn-light border btn-sm"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                ></button>
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =====================================================
+     FILTER ROUTINE
+====================================================== -->
+
+<div class="card border-0 shadow-sm rounded-4 mb-4 filter-card">
+
+    <div class="card-body p-4">
+
+        <div class="filter-heading d-flex align-items-center mb-4">
+
+            <div class="filter-icon me-3">
+                <i class="bi bi-funnel-fill"></i>
+            </div>
+
+            <div>
+                <h5 class="fw-bold mb-1">
+                    Filter Routine
+                </h5>
+
+                <small class="text-muted">
+                    Quickly find class schedules
+                </small>
+            </div>
+
+        </div>
+
+
+        <div class="row g-3">
+
+            <!-- =================================================
+                 SEMESTER
+            ================================================== -->
+
+            <div class="col-xl-3 col-lg-3 col-md-6">
+
+                <label
+                    for="filterSemester"
+                    class="form-label fw-semibold"
                 >
-                    <i class="bi bi-arrow-clockwise me-1"></i>
-                    Reset Filters
-                </button>
+                    Semester
+                </label>
+
+                <select
+                    id="filterSemester"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        All Semesters
+                    </option>
+
+                    <option value="1">
+                        Semester 1
+                    </option>
+
+                    <option value="2">
+                        Semester 2
+                    </option>
+
+                    <option value="3">
+                        Semester 3
+                    </option>
+
+                    <option value="4">
+                        Semester 4
+                    </option>
+
+                    <option value="5">
+                        Semester 5
+                    </option>
+
+                    <option value="6">
+                        Semester 6
+                    </option>
+
+                    <option value="7">
+                        Semester 7
+                    </option>
+
+                    <option value="8">
+                        Semester 8
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+                 DEPARTMENT
+            ================================================== -->
+
+            <div class="col-xl-3 col-lg-3 col-md-6">
+
+                <label
+                    for="filterDepartment"
+                    class="form-label fw-semibold"
+                >
+                    Department
+                </label>
+
+                <select
+                    id="filterDepartment"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        All Departments
+                    </option>
+
+                    {% for department in departments %}
+
+                        <option value="{{ department[0] }}">
+                            {{ department[0] }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+                 DAY
+            ================================================== -->
+
+            <div class="col-xl-3 col-lg-3 col-md-6">
+
+                <label
+                    for="filterDay"
+                    class="form-label fw-semibold"
+                >
+                    Day
+                </label>
+
+                <select
+                    id="filterDay"
+                    class="form-select"
+                >
+
+                    <option value="">
+                        All Days
+                    </option>
+
+                    <option value="Sunday">Sunday</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+                 SEARCH
+            ================================================== -->
+
+            <div class="col-xl-3 col-lg-3 col-md-6">
+
+                <label
+                    for="routineSearch"
+                    class="form-label fw-semibold"
+                >
+                    Search
+                </label>
+
+                <div class="search-box">
+
+                    <i class="bi bi-search search-icon"></i>
+
+                    <input
+                        type="text"
+                        id="routineSearch"
+                        class="form-control search-input"
+                        placeholder="Subject, teacher, room, section..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        type="button"
+                        id="clearSearch"
+                        class="clear-search"
+                        title="Clear Search"
+                    >
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTER FOOTER
+        ================================================== -->
+
+        <div class="filter-footer mt-4">
+
+            <div class="filter-result-text">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                Showing
+                <strong id="filterResultCount">
+                    {{ routines|length }}
+                </strong>
+                routines
+
+            </div>
+
+            <button
+                type="button"
+                id="resetFilters"
+                class="btn btn-light border reset-btn"
+            >
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                Reset Filters
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ROUTINE STATISTICS
+====================================================== -->
+
+<div class="row g-3 mb-4">
+
+    <!-- TOTAL -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <small class="text-muted">
+                            Total Routines
+                        </small>
+
+                        <h3
+                            class="fw-bold mb-0 mt-1"
+                            id="totalRoutineCount"
+                        >
+                            {{ routines|length }}
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon stat-primary">
+                        <i class="bi bi-calendar-week"></i>
+                    </div>
+
+                </div>
 
             </div>
 
@@ -291,163 +369,33 @@ Routine Management - AI Smart Attendance System
     </div>
 
 
-    <!-- =====================================================
-         ROUTINE STATISTICS
-    ====================================================== -->
+    <!-- SUBJECTS -->
 
-    <div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
 
-        <!-- TOTAL -->
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
 
-        <div class="col-xl-3 col-md-6">
+            <div class="card-body">
 
-            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
 
-                <div class="card-body">
+                    <div>
 
-                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">
+                            Subjects
+                        </small>
 
-                        <div>
-
-                            <small class="text-muted">
-                                Total Routines
-                            </small>
-
-                            <h3
-                                class="fw-bold mb-0 mt-1"
-                                id="totalRoutineCount"
-                            >
-                                {{ routines|length }}
-                            </h3>
-
-                        </div>
-
-                        <div
-                            class="stat-icon bg-primary-subtle text-primary"
+                        <h3
+                            class="fw-bold mb-0 mt-1"
+                            id="subjectCount"
                         >
-                            <i class="bi bi-calendar-week"></i>
-                        </div>
+                            0
+                        </h3>
 
                     </div>
 
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- SUBJECTS -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between">
-
-                        <div>
-
-                            <small class="text-muted">
-                                Subjects
-                            </small>
-
-                            <h3
-                                class="fw-bold mb-0 mt-1"
-                                id="subjectCount"
-                            >
-                                -
-                            </h3>
-
-                        </div>
-
-                        <div
-                            class="stat-icon bg-success-subtle text-success"
-                        >
-                            <i class="bi bi-book"></i>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- TEACHERS -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between">
-
-                        <div>
-
-                            <small class="text-muted">
-                                Teachers
-                            </small>
-
-                            <h3
-                                class="fw-bold mb-0 mt-1"
-                                id="teacherCount"
-                            >
-                                -
-                            </h3>
-
-                        </div>
-
-                        <div
-                            class="stat-icon bg-warning-subtle text-warning"
-                        >
-                            <i class="bi bi-people"></i>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ROOMS -->
-
-        <div class="col-xl-3 col-md-6">
-
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between">
-
-                        <div>
-
-                            <small class="text-muted">
-                                Rooms
-                            </small>
-
-                            <h3
-                                class="fw-bold mb-0 mt-1"
-                                id="roomCount"
-                            >
-                                -
-                            </h3>
-
-                        </div>
-
-                        <div
-                            class="stat-icon bg-info-subtle text-info"
-                        >
-                            <i class="bi bi-door-open"></i>
-                        </div>
-
+                    <div class="stat-icon stat-success">
+                        <i class="bi bi-book"></i>
                     </div>
 
                 </div>
@@ -459,20 +407,103 @@ Routine Management - AI Smart Attendance System
     </div>
 
 
-    <!-- =====================================================
-         ROUTINE TABLE
-    ====================================================== -->
+    <!-- TEACHERS -->
 
-    <div class="card border-0 shadow-sm rounded-4">
+    <div class="col-xl-3 col-md-6">
 
-        <div class="card-header bg-white border-0 p-4">
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
 
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <small class="text-muted">
+                            Teachers
+                        </small>
+
+                        <h3
+                            class="fw-bold mb-0 mt-1"
+                            id="teacherCount"
+                        >
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon stat-warning">
+                        <i class="bi bi-people"></i>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ROOMS -->
+
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card stat-card border-0 shadow-sm rounded-4 h-100">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <small class="text-muted">
+                            Rooms
+                        </small>
+
+                        <h3
+                            class="fw-bold mb-0 mt-1"
+                            id="roomCount"
+                        >
+                            0
+                        </h3>
+
+                    </div>
+
+                    <div class="stat-icon stat-info">
+                        <i class="bi bi-door-open"></i>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     ROUTINE TABLE
+====================================================== -->
+
+<div class="card border-0 shadow-sm rounded-4 routine-table-card">
+
+    <div class="card-header bg-white border-0 p-4">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="table-title-icon">
+                    <i class="bi bi-calendar3"></i>
+                </div>
 
                 <div>
 
                     <h5 class="fw-bold mb-1">
-                        <i class="bi bi-calendar3 me-2 text-primary"></i>
                         Class Routine
                     </h5>
 
@@ -482,341 +513,404 @@ Routine Management - AI Smart Attendance System
 
                 </div>
 
-                <span
-                    class="badge bg-primary-subtle text-primary px-3 py-2"
-                    id="visibleRoutineCount"
-                >
-                    {{ routines|length }} Routines
-                </span>
-
             </div>
 
-        </div>
 
-
-        <div class="card-body p-0">
-
-            {% if routines %}
-
-                <div class="table-responsive">
-
-                    <table
-                        class="table table-hover align-middle mb-0"
-                        id="routineTable"
-                    >
-
-                        <thead class="table-light">
-
-                            <tr>
-
-                                <th class="ps-4">
-                                    #
-                                </th>
-
-                                <th>
-                                    Class
-                                </th>
-
-                                <th>
-                                    Day
-                                </th>
-
-                                <th>
-                                    Time
-                                </th>
-
-                                <th>
-                                    Subject
-                                </th>
-
-                                <th>
-                                    Teacher
-                                </th>
-
-                                <th>
-                                    Room
-                                </th>
-
-                                <th class="text-end pe-4">
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            {% for routine in routines %}
-
-                                <tr
-                                    class="routine-row"
-                                    data-semester="{{ routine[1] }}"
-                                    data-department="{{ routine[2] }}"
-                                    data-section="{{ routine[3] or '' }}"
-                                    data-day="{{ routine[4] }}"
-                                    data-subject="{{ routine[8] or '' }} {{ routine[9] or '' }}"
-                                    data-teacher="{{ routine[11] or '' }}"
-                                    data-room="{{ routine[12] or '' }}"
-                                >
-
-                                    <!-- NUMBER -->
-
-                                    <td class="ps-4 fw-semibold text-muted">
-
-                                        {{ loop.index }}
-
-                                    </td>
-
-
-                                    <!-- CLASS -->
-
-                                    <td>
-
-                                        <div class="fw-semibold">
-
-                                            Semester {{ routine[1] }}
-
-                                        </div>
-
-                                        <small class="text-muted">
-
-                                            {{ routine[2] }}
-
-                                            {% if routine[3] %}
-                                                • Section {{ routine[3] }}
-                                            {% endif %}
-
-                                        </small>
-
-                                    </td>
-
-
-                                    <!-- DAY -->
-
-                                    <td>
-
-                                        {% set day_colors = {
-                                            'Sunday': 'danger',
-                                            'Monday': 'primary',
-                                            'Tuesday': 'success',
-                                            'Wednesday': 'warning',
-                                            'Thursday': 'info',
-                                            'Friday': 'secondary',
-                                            'Saturday': 'dark'
-                                        } %}
-
-                                        <span
-                                            class="badge bg-{{ day_colors.get(routine[4], 'secondary') }}-subtle text-{{ day_colors.get(routine[4], 'secondary') }}"
-                                        >
-                                            {{ routine[4] }}
-                                        </span>
-
-                                    </td>
-
-
-                                    <!-- TIME -->
-
-                                    <td>
-
-                                        <div class="fw-semibold">
-
-                                            {{ routine[5] }}
-
-                                            <span class="text-muted">
-                                                -
-                                            </span>
-
-                                            {{ routine[6] }}
-
-                                        </div>
-
-                                    </td>
-
-
-                                    <!-- SUBJECT -->
-
-                                    <td>
-
-                                        {% if routine[8] %}
-
-                                            <div class="fw-semibold">
-                                                {{ routine[8] }}
-                                            </div>
-
-                                        {% endif %}
-
-                                        {% if routine[9] %}
-
-                                            <small class="text-muted">
-                                                {{ routine[9] }}
-                                            </small>
-
-                                        {% endif %}
-
-                                    </td>
-
-
-                                    <!-- TEACHER -->
-
-                                    <td>
-
-                                        {% if routine[11] %}
-
-                                            <div class="d-flex align-items-center gap-2">
-
-                                                <div
-                                                    class="teacher-avatar"
-                                                >
-                                                    <i class="bi bi-person-fill"></i>
-                                                </div>
-
-                                                <span>
-                                                    {{ routine[11] }}
-                                                </span>
-
-                                            </div>
-
-                                        {% else %}
-
-                                            <span class="text-muted">
-                                                No teacher assigned
-                                            </span>
-
-                                        {% endif %}
-
-                                    </td>
-
-
-                                    <!-- ROOM -->
-
-                                    <td>
-
-                                        {% if routine[12] %}
-
-                                            <span
-                                                class="badge bg-light text-dark border"
-                                            >
-                                                <i class="bi bi-door-open me-1"></i>
-                                                {{ routine[12] }}
-                                            </span>
-
-                                        {% else %}
-
-                                            <span class="text-muted">
-                                                —
-                                            </span>
-
-                                        {% endif %}
-
-                                    </td>
-
-
-                                    <!-- ACTION -->
-
-                                    <td class="text-end pe-4">
-
-                                        <div
-                                            class="d-flex justify-content-end gap-1"
-                                        >
-
-                                            <!-- EDIT -->
-
-                                            <a
-                                                href="{{ url_for(
-                                                    'routine.edit',
-                                                    routine_id=routine[0]
-                                                ) }}"
-                                                class="btn btn-sm btn-light border"
-                                                title="Edit Routine"
-                                            >
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-
-
-                                            <!-- DELETE -->
-
-                                            <button
-                                                type="button"
-                                                class="btn btn-sm btn-light border text-danger"
-                                                title="Delete Routine"
-                                                onclick="confirmDelete(
-                                                    {{ routine[0] }}
-                                                )"
-                                            >
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-
-                                        </div>
-
-
-                                        <!-- DELETE FORM -->
-
-                                        <form
-                                            method="POST"
-                                            action="{{ url_for(
-                                                'routine.delete',
-                                                routine_id=routine[0]
-                                            ) }}"
-                                            id="deleteForm{{ routine[0] }}"
-                                            style="display:none;"
-                                        >
-                                        </form>
-
-                                    </td>
-
-                                </tr>
-
-                            {% endfor %}
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            {% else %}
-
-                <!-- EMPTY STATE -->
-
-                <div class="text-center py-5">
-
-                    <div
-                        class="empty-icon mx-auto mb-3"
-                    >
-                        <i class="bi bi-calendar-x"></i>
-                    </div>
-
-                    <h5 class="fw-bold">
-                        No Routine Found
-                    </h5>
-
-                    <p class="text-muted mb-4">
-                        No class routine has been created yet.
-                    </p>
-
-                    <a
-                        href="{{ url_for('routine.add') }}"
-                        class="btn btn-primary px-4"
-                    >
-                        <i class="bi bi-plus-circle me-1"></i>
-                        Add First Routine
-                    </a>
-
-                </div>
-
-            {% endif %}
+            <span
+                class="routine-count-badge"
+                id="visibleRoutineCount"
+            >
+                {{ routines|length }}
+                Routine{% if routines|length != 1 %}s{% endif %}
+            </span>
 
         </div>
 
     </div>
 
+
+    <div class="card-body p-0">
+
+        {% if routines %}
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-hover align-middle mb-0 routine-table"
+                    id="routineTable"
+                >
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="ps-4">
+                                #
+                            </th>
+
+                            <th>
+                                Class
+                            </th>
+
+                            <th>
+                                Day
+                            </th>
+
+                            <th>
+                                Time
+                            </th>
+
+                            <th>
+                                Subject
+                            </th>
+
+                            <th>
+                                Teacher
+                            </th>
+
+                            <th>
+                                Room
+                            </th>
+
+                            <th class="text-end pe-4">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for routine in routines %}
+
+                            <tr
+                                class="routine-row"
+                                data-semester="{{ routine[1] }}"
+                                data-department="{{ routine[2] or '' }}"
+                                data-section="{{ routine[3] or '' }}"
+                                data-day="{{ routine[4] or '' }}"
+                                data-subject="{{ routine[8] or '' }} {{ routine[9] or '' }}"
+                                data-teacher="{{ routine[11] or '' }}"
+                                data-room="{{ routine[12] or '' }}"
+                            >
+
+                                <!-- NUMBER -->
+
+                                <td class="ps-4">
+
+                                    <span class="row-number">
+                                        {{ loop.index }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- CLASS -->
+
+                                <td>
+
+                                    <div class="class-info">
+
+                                        <div class="class-semester">
+                                            Semester {{ routine[1] }}
+                                        </div>
+
+                                        <div class="class-details">
+
+                                            {{ routine[2] }}
+
+                                            {% if routine[3] %}
+
+                                                <span class="separator">
+                                                    •
+                                                </span>
+
+                                                Section {{ routine[3] }}
+
+                                            {% endif %}
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- DAY -->
+
+                                <td>
+
+                                    {% set day_colors = {
+                                        'Sunday': 'danger',
+                                        'Monday': 'primary',
+                                        'Tuesday': 'success',
+                                        'Wednesday': 'warning',
+                                        'Thursday': 'info',
+                                        'Friday': 'secondary'
+                                    } %}
+
+                                    {% set day_color = day_colors.get(
+                                        routine[4],
+                                        'secondary'
+                                    ) %}
+
+                                    <span
+                                        class="day-badge day-{{ day_color }}"
+                                    >
+                                        <i class="bi bi-calendar-day me-1"></i>
+                                        {{ routine[4] }}
+                                    </span>
+
+                                </td>
+
+
+                                <!-- TIME -->
+
+                                <td>
+
+                                    <div class="time-box">
+
+                                        <i class="bi bi-clock me-1"></i>
+
+                                        <span>
+                                            {{ routine[5] }}
+                                        </span>
+
+                                        <span class="time-divider">
+                                            -
+                                        </span>
+
+                                        <span>
+                                            {{ routine[6] }}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- SUBJECT -->
+
+                                <td>
+
+                                    {% if routine[8] %}
+
+                                        <div class="subject-name">
+                                            {{ routine[8] }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    {% if routine[9] %}
+
+                                        <div class="subject-code">
+                                            {{ routine[9] }}
+                                        </div>
+
+                                    {% endif %}
+
+                                    {% if not routine[8] and not routine[9] %}
+
+                                        <span class="text-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- TEACHER -->
+
+                                <td>
+
+                                    {% if routine[11] %}
+
+                                        <div class="teacher-info">
+
+                                            <div class="teacher-avatar">
+                                                <i class="bi bi-person-fill"></i>
+                                            </div>
+
+                                            <span class="teacher-name">
+                                                {{ routine[11] }}
+                                            </span>
+
+                                        </div>
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            No teacher assigned
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- ROOM -->
+
+                                <td>
+
+                                    {% if routine[12] %}
+
+                                        <span class="room-badge">
+
+                                            <i class="bi bi-door-open me-1"></i>
+
+                                            {{ routine[12] }}
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <!-- ACTION -->
+
+                                <td class="text-end pe-4">
+
+                                    <div class="action-buttons">
+
+                                        <!-- EDIT -->
+
+                                        <a
+                                            href="{{ url_for(
+                                                'routine.edit',
+                                                routine_id=routine[0]
+                                            ) }}"
+                                            class="action-btn edit-btn"
+                                            title="Edit Routine"
+                                        >
+
+                                            <i class="bi bi-pencil"></i>
+
+                                        </a>
+
+
+                                        <!-- DELETE -->
+
+                                        <button
+                                            type="button"
+                                            class="action-btn delete-btn"
+                                            title="Delete Routine"
+                                            onclick="confirmDelete({{ routine[0] }})"
+                                        >
+
+                                            <i class="bi bi-trash"></i>
+
+                                        </button>
+
+                                    </div>
+
+
+                                    <!-- DELETE FORM -->
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'routine.delete',
+                                            routine_id=routine[0]
+                                        ) }}"
+                                        id="deleteForm{{ routine[0] }}"
+                                        style="display:none;"
+                                    >
+                                    </form>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- NO FILTER RESULT -->
+
+            <div
+                id="noFilterResults"
+                class="no-filter-results d-none"
+            >
+
+                <div class="no-result-icon">
+                    <i class="bi bi-search"></i>
+                </div>
+
+                <h5 class="fw-bold mt-3">
+                    No Routine Found
+                </h5>
+
+                <p class="text-muted mb-3">
+                    No routine matches your selected filters.
+                </p>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="clearFiltersFromEmpty"
+                >
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Clear Filters
+                </button>
+
+            </div>
+
+        {% else %}
+
+            <!-- =================================================
+                 EMPTY STATE
+            ================================================== -->
+
+            <div class="empty-state text-center py-5">
+
+                <div class="empty-icon mx-auto mb-3">
+                    <i class="bi bi-calendar-x"></i>
+                </div>
+
+                <h5 class="fw-bold">
+                    No Routine Found
+                </h5>
+
+                <p class="text-muted mb-4">
+                    No class routine has been created yet.
+                </p>
+
+                <a
+                    href="{{ url_for('routine.add') }}"
+                    class="btn btn-primary px-4"
+                >
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add First Routine
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+```
+
 </div>
 
-
 <!-- =========================================================
-     DELETE CONFIRMATION
+     DELETE CONFIRMATION MODAL
 ========================================================== -->
 
 <div
@@ -826,68 +920,86 @@ Routine Management - AI Smart Attendance System
     aria-hidden="true"
 >
 
-    <div class="modal-dialog modal-dialog-centered">
+```
+<div class="modal-dialog modal-dialog-centered">
 
-        <div class="modal-content border-0 rounded-4 shadow">
+    <div class="modal-content border-0 rounded-4 shadow">
 
-            <div class="modal-header border-0">
+        <div class="modal-header border-0 p-4">
 
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
-                    Delete Routine
-                </h5>
+            <div class="d-flex align-items-center gap-3">
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                ></button>
+                <div class="delete-modal-icon">
+                    <i class="bi bi-trash"></i>
+                </div>
 
-            </div>
+                <div>
 
-            <div class="modal-body">
+                    <h5 class="modal-title fw-bold mb-0">
+                        Delete Routine
+                    </h5>
 
-                <p class="mb-0 text-muted">
+                    <small class="text-muted">
+                        Permanent action
+                    </small>
 
-                    Are you sure you want to delete this routine?
-
-                    <br>
-
-                    <strong class="text-danger">
-                        This action cannot be undone.
-                    </strong>
-
-                </p>
+                </div>
 
             </div>
 
-            <div class="modal-footer border-0">
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+            ></button>
 
-                <button
-                    type="button"
-                    class="btn btn-light border"
-                    data-bs-dismiss="modal"
-                >
-                    Cancel
-                </button>
+        </div>
 
-                <button
-                    type="button"
-                    class="btn btn-danger"
-                    id="confirmDeleteButton"
-                >
-                    <i class="bi bi-trash me-1"></i>
-                    Delete
-                </button>
 
-            </div>
+        <div class="modal-body px-4 pb-3">
+
+            <p class="mb-0 text-muted">
+
+                Are you sure you want to delete this routine?
+
+                <br>
+
+                <strong class="text-danger">
+                    This action cannot be undone.
+                </strong>
+
+            </p>
+
+        </div>
+
+
+        <div class="modal-footer border-0 px-4 pb-4">
+
+            <button
+                type="button"
+                class="btn btn-light border px-4"
+                data-bs-dismiss="modal"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-danger px-4"
+                id="confirmDeleteButton"
+            >
+                <i class="bi bi-trash me-1"></i>
+                Delete
+            </button>
 
         </div>
 
     </div>
 
 </div>
+```
 
+</div>
 
 <!-- =========================================================
      JAVASCRIPT
@@ -895,269 +1007,418 @@ Routine Management - AI Smart Attendance System
 
 <script>
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-        const semesterFilter =
-            document.getElementById("filterSemester");
+    const semesterFilter =
+        document.getElementById("filterSemester");
 
-        const departmentFilter =
-            document.getElementById("filterDepartment");
+    const departmentFilter =
+        document.getElementById("filterDepartment");
 
-        const dayFilter =
-            document.getElementById("filterDay");
+    const dayFilter =
+        document.getElementById("filterDay");
 
-        const searchInput =
-            document.getElementById("routineSearch");
+    const searchInput =
+        document.getElementById("routineSearch");
 
-        const resetButton =
-            document.getElementById("resetFilters");
+    const resetButton =
+        document.getElementById("resetFilters");
 
-        const rows =
-            Array.from(
-                document.querySelectorAll(".routine-row")
-            );
+    const clearSearchButton =
+        document.getElementById("clearSearch");
+
+    const clearFiltersFromEmpty =
+        document.getElementById("clearFiltersFromEmpty");
+
+    const rows =
+        Array.from(
+            document.querySelectorAll(".routine-row")
+        );
+
+    const visibleRoutineCount =
+        document.getElementById("visibleRoutineCount");
+
+    const filterResultCount =
+        document.getElementById("filterResultCount");
+
+    const noFilterResults =
+        document.getElementById("noFilterResults");
+
+    const routineTable =
+        document.getElementById("routineTable");
 
 
-        /* =====================================================
-           FILTER ROUTINES
-        ====================================================== */
+    /* =====================================================
+       FILTER ROUTINES
+    ====================================================== */
 
-        function filterRoutines() {
+    function filterRoutines() {
 
-            const semester =
-                semesterFilter.value
+        const semester =
+            semesterFilter.value
+                .trim()
+                .toLowerCase();
+
+        const department =
+            departmentFilter.value
+                .trim()
+                .toLowerCase();
+
+        const day =
+            dayFilter.value
+                .trim()
+                .toLowerCase();
+
+        const search =
+            searchInput.value
+                .trim()
+                .toLowerCase();
+
+
+        let visibleCount = 0;
+
+
+        rows.forEach(function (row) {
+
+            const rowSemester =
+                (row.dataset.semester || "")
                     .trim()
                     .toLowerCase();
 
-            const department =
-                departmentFilter.value
+            const rowDepartment =
+                (row.dataset.department || "")
                     .trim()
                     .toLowerCase();
 
-            const day =
-                dayFilter.value
+            const rowSection =
+                (row.dataset.section || "")
                     .trim()
                     .toLowerCase();
 
-            const search =
-                searchInput.value
+            const rowDay =
+                (row.dataset.day || "")
+                    .trim()
+                    .toLowerCase();
+
+            const rowSubject =
+                (row.dataset.subject || "")
+                    .trim()
+                    .toLowerCase();
+
+            const rowTeacher =
+                (row.dataset.teacher || "")
+                    .trim()
+                    .toLowerCase();
+
+            const rowRoom =
+                (row.dataset.room || "")
                     .trim()
                     .toLowerCase();
 
 
-            let visibleCount = 0;
+            /* =============================================
+               SEMESTER MATCH
+            ============================================== */
+
+            const matchesSemester =
+                !semester ||
+                rowSemester === semester;
 
 
-            rows.forEach(function (row) {
+            /* =============================================
+               DEPARTMENT MATCH
+            ============================================== */
 
-                const rowSemester =
-                    (row.dataset.semester || "")
-                        .toLowerCase();
-
-                const rowDepartment =
-                    (row.dataset.department || "")
-                        .toLowerCase();
-
-                const rowDay =
-                    (row.dataset.day || "")
-                        .toLowerCase();
-
-                const rowSubject =
-                    (row.dataset.subject || "")
-                        .toLowerCase();
-
-                const rowTeacher =
-                    (row.dataset.teacher || "")
-                        .toLowerCase();
-
-                const rowRoom =
-                    (row.dataset.room || "")
-                        .toLowerCase();
-
-                const rowSection =
-                    (row.dataset.section || "")
-                        .toLowerCase();
+            const matchesDepartment =
+                !department ||
+                rowDepartment === department;
 
 
-                const matchesSemester =
-                    !semester ||
-                    rowSemester === semester;
+            /* =============================================
+               DAY MATCH
+            ============================================== */
+
+            const matchesDay =
+                !day ||
+                rowDay === day;
 
 
-                const matchesDepartment =
-                    !department ||
-                    rowDepartment === department;
+            /* =============================================
+               SEARCH
+            ============================================== */
+
+            const searchableText = [
+
+                rowSemester,
+
+                "semester " + rowSemester,
+
+                rowDepartment,
+
+                rowSection,
+
+                rowDay,
+
+                rowSubject,
+
+                rowTeacher,
+
+                rowRoom
+
+            ].join(" ");
 
 
-                const matchesDay =
-                    !day ||
-                    rowDay === day;
+            const matchesSearch =
+                !search ||
+                searchableText.includes(search);
 
 
-                const searchableText =
-                    [
-                        rowSubject,
-                        rowTeacher,
-                        rowRoom,
-                        rowSection,
-                        rowDepartment,
-                        rowSemester,
-                        rowDay
-                    ].join(" ");
+            /* =============================================
+               FINAL MATCH
+            ============================================== */
+
+            const visible =
+                matchesSemester &&
+                matchesDepartment &&
+                matchesDay &&
+                matchesSearch;
 
 
-                const matchesSearch =
-                    !search ||
-                    searchableText.includes(search);
+            row.style.display =
+                visible ? "" : "none";
 
 
-                const visible =
-                    matchesSemester &&
-                    matchesDepartment &&
-                    matchesDay &&
-                    matchesSearch;
+            if (visible) {
+                visibleCount++;
+            }
+
+        });
 
 
-                row.style.display =
-                    visible ? "" : "none";
+        /* =================================================
+           UPDATE COUNTS
+        ================================================== */
+
+        if (visibleRoutineCount) {
+
+            visibleRoutineCount.textContent =
+                visibleCount +
+                " Routine" +
+                (visibleCount === 1 ? "" : "s");
+
+        }
 
 
-                if (visible) {
-                    visibleCount++;
+        if (filterResultCount) {
+
+            filterResultCount.textContent =
+                visibleCount;
+
+        }
+
+
+        /* =================================================
+           SHOW / HIDE EMPTY FILTER RESULT
+        ================================================== */
+
+        if (noFilterResults) {
+
+            if (visibleCount === 0) {
+
+                noFilterResults.classList.remove("d-none");
+
+                if (routineTable) {
+                    routineTable.classList.add("d-none");
                 }
 
-            });
+            } else {
 
+                noFilterResults.classList.add("d-none");
 
-            const countElement =
-                document.getElementById(
-                    "visibleRoutineCount"
-                );
-
-
-            if (countElement) {
-
-                countElement.textContent =
-                    visibleCount + " Routine" +
-                    (visibleCount === 1 ? "" : "s");
+                if (routineTable) {
+                    routineTable.classList.remove("d-none");
+                }
 
             }
 
         }
 
+    }
 
-        /* =====================================================
-           RESET
-        ====================================================== */
 
-        resetButton.addEventListener(
+    /* =====================================================
+       RESET FILTERS
+    ====================================================== */
+
+    function resetFilters() {
+
+        semesterFilter.value = "";
+
+        departmentFilter.value = "";
+
+        dayFilter.value = "";
+
+        searchInput.value = "";
+
+        filterRoutines();
+
+    }
+
+
+    /* =====================================================
+       EVENTS
+    ====================================================== */
+
+    semesterFilter.addEventListener(
+        "change",
+        filterRoutines
+    );
+
+
+    departmentFilter.addEventListener(
+        "change",
+        filterRoutines
+    );
+
+
+    dayFilter.addEventListener(
+        "change",
+        filterRoutines
+    );
+
+
+    searchInput.addEventListener(
+        "input",
+        filterRoutines
+    );
+
+
+    resetButton.addEventListener(
+        "click",
+        resetFilters
+    );
+
+
+    /* =====================================================
+       CLEAR SEARCH
+    ====================================================== */
+
+    if (clearSearchButton) {
+
+        clearSearchButton.addEventListener(
             "click",
             function () {
 
-                semesterFilter.value = "";
-                departmentFilter.value = "";
-                dayFilter.value = "";
                 searchInput.value = "";
+
+                searchInput.focus();
 
                 filterRoutines();
 
             }
         );
 
+    }
 
-        /* =====================================================
-           EVENTS
-        ====================================================== */
 
-        semesterFilter.addEventListener(
-            "change",
-            filterRoutines
+    /* =====================================================
+       CLEAR FILTERS FROM EMPTY STATE
+    ====================================================== */
+
+    if (clearFiltersFromEmpty) {
+
+        clearFiltersFromEmpty.addEventListener(
+            "click",
+            resetFilters
         );
-
-        departmentFilter.addEventListener(
-            "change",
-            filterRoutines
-        );
-
-        dayFilter.addEventListener(
-            "change",
-            filterRoutines
-        );
-
-        searchInput.addEventListener(
-            "input",
-            filterRoutines
-        );
-
-
-        /* =====================================================
-           STATISTICS
-        ====================================================== */
-
-        const subjects = new Set();
-        const teachers = new Set();
-        const rooms = new Set();
-
-
-        rows.forEach(function (row) {
-
-            const subject =
-                row.dataset.subject
-                    ?.trim();
-
-            const teacher =
-                row.dataset.teacher
-                    ?.trim();
-
-            const room =
-                row.dataset.room
-                    ?.trim();
-
-
-            if (subject) {
-                subjects.add(subject);
-            }
-
-            if (
-                teacher &&
-                teacher.toLowerCase()
-                    !== "no teacher assigned"
-            ) {
-                teachers.add(teacher);
-            }
-
-            if (room) {
-                rooms.add(room);
-            }
-
-        });
-
-
-        document.getElementById(
-            "subjectCount"
-        ).textContent = subjects.size;
-
-
-        document.getElementById(
-            "teacherCount"
-        ).textContent = teachers.size;
-
-
-        document.getElementById(
-            "roomCount"
-        ).textContent = rooms.size;
-
-
-        /* =====================================================
-           INITIAL FILTER
-        ====================================================== */
-
-        filterRoutines();
 
     }
-);
+
+
+    /* =====================================================
+       STATISTICS
+    ====================================================== */
+
+    const subjects = new Set();
+
+    const teachers = new Set();
+
+    const rooms = new Set();
+
+
+    rows.forEach(function (row) {
+
+        const subject =
+            (row.dataset.subject || "")
+                .trim();
+
+        const teacher =
+            (row.dataset.teacher || "")
+                .trim();
+
+        const room =
+            (row.dataset.room || "")
+                .trim();
+
+
+        if (subject) {
+            subjects.add(subject);
+        }
+
+
+        if (
+            teacher &&
+            teacher.toLowerCase() !==
+            "no teacher assigned"
+        ) {
+
+            teachers.add(teacher);
+
+        }
+
+
+        if (room) {
+            rooms.add(room);
+        }
+
+    });
+
+
+    const subjectCount =
+        document.getElementById("subjectCount");
+
+    const teacherCount =
+        document.getElementById("teacherCount");
+
+    const roomCount =
+        document.getElementById("roomCount");
+
+
+    if (subjectCount) {
+        subjectCount.textContent =
+            subjects.size;
+    }
+
+
+    if (teacherCount) {
+        teacherCount.textContent =
+            teachers.size;
+    }
+
+
+    if (roomCount) {
+        roomCount.textContent =
+            rooms.size;
+    }
+
+
+    /* =====================================================
+       INITIAL FILTER
+    ====================================================== */
+
+    filterRoutines();
+
+});
 
 
 /* =========================================================
@@ -1178,8 +1439,13 @@ function confirmDelete(routineId) {
         );
 
 
+    if (!modalElement) {
+        return;
+    }
+
+
     const modal =
-        new bootstrap.Modal(
+        bootstrap.Modal.getOrCreateInstance(
             modalElement
         );
 
@@ -1187,9 +1453,13 @@ function confirmDelete(routineId) {
     modal.show();
 
 
-    document.getElementById(
-        "confirmDeleteButton"
-    ).onclick = function () {
+    const confirmButton =
+        document.getElementById(
+            "confirmDeleteButton"
+        );
+
+
+    confirmButton.onclick = function () {
 
         const form =
             document.getElementById(
@@ -1198,6 +1468,8 @@ function confirmDelete(routineId) {
 
 
         if (form) {
+
+            confirmButton.disabled = true;
 
             form.submit();
 
@@ -1209,21 +1481,154 @@ function confirmDelete(routineId) {
 
 </script>
 
-
 <!-- =========================================================
-     STYLE
+     CSS
 ========================================================== -->
 
 <style>
 
-.form-select,
-.form-control {
+/* =========================================================
+   PAGE
+========================================================== */
+
+.routine-page {
+    max-width: 100%;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================== */
+
+.routine-header {
+    padding: 4px 0;
+}
+
+
+.routine-header-icon {
+
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+
+    font-size: 23px;
+
+    flex-shrink: 0;
+
+}
+
+
+.add-routine-btn {
 
     min-height: 44px;
 
-    border-radius: 10px;
+    border-radius: 11px;
+
+    font-weight: 600;
+
+    box-shadow:
+        0 4px 12px rgba(13, 110, 253, .18);
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+.add-routine-btn:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 18px rgba(13, 110, 253, .23);
+
+}
+
+
+/* =========================================================
+   CARDS
+========================================================== */
+
+.card {
+
+    overflow: hidden;
+
+}
+
+
+.filter-card,
+.stat-card,
+.routine-table-card {
+
+    border: 1px solid rgba(0, 0, 0, .035) !important;
+
+}
+
+
+/* =========================================================
+   FILTER
+========================================================== */
+
+.filter-heading {
+    padding-bottom: 2px;
+}
+
+
+.filter-icon {
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+
+    font-size: 17px;
+
+}
+
+
+.form-label {
+
+    font-size: 13px;
+
+    margin-bottom: 7px;
+
+    color: #343a40;
+
+}
+
+
+.form-select,
+.form-control {
+
+    min-height: 45px;
+
+    border-radius: 11px;
 
     border-color: #dee2e6;
+
+    font-size: 14px;
+
+    transition:
+        border-color .15s ease,
+        box-shadow .15s ease;
 
 }
 
@@ -1235,48 +1640,304 @@ function confirmDelete(routineId) {
 
     box-shadow:
         0 0 0 .20rem
-        rgba(13,110,253,.10);
+        rgba(13, 110, 253, .10);
 
 }
 
 
-.btn {
+/* =========================================================
+   SEARCH
+========================================================== */
 
-    border-radius: 10px;
+.search-box {
 
-}
-
-
-.card {
-
-    overflow: hidden;
+    position: relative;
 
 }
 
 
-.table {
+.search-icon {
+
+    position: absolute;
+
+    left: 14px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #8a94a6;
+
+    z-index: 2;
+
+    pointer-events: none;
+
+}
+
+
+.search-input {
+
+    padding-left: 39px;
+
+    padding-right: 40px;
+
+}
+
+
+.clear-search {
+
+    position: absolute;
+
+    right: 10px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    border: 0;
+
+    background: transparent;
+
+    color: #adb5bd;
+
+    padding: 4px;
+
+    cursor: pointer;
+
+    z-index: 3;
+
+    transition:
+        color .15s ease;
+
+}
+
+
+.clear-search:hover {
+
+    color: #dc3545;
+
+}
+
+
+/* =========================================================
+   FILTER FOOTER
+========================================================== */
+
+.filter-footer {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+    flex-wrap: wrap;
+
+}
+
+
+.filter-result-text {
+
+    color: #6c757d;
+
+    font-size: 13px;
+
+}
+
+
+.filter-result-text strong {
+
+    color: #212529;
+
+}
+
+
+.reset-btn {
+
+    min-height: 36px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================== */
+
+.stat-card {
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease;
+
+}
+
+
+.stat-card:hover {
+
+    transform: translateY(-2px);
+
+}
+
+
+.stat-card .card-body {
+
+    padding: 21px;
+
+}
+
+
+.stat-icon {
+
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 13px;
+
+    font-size: 20px;
+
+}
+
+
+.stat-primary {
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+
+}
+
+
+.stat-success {
+
+    background: rgba(25, 135, 84, .10);
+
+    color: #198754;
+
+}
+
+
+.stat-warning {
+
+    background: rgba(255, 193, 7, .15);
+
+    color: #b58100;
+
+}
+
+
+.stat-info {
+
+    background: rgba(13, 202, 240, .12);
+
+    color: #089bb8;
+
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================== */
+
+.table-title-icon {
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+
+    font-size: 18px;
+
+}
+
+
+.routine-count-badge {
+
+    background: rgba(13, 110, 253, .09);
+
+    color: #0d6efd;
+
+    padding: 8px 14px;
+
+    border-radius: 9px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   TABLE
+========================================================== */
+
+.routine-table {
 
     font-size: 14px;
 
 }
 
 
-.table thead th {
+.routine-table thead th {
 
-    font-size: 12px;
+    background: #f8f9fa;
 
-    text-transform: uppercase;
-
-    letter-spacing: .3px;
+    border-bottom: 1px solid #e9ecef;
 
     color: #6c757d;
 
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: .45px;
+
+    text-transform: uppercase;
+
     white-space: nowrap;
+
+    padding-top: 14px;
+
+    padding-bottom: 14px;
 
 }
 
 
-.table tbody tr {
+.routine-table tbody td {
+
+    padding-top: 15px;
+
+    padding-bottom: 15px;
+
+    border-color: #f0f1f3;
+
+}
+
+
+.routine-table tbody tr {
 
     transition:
         background-color .15s ease;
@@ -1284,10 +1945,229 @@ function confirmDelete(routineId) {
 }
 
 
-.table tbody tr:hover {
+.routine-table tbody tr:hover {
 
     background-color:
-        rgba(13,110,253,.025);
+        rgba(13, 110, 253, .025);
+
+}
+
+
+/* =========================================================
+   ROW NUMBER
+========================================================== */
+
+.row-number {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 28px;
+
+    height: 28px;
+
+    border-radius: 8px;
+
+    background: #f5f6f8;
+
+    color: #6c757d;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+}
+
+
+/* =========================================================
+   CLASS
+========================================================== */
+
+.class-semester {
+
+    font-weight: 650;
+
+    color: #212529;
+
+}
+
+
+.class-details {
+
+    margin-top: 3px;
+
+    color: #6c757d;
+
+    font-size: 12px;
+
+}
+
+
+.separator {
+
+    margin: 0 3px;
+
+    color: #adb5bd;
+
+}
+
+
+/* =========================================================
+   DAY BADGES
+========================================================== */
+
+.day-badge {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+.day-primary {
+
+    background: rgba(13, 110, 253, .10);
+
+    color: #0d6efd;
+
+}
+
+
+.day-success {
+
+    background: rgba(25, 135, 84, .10);
+
+    color: #198754;
+
+}
+
+
+.day-danger {
+
+    background: rgba(220, 53, 69, .10);
+
+    color: #dc3545;
+
+}
+
+
+.day-warning {
+
+    background: rgba(255, 193, 7, .15);
+
+    color: #997404;
+
+}
+
+
+.day-info {
+
+    background: rgba(13, 202, 240, .12);
+
+    color: #087990;
+
+}
+
+
+.day-secondary {
+
+    background: rgba(108, 117, 125, .10);
+
+    color: #6c757d;
+
+}
+
+
+/* =========================================================
+   TIME
+========================================================== */
+
+.time-box {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 2px;
+
+    white-space: nowrap;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    color: #495057;
+
+}
+
+
+.time-box > i {
+
+    color: #0d6efd;
+
+}
+
+
+.time-divider {
+
+    color: #adb5bd;
+
+    margin: 0 2px;
+
+}
+
+
+/* =========================================================
+   SUBJECT
+========================================================== */
+
+.subject-name {
+
+    font-weight: 650;
+
+    color: #212529;
+
+    line-height: 1.4;
+
+}
+
+
+.subject-code {
+
+    color: #6c757d;
+
+    font-size: 11px;
+
+    margin-top: 3px;
+
+}
+
+
+/* =========================================================
+   TEACHER
+========================================================== */
+
+.teacher-info {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
 
 }
 
@@ -1295,7 +2175,6 @@ function confirmDelete(routineId) {
 .teacher-avatar {
 
     width: 34px;
-
     height: 34px;
 
     border-radius: 50%;
@@ -1307,50 +2186,164 @@ function confirmDelete(routineId) {
     justify-content: center;
 
     background:
-        rgba(13,110,253,.10);
+        rgba(13, 110, 253, .10);
 
     color: #0d6efd;
 
     flex-shrink: 0;
 
+    font-size: 14px;
+
 }
 
 
-.stat-icon {
+.teacher-name {
 
-    width: 44px;
+    font-size: 13px;
 
-    height: 44px;
+    font-weight: 500;
 
-    border-radius: 12px;
+    color: #343a40;
 
-    display: flex;
+}
+
+
+/* =========================================================
+   ROOM
+========================================================== */
+
+.room-badge {
+
+    display: inline-flex;
 
     align-items: center;
 
+    background: #f8f9fa;
+
+    color: #495057;
+
+    border: 1px solid #e4e6e8;
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    white-space: nowrap;
+
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================== */
+
+.action-buttons {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 6px;
+
+}
+
+
+.action-btn {
+
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+
+    align-items: center;
     justify-content: center;
 
-    font-size: 20px;
+    border-radius: 9px;
+
+    border: 1px solid #e3e5e8;
+
+    background: #fff;
+
+    text-decoration: none;
+
+    transition:
+        background-color .15s ease,
+        border-color .15s ease,
+        color .15s ease,
+        transform .15s ease;
 
 }
 
 
-.empty-icon {
+.action-btn:hover {
 
-    width: 70px;
+    transform: translateY(-1px);
 
-    height: 70px;
+}
 
-    border-radius: 18px;
+
+.edit-btn {
+
+    color: #0d6efd;
+
+}
+
+
+.edit-btn:hover {
+
+    background: rgba(13, 110, 253, .08);
+
+    border-color: rgba(13, 110, 253, .25);
+
+}
+
+
+.delete-btn {
+
+    color: #dc3545;
+
+}
+
+
+.delete-btn:hover {
+
+    background: rgba(220, 53, 69, .08);
+
+    border-color: rgba(220, 53, 69, .25);
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================== */
+
+.empty-state {
+
+    padding: 70px 20px;
+
+}
+
+
+.empty-icon,
+.no-result-icon {
+
+    width: 72px;
+    height: 72px;
+
+    border-radius: 20px;
 
     display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     background:
-        rgba(13,110,253,.08);
+        rgba(13, 110, 253, .08);
 
     color: #0d6efd;
 
@@ -1359,58 +2352,74 @@ function confirmDelete(routineId) {
 }
 
 
-.bg-primary-subtle {
+.no-filter-results {
 
-    background-color:
-        rgba(13,110,253,.10) !important;
+    padding: 65px 20px;
 
-}
-
-
-.bg-success-subtle {
-
-    background-color:
-        rgba(25,135,84,.10) !important;
+    text-align: center;
 
 }
 
 
-.bg-warning-subtle {
+.no-result-icon {
 
-    background-color:
-        rgba(255,193,7,.15) !important;
+    margin: auto;
 
-}
+    width: 64px;
+    height: 64px;
 
-
-.bg-info-subtle {
-
-    background-color:
-        rgba(13,202,240,.12) !important;
+    font-size: 25px;
 
 }
 
 
-.bg-danger-subtle {
+/* =========================================================
+   DELETE MODAL
+========================================================== */
 
-    background-color:
-        rgba(220,53,69,.10) !important;
+.delete-modal-icon {
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background: rgba(220, 53, 69, .10);
+
+    color: #dc3545;
 
 }
 
 
-.bg-secondary-subtle {
+/* =========================================================
+   GENERAL BUTTON
+========================================================== */
 
-    background-color:
-        rgba(108,117,125,.10) !important;
+.btn {
+
+    border-radius: 10px;
+
+    font-weight: 500;
 
 }
 
 
-.bg-dark-subtle {
+/* =========================================================
+   RESPONSIVE
+========================================================== */
 
-    background-color:
-        rgba(33,37,41,.10) !important;
+@media (max-width: 992px) {
+
+    .routine-table {
+
+        min-width: 1050px;
+
+    }
 
 }
 
@@ -1426,16 +2435,132 @@ function confirmDelete(routineId) {
     }
 
 
-    .card-body {
+    .routine-header {
+
+        align-items: flex-start !important;
+
+    }
+
+
+    .routine-header-icon {
+
+        width: 46px;
+        height: 46px;
+
+        font-size: 20px;
+
+    }
+
+
+    .routine-header h3 {
+
+        font-size: 21px;
+
+    }
+
+
+    .routine-header p {
+
+        font-size: 12px;
+
+    }
+
+
+    .add-routine-btn {
+
+        width: 100%;
+
+    }
+
+
+    .filter-card .card-body {
 
         padding: 18px !important;
 
     }
 
 
-    .table {
+    .stat-card .card-body {
 
-        min-width: 1000px;
+        padding: 18px;
+
+    }
+
+
+    .filter-footer {
+
+        align-items: stretch;
+
+    }
+
+
+    .filter-result-text {
+
+        width: 100%;
+
+    }
+
+
+    .reset-btn {
+
+        width: 100%;
+
+    }
+
+
+    .routine-table {
+
+        min-width: 1050px;
+
+    }
+
+
+    .routine-table-card .card-header {
+
+        padding: 18px !important;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================== */
+
+@media (max-width: 480px) {
+
+    .routine-header {
+
+        gap: 12px !important;
+
+    }
+
+
+    .routine-header > div:first-child {
+
+        width: 100%;
+
+    }
+
+
+    .routine-header h3 {
+
+        font-size: 19px;
+
+    }
+
+
+    .filter-heading h5 {
+
+        font-size: 16px;
+
+    }
+
+
+    .stat-card h3 {
+
+        font-size: 22px;
 
     }
 

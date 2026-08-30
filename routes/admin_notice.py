@@ -1,7 +1,6 @@
 # ============================================================
 # ADMIN NOTICE MANAGEMENT
-# File:
-# routes/admin_notice.py
+# File: routes/admin_notice.py
 # ============================================================
 
 import os
@@ -21,10 +20,6 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 
-# ============================================================
-# BLUEPRINT
-# ============================================================
-
 admin_notice = Blueprint(
     "admin_notice",
     __name__,
@@ -32,24 +27,12 @@ admin_notice = Blueprint(
 )
 
 
-# ============================================================
-# ALLOWED FILE TYPES
-# ============================================================
-
-ALLOWED_IMAGES = {
-    "jpg",
-    "jpeg",
-    "png",
-    "webp"
-}
-
-ALLOWED_PDF = {
-    "pdf"
-}
+ALLOWED_IMAGES = {"jpg", "jpeg", "png", "webp"}
+ALLOWED_PDF = {"pdf"}
 
 
 # ============================================================
-# MYSQL CONNECTION
+# MYSQL
 # ============================================================
 
 def get_mysql():
@@ -67,13 +50,11 @@ def get_mysql():
     except Exception as e:
         print("ADMIN NOTICE MYSQL ERROR:", repr(e))
 
-    raise RuntimeError(
-        "MySQL connection is not initialized."
-    )
+    raise RuntimeError("MySQL connection is not initialized.")
 
 
 # ============================================================
-# ADMIN AUTH CHECK
+# ADMIN AUTH
 # ============================================================
 
 def admin_required():
@@ -85,28 +66,18 @@ def admin_required():
 
 
 # ============================================================
-# FILE EXTENSION CHECK
+# FILE HELPERS
 # ============================================================
 
 def allowed_file(filename, allowed_extensions):
-
-    if not filename:
-        return False
-
-    if "." not in filename:
+    if not filename or "." not in filename:
         return False
 
     extension = filename.rsplit(".", 1)[1].lower()
-
     return extension in allowed_extensions
 
 
-# ============================================================
-# UNIQUE FILE NAME
-# ============================================================
-
 def make_filename(filename):
-
     filename = secure_filename(filename)
 
     extension = ""
@@ -117,18 +88,8 @@ def make_filename(filename):
     return f"{uuid4().hex}{extension}"
 
 
-# ============================================================
-# GENERATE NOTICE ID
-#
-# IMPORTANT:
-# notices.id is NOT AUTO_INCREMENT in your TiDB schema.
-# Therefore we generate the ID manually.
-# ============================================================
-
 def generate_notice_id(cursor):
-
     while True:
-
         new_id = uuid4().int % 2147483647
 
         if new_id <= 0:
@@ -144,14 +105,12 @@ def generate_notice_id(cursor):
             (new_id,)
         )
 
-        existing = cursor.fetchone()
-
-        if not existing:
+        if not cursor.fetchone():
             return new_id
 
 
 # ============================================================
-# NOTICE UPLOAD DIRECTORIES
+# UPLOAD FOLDERS
 # ============================================================
 
 def get_notice_upload_paths():
@@ -168,41 +127,21 @@ def get_notice_upload_paths():
         "pdf"
     )
 
-    os.makedirs(
-        base_folder,
-        exist_ok=True
-    )
-
-    os.makedirs(
-        pdf_folder,
-        exist_ok=True
-    )
+    os.makedirs(base_folder, exist_ok=True)
+    os.makedirs(pdf_folder, exist_ok=True)
 
     return base_folder, pdf_folder
 
 
-# ============================================================
-# DELETE NOTICE FILE
-# ============================================================
-
-def delete_notice_file(
-    filename,
-    file_type="image"
-):
+def delete_notice_file(filename, file_type="image"):
 
     if not filename:
         return
 
     try:
+        base_folder, pdf_folder = get_notice_upload_paths()
 
-        base_folder, pdf_folder = (
-            get_notice_upload_paths()
-        )
-
-        if file_type == "pdf":
-            folder = pdf_folder
-        else:
-            folder = base_folder
+        folder = pdf_folder if file_type == "pdf" else base_folder
 
         file_path = os.path.join(
             folder,
@@ -213,11 +152,7 @@ def delete_notice_file(
             os.remove(file_path)
 
     except Exception as e:
-
-        print(
-            "NOTICE FILE DELETE ERROR:",
-            repr(e)
-        )
+        print("NOTICE FILE DELETE ERROR:", repr(e))
 
 
 # ============================================================
@@ -228,22 +163,18 @@ def delete_notice_file(
 def index():
 
     if not admin_required():
-
         flash(
             "Please login as administrator.",
             "warning"
         )
-
         return redirect("/admin/login")
 
     mysql = get_mysql()
-
     cursor = mysql.connection.cursor()
 
     notices = []
 
     try:
-
         cursor.execute(
             """
             SELECT
@@ -257,7 +188,8 @@ def index():
                 notice_type,
                 is_published,
                 created_at,
-                updated_at
+                updated_at,
+                audience
             FROM notices
             ORDER BY created_at DESC
             """
@@ -267,10 +199,7 @@ def index():
 
     except Exception as e:
 
-        print(
-            "NOTICE INDEX ERROR:",
-            repr(e)
-        )
+        print("NOTICE INDEX ERROR:", repr(e))
 
         flash(
             f"Unable to load notices: {str(e)}",
@@ -278,7 +207,6 @@ def index():
         )
 
     finally:
-
         cursor.close()
 
     return render_template(
@@ -305,10 +233,6 @@ def add():
         )
 
         return redirect("/admin/login")
-
-    # --------------------------------------------------------
-    # GET
-    # --------------------------------------------------------
 
     if request.method == "GET":
 
@@ -345,22 +269,34 @@ def add():
         "General"
     ).strip()
 
+    # IMPORTANT
+    # Everyone / Students / Teachers
+
+    audience = request.form.get(
+        "audience",
+        "Everyone"
+    ).strip()
+
+    allowed_audiences = {
+        "Everyone",
+        "Students",
+        "Teachers"
+    }
+
+    if audience not in allowed_audiences:
+        audience = "Everyone"
+
     is_published = (
         1
         if request.form.get("is_published")
         else 0
     )
 
-    image_file = request.files.get(
-        "image"
-    )
-
-    pdf_file = request.files.get(
-        "pdf_file"
-    )
+    image_file = request.files.get("image")
+    pdf_file = request.files.get("pdf_file")
 
     # --------------------------------------------------------
-    # TITLE VALIDATION
+    # VALIDATE TITLE
     # --------------------------------------------------------
 
     if not title:
@@ -374,19 +310,13 @@ def add():
             "admin/notices/add.html"
         )
 
-    # --------------------------------------------------------
-    # FILE VARIABLES
-    # --------------------------------------------------------
-
     image_name = None
     pdf_name = None
 
-    image_folder, pdf_folder = (
-        get_notice_upload_paths()
-    )
+    image_folder, pdf_folder = get_notice_upload_paths()
 
     # ========================================================
-    # IMAGE UPLOAD
+    # IMAGE
     # ========================================================
 
     if image_file and image_file.filename:
@@ -435,7 +365,7 @@ def add():
             )
 
     # ========================================================
-    # PDF UPLOAD
+    # PDF
     # ========================================================
 
     if pdf_file and pdf_file.filename:
@@ -446,7 +376,6 @@ def add():
         ):
 
             if image_name:
-
                 delete_notice_file(
                     image_name,
                     "image"
@@ -477,7 +406,6 @@ def add():
         except Exception as e:
 
             if image_name:
-
                 delete_notice_file(
                     image_name,
                     "image"
@@ -502,31 +430,16 @@ def add():
     # ========================================================
 
     mysql = get_mysql()
-
     cursor = mysql.connection.cursor()
 
     try:
 
-        # ----------------------------------------------------
-        # GENERATE ID MANUALLY
-        # ----------------------------------------------------
-
-        notice_id = generate_notice_id(
-            cursor
-        )
-
-        # ----------------------------------------------------
-        # ADMIN ID
-        # ----------------------------------------------------
+        notice_id = generate_notice_id(cursor)
 
         admin_id = (
             session.get("admin_id")
             or session.get("user_id")
         )
-
-        # ----------------------------------------------------
-        # INSERT
-        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -541,10 +454,12 @@ def add():
                 target_department,
                 notice_type,
                 is_published,
-                created_by
+                created_by,
+                audience
             )
             VALUES
             (
+                %s,
                 %s,
                 %s,
                 %s,
@@ -567,7 +482,8 @@ def add():
                 target_department or None,
                 notice_type or "General",
                 is_published,
-                admin_id
+                admin_id,
+                audience
             )
         )
 
@@ -579,9 +495,7 @@ def add():
         )
 
         return redirect(
-            url_for(
-                "admin_notice.index"
-            )
+            url_for("admin_notice.index")
         )
 
     except Exception as e:
@@ -591,19 +505,13 @@ def add():
         except Exception:
             pass
 
-        # ----------------------------------------------------
-        # DELETE UPLOADED FILES IF DB INSERT FAILED
-        # ----------------------------------------------------
-
         if image_name:
-
             delete_notice_file(
                 image_name,
                 "image"
             )
 
         if pdf_name:
-
             delete_notice_file(
                 pdf_name,
                 "pdf"
@@ -619,15 +527,12 @@ def add():
             "danger"
         )
 
-    finally:
-
-        cursor.close()
-
-    return redirect(
-        url_for(
-            "admin_notice.index"
+        return render_template(
+            "admin/notices/add.html"
         )
-    )
+
+    finally:
+        cursor.close()
 
 
 # ============================================================
@@ -650,14 +555,13 @@ def edit(notice_id):
         return redirect("/admin/login")
 
     mysql = get_mysql()
-
     cursor = mysql.connection.cursor()
 
     try:
 
-        # ====================================================
-        # GET EXISTING NOTICE
-        # ====================================================
+        # IMPORTANT:
+        # audience is included at the END.
+        # This keeps the old tuple positions unchanged.
 
         cursor.execute(
             """
@@ -670,7 +574,8 @@ def edit(notice_id):
                 target_semester,
                 target_department,
                 notice_type,
-                is_published
+                is_published,
+                audience
             FROM notices
             WHERE id = %s
             LIMIT 1
@@ -688,14 +593,12 @@ def edit(notice_id):
             )
 
             return redirect(
-                url_for(
-                    "admin_notice.index"
-                )
+                url_for("admin_notice.index")
             )
 
-        # ====================================================
+        # ----------------------------------------------------
         # GET
-        # ====================================================
+        # ----------------------------------------------------
 
         if request.method == "GET":
 
@@ -704,9 +607,9 @@ def edit(notice_id):
                 notice=notice
             )
 
-        # ====================================================
-        # POST DATA
-        # ====================================================
+        # ----------------------------------------------------
+        # POST
+        # ----------------------------------------------------
 
         title = request.form.get(
             "title",
@@ -733,6 +636,18 @@ def edit(notice_id):
             "General"
         ).strip()
 
+        audience = request.form.get(
+            "audience",
+            "Everyone"
+        ).strip()
+
+        if audience not in {
+            "Everyone",
+            "Students",
+            "Teachers"
+        }:
+            audience = "Everyone"
+
         is_published = (
             1
             if request.form.get("is_published")
@@ -751,31 +666,22 @@ def edit(notice_id):
                 notice=notice
             )
 
-        # ====================================================
-        # OLD FILES
-        # ====================================================
-
         old_image = notice[3]
         old_pdf = notice[4]
 
         new_image = old_image
         new_pdf = old_pdf
 
-        image_file = request.files.get(
-            "image"
-        )
-
-        pdf_file = request.files.get(
-            "pdf_file"
-        )
+        image_file = request.files.get("image")
+        pdf_file = request.files.get("pdf_file")
 
         image_folder, pdf_folder = (
             get_notice_upload_paths()
         )
 
-        # ====================================================
+        # ----------------------------------------------------
         # NEW IMAGE
-        # ====================================================
+        # ----------------------------------------------------
 
         if image_file and image_file.filename:
 
@@ -805,9 +711,9 @@ def edit(notice_id):
                 )
             )
 
-        # ====================================================
+        # ----------------------------------------------------
         # NEW PDF
-        # ====================================================
+        # ----------------------------------------------------
 
         if pdf_file and pdf_file.filename:
 
@@ -817,7 +723,6 @@ def edit(notice_id):
             ):
 
                 if new_image != old_image:
-
                     delete_notice_file(
                         new_image,
                         "image"
@@ -844,9 +749,9 @@ def edit(notice_id):
                 )
             )
 
-        # ====================================================
-        # UPDATE DATABASE
-        # ====================================================
+        # ----------------------------------------------------
+        # UPDATE
+        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -859,7 +764,8 @@ def edit(notice_id):
                 target_semester = %s,
                 target_department = %s,
                 notice_type = %s,
-                is_published = %s
+                is_published = %s,
+                audience = %s
             WHERE id = %s
             """,
             (
@@ -871,25 +777,20 @@ def edit(notice_id):
                 target_department or None,
                 notice_type or "General",
                 is_published,
+                audience,
                 notice_id
             )
         )
 
         mysql.connection.commit()
 
-        # ====================================================
-        # DELETE OLD FILES
-        # ====================================================
-
         if new_image != old_image:
-
             delete_notice_file(
                 old_image,
                 "image"
             )
 
         if new_pdf != old_pdf:
-
             delete_notice_file(
                 old_pdf,
                 "pdf"
@@ -901,9 +802,7 @@ def edit(notice_id):
         )
 
         return redirect(
-            url_for(
-                "admin_notice.index"
-            )
+            url_for("admin_notice.index")
         )
 
     except Exception as e:
@@ -924,13 +823,10 @@ def edit(notice_id):
         )
 
         return redirect(
-            url_for(
-                "admin_notice.index"
-            )
+            url_for("admin_notice.index")
         )
 
     finally:
-
         cursor.close()
 
 
@@ -954,14 +850,9 @@ def delete(notice_id):
         return redirect("/admin/login")
 
     mysql = get_mysql()
-
     cursor = mysql.connection.cursor()
 
     try:
-
-        # ====================================================
-        # GET FILE NAMES
-        # ====================================================
 
         cursor.execute(
             """
@@ -985,14 +876,8 @@ def delete(notice_id):
             )
 
             return redirect(
-                url_for(
-                    "admin_notice.index"
-                )
+                url_for("admin_notice.index")
             )
-
-        # ====================================================
-        # DELETE DATABASE RECORD
-        # ====================================================
 
         cursor.execute(
             """
@@ -1004,23 +889,13 @@ def delete(notice_id):
 
         mysql.connection.commit()
 
-        # ====================================================
-        # DELETE IMAGE
-        # ====================================================
-
         if notice[0]:
-
             delete_notice_file(
                 notice[0],
                 "image"
             )
 
-        # ====================================================
-        # DELETE PDF
-        # ====================================================
-
         if notice[1]:
-
             delete_notice_file(
                 notice[1],
                 "pdf"
@@ -1049,18 +924,15 @@ def delete(notice_id):
         )
 
     finally:
-
         cursor.close()
 
     return redirect(
-        url_for(
-            "admin_notice.index"
-        )
+        url_for("admin_notice.index")
     )
 
 
 # ============================================================
-# TOGGLE PUBLISH / UNPUBLISH
+# TOGGLE PUBLISH
 # ============================================================
 
 @admin_notice.route(
@@ -1079,7 +951,6 @@ def toggle_publish(notice_id):
         return redirect("/admin/login")
 
     mysql = get_mysql()
-
     cursor = mysql.connection.cursor()
 
     try:
@@ -1122,11 +993,8 @@ def toggle_publish(notice_id):
         )
 
     finally:
-
         cursor.close()
 
     return redirect(
-        url_for(
-            "admin_notice.index"
-        )
+        url_for("admin_notice.index")
     )

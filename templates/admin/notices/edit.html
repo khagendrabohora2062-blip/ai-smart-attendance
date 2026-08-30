@@ -1,3 +1,4 @@
+
 {% extends "layouts/base.html" %}
 
 {% block title %}
@@ -6,13 +7,15 @@ Edit Notice - AI Smart Attendance System
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 py-md-4">
 
     <!-- =====================================================
          HEADER
     ====================================================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-sm-row
+                justify-content-between
+                align-items-start align-items-sm-center
+                gap-3 mb-4">
 
         <div>
             <h3 class="fw-bold mb-1">
@@ -21,7 +24,7 @@ Edit Notice - AI Smart Attendance System
             </h3>
 
             <p class="text-muted mb-0">
-                Update notice, photo and PDF
+                Update notice, audience, photo and PDF
             </p>
         </div>
 
@@ -32,31 +35,28 @@ Edit Notice - AI Smart Attendance System
             <i class="bi bi-arrow-left me-1"></i>
             Back
         </a>
-
     </div>
 
 
     <!-- =====================================================
          EDIT FORM
     ====================================================== -->
-
     <div class="card border-0 shadow-sm">
 
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
 
             <form
                 method="POST"
                 enctype="multipart/form-data"
             >
 
-                <div class="row g-4">
+                <div class="row g-3 g-md-4">
 
 
                     <!-- =================================================
                          TITLE
                     ================================================== -->
-
-                    <div class="col-md-8">
+                    <div class="col-12 col-md-8">
 
                         <label class="form-label fw-semibold">
                             Notice Title
@@ -77,8 +77,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          TYPE
                     ================================================== -->
-
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
 
                         <label class="form-label fw-semibold">
                             Notice Type
@@ -137,9 +136,59 @@ Edit Notice - AI Smart Attendance System
 
 
                     <!-- =================================================
+                         AUDIENCE
+                    ================================================== -->
+                    <div class="col-12">
+
+                        <label class="form-label fw-semibold">
+                            Notice Audience
+                        </label>
+
+                        <select
+                            name="audience"
+                            class="form-select"
+                            required
+                        >
+
+                            <option
+                                value="Everyone"
+                                {% if notice[9] == "Everyone" or not notice[9] %}
+                                    selected
+                                {% endif %}
+                            >
+                                Everyone - Teachers & Students
+                            </option>
+
+                            <option
+                                value="Students"
+                                {% if notice[9] == "Students" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Students Only
+                            </option>
+
+                            <option
+                                value="Teachers"
+                                {% if notice[9] == "Teachers" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Teachers Only
+                            </option>
+
+                        </select>
+
+                        <small class="text-muted">
+                            Select who should be able to see this notice.
+                        </small>
+
+                    </div>
+
+
+                    <!-- =================================================
                          DESCRIPTION
                     ================================================== -->
-
                     <div class="col-12">
 
                         <label class="form-label fw-semibold">
@@ -159,8 +208,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          SEMESTER
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Target Semester
@@ -242,8 +290,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          DEPARTMENT
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Target Department
@@ -263,8 +310,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          CURRENT IMAGE
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Current Notice Photo
@@ -297,8 +343,13 @@ Edit Notice - AI Smart Attendance System
                         {% else %}
 
                         <div class="no-file-box">
+
                             <i class="bi bi-image text-muted"></i>
-                            <span>No photo uploaded</span>
+
+                            <span>
+                                No photo uploaded
+                            </span>
+
                         </div>
 
                         {% endif %}
@@ -309,8 +360,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          NEW IMAGE
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Replace Notice Photo
@@ -329,10 +379,11 @@ Edit Notice - AI Smart Attendance System
                             JPG, JPEG, PNG or WEBP.
                         </small>
 
+
                         <div
                             id="imagePreviewContainer"
                             class="mt-3"
-                            style="display:none;"
+                            style="display: none;"
                         >
 
                             <p class="small fw-semibold mb-2">
@@ -354,8 +405,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          CURRENT PDF
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Current PDF
@@ -388,7 +438,9 @@ Edit Notice - AI Smart Attendance System
                                 class="btn btn-sm btn-outline-danger ms-auto"
                             >
                                 <i class="bi bi-eye"></i>
-                                View
+                                <span class="d-none d-sm-inline">
+                                    View
+                                </span>
                             </a>
 
                         </div>
@@ -396,8 +448,13 @@ Edit Notice - AI Smart Attendance System
                         {% else %}
 
                         <div class="no-file-box">
+
                             <i class="bi bi-file-earmark-pdf text-muted"></i>
-                            <span>No PDF uploaded</span>
+
+                            <span>
+                                No PDF uploaded
+                            </span>
+
                         </div>
 
                         {% endif %}
@@ -408,8 +465,7 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          NEW PDF
                     ================================================== -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Replace Official Notice PDF
@@ -433,7 +489,6 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          PUBLISH
                     ================================================== -->
-
                     <div class="col-12">
 
                         <div class="form-check form-switch">
@@ -461,12 +516,11 @@ Edit Notice - AI Smart Attendance System
                     <!-- =================================================
                          BUTTONS
                     ================================================== -->
-
                     <div class="col-12">
 
                         <hr>
 
-                        <div class="d-flex gap-2">
+                        <div class="d-flex flex-column flex-sm-row gap-2">
 
                             <button
                                 type="submit"
@@ -524,13 +578,13 @@ Edit Notice - AI Smart Attendance System
     border: 1px dashed #cbd5e1;
     border-radius: 10px;
     background: #f8fafc;
-
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-
     color: #64748b;
+    padding: 15px;
+    text-align: center;
 }
 
 .no-file-box i {
@@ -540,25 +594,30 @@ Edit Notice - AI Smart Attendance System
 .current-pdf-box {
     min-height: 80px;
     padding: 14px;
-
     border: 1px solid #fecaca;
     border-radius: 10px;
-
     background: #fff7f7;
-
     display: flex;
     align-items: center;
     gap: 12px;
+    overflow: hidden;
 }
 
 .current-pdf-box > i {
     font-size: 2rem;
     color: #dc2626;
+    flex-shrink: 0;
 }
 
 .current-pdf-box div {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+}
+
+.current-pdf-box strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .current-pdf-box small {
@@ -573,10 +632,63 @@ Edit Notice - AI Smart Attendance System
     width: 100%;
     max-height: 220px;
     object-fit: contain;
-
     border-radius: 8px;
     border: 1px solid #e5e7eb;
     background: #f8fafc;
+}
+
+
+/* =============================================================
+   MOBILE
+============================================================= */
+
+@media (max-width: 575.98px) {
+
+    .container-fluid {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .card-body {
+        padding: 16px !important;
+    }
+
+    h3 {
+        font-size: 1.35rem;
+    }
+
+    .current-pdf-box {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .current-pdf-box .btn {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    .current-pdf-box small {
+        max-width: 100%;
+    }
+
+    .current-notice-image,
+    .preview-image {
+        max-height: 180px;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 44px;
+    }
+
+    textarea.form-control {
+        min-height: 140px;
+    }
+
+    .btn {
+        min-height: 44px;
+    }
+
 }
 
 </style>
@@ -598,19 +710,23 @@ function previewImage(event) {
     const preview =
         document.getElementById("imagePreview");
 
+
     if (!file) {
 
         previewContainer.style.display = "none";
+
         preview.src = "";
 
         return;
     }
+
 
     const allowedTypes = [
         "image/jpeg",
         "image/png",
         "image/webp"
     ];
+
 
     if (!allowedTypes.includes(file.type)) {
 
@@ -621,12 +737,15 @@ function previewImage(event) {
         event.target.value = "";
 
         previewContainer.style.display = "none";
+
         preview.src = "";
 
         return;
     }
 
+
     const reader = new FileReader();
+
 
     reader.onload = function(e) {
 
@@ -635,6 +754,7 @@ function previewImage(event) {
         previewContainer.style.display = "block";
 
     };
+
 
     reader.readAsDataURL(file);
 }

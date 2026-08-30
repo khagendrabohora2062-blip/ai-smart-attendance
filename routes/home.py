@@ -1,3 +1,4 @@
+
 from flask import (
     Blueprint,
     render_template,
@@ -9,6 +10,10 @@ from flask import (
 
 from extensions import mysql
 
+
+# =====================================================
+# HOME BLUEPRINT
+# =====================================================
 
 home = Blueprint(
     "home",
@@ -25,93 +30,114 @@ def index():
 
     cursor = mysql.connection.cursor()
 
-    # =================================================
-    # TOTAL STUDENTS
-    # =================================================
+    try:
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM students
-    """)
+        # =================================================
+        # TOTAL STUDENTS
+        # =================================================
 
-    total_students = cursor.fetchone()[0]
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM students
+        """)
 
-
-    # =================================================
-    # TOTAL TEACHERS
-    # =================================================
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM teachers
-    """)
-
-    total_teachers = cursor.fetchone()[0]
+        total_students = cursor.fetchone()[0]
 
 
-    # =================================================
-    # TOTAL SUBJECTS
-    # =================================================
+        # =================================================
+        # TOTAL TEACHERS
+        # =================================================
 
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM subjects
-    """)
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM teachers
+        """)
 
-    total_subjects = cursor.fetchone()[0]
-
-
-    # =================================================
-    # TODAY'S ATTENDANCE
-    # =================================================
-
-    cursor.execute("""
-        SELECT COUNT(*)
-        FROM attendance
-        WHERE attendance_date = CURDATE()
-    """)
-
-    today_attendance = cursor.fetchone()[0]
+        total_teachers = cursor.fetchone()[0]
 
 
-    # =================================================
-    # REAL USER FEEDBACK / TESTIMONIALS
-    # =================================================
+        # =================================================
+        # TOTAL SUBJECTS
+        # =================================================
 
-    cursor.execute("""
-        SELECT
-            name,
-            rating,
-            message,
-            created_at
-        FROM feedback
-        ORDER BY id DESC
-        LIMIT 6
-    """)
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM subjects
+        """)
 
-    feedbacks = cursor.fetchall()
+        total_subjects = cursor.fetchone()[0]
 
 
-    cursor.close()
+        # =================================================
+        # TODAY'S ATTENDANCE
+        # =================================================
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM attendance
+            WHERE attendance_date = CURDATE()
+        """)
+
+        today_attendance = cursor.fetchone()[0]
 
 
-    # =================================================
-    # SEND DATA TO LANDING PAGE
-    # =================================================
+        # =================================================
+        # LATEST FEEDBACK
+        # =================================================
 
-    return render_template(
-        "landing/index.html",
+        cursor.execute("""
+            SELECT
+                name,
+                rating,
+                message,
+                created_at
+            FROM feedback
+            ORDER BY id DESC
+            LIMIT 6
+        """)
 
-        total_students=total_students,
+        feedbacks = cursor.fetchall()
 
-        total_teachers=total_teachers,
 
-        total_subjects=total_subjects,
+        # =================================================
+        # SEND DATA TO LANDING PAGE
+        # =================================================
 
-        today_attendance=today_attendance,
+        return render_template(
+            "landing/index.html",
+            total_students=total_students,
+            total_teachers=total_teachers,
+            total_subjects=total_subjects,
+            today_attendance=today_attendance,
+            feedbacks=feedbacks
+        )
 
-        feedbacks=feedbacks
-    )
+
+    except Exception as e:
+
+        print(
+            "HOME PAGE ERROR:",
+            repr(e)
+        )
+
+        flash(
+            "Unable to load home page.",
+            "danger"
+        )
+
+        return render_template(
+            "landing/index.html",
+            total_students=0,
+            total_teachers=0,
+            total_subjects=0,
+            today_attendance=0,
+            feedbacks=[]
+        )
+
+
+    finally:
+
+        cursor.close()
 
 
 # =====================================================
@@ -136,39 +162,122 @@ def about():
 )
 def contact():
 
-    if request.method == "POST":
+    # =================================================
+    # SHOW CONTACT PAGE
+    # =================================================
 
-        name = request.form.get("name", "").strip()
+    if request.method == "GET":
 
-        email = request.form.get("email", "").strip()
-
-        subject = request.form.get("subject", "").strip()
-
-        message = request.form.get("message", "").strip()
-
-
-        # ---------------------------------------------
-        # BASIC VALIDATION
-        # ---------------------------------------------
-
-        if not name or not email or not subject or not message:
-
-            flash(
-                "Please fill in all required fields.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("home.contact")
-            )
+        return render_template(
+            "landing/contact.html"
+        )
 
 
-        cursor = mysql.connection.cursor()
+    # =================================================
+    # GET FORM DATA
+    # =================================================
 
+    name = request.form.get(
+        "name",
+        ""
+    ).strip()
+
+    email = request.form.get(
+        "email",
+        ""
+    ).strip()
+
+    subject = request.form.get(
+        "subject",
+        ""
+    ).strip()
+
+    message = request.form.get(
+        "message",
+        ""
+    ).strip()
+
+
+    # =================================================
+    # VALIDATION
+    # =================================================
+
+    if not name:
+
+        flash(
+            "Please enter your name.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.contact")
+        )
+
+
+    if not email:
+
+        flash(
+            "Please enter your email address.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.contact")
+        )
+
+
+    if not subject:
+
+        flash(
+            "Please enter a subject.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.contact")
+        )
+
+
+    if not message:
+
+        flash(
+            "Please enter your message.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.contact")
+        )
+
+
+    # =================================================
+    # DATABASE INSERT
+    # =================================================
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        # =================================================
+        # MANUALLY GENERATE NEXT ID
+        # =================================================
+
+        cursor.execute("""
+            SELECT COALESCE(MAX(id), 0) + 1
+            FROM contact_messages
+        """)
+
+        next_id = cursor.fetchone()[0]
+
+
+        # =================================================
+        # INSERT CONTACT MESSAGE
+        # =================================================
 
         cursor.execute("""
             INSERT INTO contact_messages
             (
+                id,
                 name,
                 email,
                 subject,
@@ -179,9 +288,11 @@ def contact():
                 %s,
                 %s,
                 %s,
+                %s,
                 %s
             )
         """, (
+            next_id,
             name,
             email,
             subject,
@@ -189,9 +300,11 @@ def contact():
         ))
 
 
-        mysql.connection.commit()
+        # =================================================
+        # COMMIT
+        # =================================================
 
-        cursor.close()
+        mysql.connection.commit()
 
 
         flash(
@@ -200,13 +313,32 @@ def contact():
         )
 
 
-        return redirect(
-            url_for("home.contact")
+    except Exception as e:
+
+        mysql.connection.rollback()
+
+        print(
+            "CONTACT MESSAGE ERROR:",
+            repr(e)
+        )
+
+        flash(
+            "Unable to send your message. Please try again.",
+            "danger"
         )
 
 
-    return render_template(
-        "landing/contact.html"
+    finally:
+
+        cursor.close()
+
+
+    # =================================================
+    # RETURN TO CONTACT PAGE
+    # =================================================
+
+    return redirect(
+        url_for("home.contact")
     )
 
 
@@ -218,41 +350,178 @@ def contact():
     "/feedback",
     methods=["GET", "POST"]
 )
-def feedback():
+def feedback_page():
 
-    if request.method == "POST":
+    # =================================================
+    # GET REQUEST
+    # =================================================
 
-        name = request.form.get("name", "").strip()
-
-        email = request.form.get("email", "").strip()
-
-        rating = request.form.get("rating")
-
-        message = request.form.get("message", "").strip()
-
-
-        # ---------------------------------------------
-        # VALIDATION
-        # ---------------------------------------------
-
-        if not name or not rating or not message:
-
-            flash(
-                "Please fill in all required feedback fields.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("home.feedback")
-            )
-
+    if request.method == "GET":
 
         cursor = mysql.connection.cursor()
 
+        try:
+
+            cursor.execute("""
+                SELECT
+                    name,
+                    rating,
+                    message,
+                    created_at
+                FROM feedback
+                ORDER BY id DESC
+                LIMIT 10
+            """)
+
+            feedbacks = cursor.fetchall()
+
+
+        except Exception as e:
+
+            print(
+                "FEEDBACK LOAD ERROR:",
+                repr(e)
+            )
+
+            feedbacks = []
+
+
+        finally:
+
+            cursor.close()
+
+
+        return render_template(
+            "landing/feedback.html",
+            feedbacks=feedbacks
+        )
+
+
+    # =================================================
+    # GET FEEDBACK FORM DATA
+    # =================================================
+
+    name = request.form.get(
+        "name",
+        ""
+    ).strip()
+
+    email = request.form.get(
+        "email",
+        ""
+    ).strip()
+
+    rating = request.form.get(
+        "rating",
+        ""
+    ).strip()
+
+    message = request.form.get(
+        "message",
+        ""
+    ).strip()
+
+
+    # =================================================
+    # VALIDATION
+    # =================================================
+
+    if not name:
+
+        flash(
+            "Please enter your name.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.feedback_page")
+        )
+
+
+    if not rating:
+
+        flash(
+            "Please select a rating.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.feedback_page")
+        )
+
+
+    if not message:
+
+        flash(
+            "Please write your feedback.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.feedback_page")
+        )
+
+
+    # =================================================
+    # VALIDATE RATING
+    # =================================================
+
+    try:
+
+        rating_value = int(rating)
+
+    except (ValueError, TypeError):
+
+        flash(
+            "Invalid rating.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.feedback_page")
+        )
+
+
+    if rating_value < 1 or rating_value > 5:
+
+        flash(
+            "Rating must be between 1 and 5.",
+            "danger"
+        )
+
+        return redirect(
+            url_for("home.feedback_page")
+        )
+
+
+    # =================================================
+    # INSERT FEEDBACK
+    # =================================================
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        # =================================================
+        # MANUALLY GENERATE NEXT ID
+        # =================================================
+
+        cursor.execute("""
+            SELECT COALESCE(MAX(id), 0) + 1
+            FROM feedback
+        """)
+
+        next_feedback_id = cursor.fetchone()[0]
+
+
+        # =================================================
+        # INSERT
+        # =================================================
 
         cursor.execute("""
             INSERT INTO feedback
             (
+                id,
                 name,
                 email,
                 rating,
@@ -263,58 +532,55 @@ def feedback():
                 %s,
                 %s,
                 %s,
+                %s,
                 %s
             )
         """, (
+            next_feedback_id,
             name,
             email,
-            rating,
+            rating_value,
             message
         ))
 
 
-        mysql.connection.commit()
+        # =================================================
+        # COMMIT
+        # =================================================
 
-        cursor.close()
+        mysql.connection.commit()
 
 
         flash(
-            "Thank you for your feedback!",
+            "Thank you for your valuable feedback!",
             "success"
         )
 
 
-        return redirect(
-            url_for("home.feedback")
+    except Exception as e:
+
+        mysql.connection.rollback()
+
+        print(
+            "FEEDBACK INSERT ERROR:",
+            repr(e)
+        )
+
+        flash(
+            "Unable to submit feedback. Please try again.",
+            "danger"
         )
 
 
+    finally:
+
+        cursor.close()
+
+
     # =================================================
-    # GET LATEST FEEDBACK
+    # RETURN TO FEEDBACK PAGE
     # =================================================
 
-    cursor = mysql.connection.cursor()
-
-
-    cursor.execute("""
-        SELECT
-            name,
-            rating,
-            message,
-            created_at
-        FROM feedback
-        ORDER BY id DESC
-        LIMIT 10
-    """)
-
-
-    feedbacks = cursor.fetchall()
-
-
-    cursor.close()
-
-
-    return render_template(
-        "landing/feedback.html",
-        feedbacks=feedbacks
+    return redirect(
+        url_for("home.feedback_page")
     )

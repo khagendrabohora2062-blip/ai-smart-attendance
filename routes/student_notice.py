@@ -1,7 +1,6 @@
 # ============================================================
 # STUDENT NOTICE
-# File:
-# routes/student_notice.py
+# File: routes/student_notice.py
 # ============================================================
 
 import os
@@ -37,6 +36,7 @@ def get_mysql():
         return mysql
 
     try:
+
         from app import mysql as app_mysql
 
         if app_mysql is not None:
@@ -93,7 +93,7 @@ def index():
         )
 
         # ----------------------------------------------------
-        # STUDENT INFORMATION
+        # STUDENT INFO
         # ----------------------------------------------------
 
         cursor.execute(
@@ -130,6 +130,10 @@ def index():
 
         # ----------------------------------------------------
         # NOTICE QUERY
+        #
+        # Everyone  -> visible
+        # Students  -> visible
+        # Teachers   -> hidden
         # ----------------------------------------------------
 
         cursor.execute(
@@ -147,23 +151,29 @@ def index():
             FROM notices
             WHERE is_published = 1
 
-            AND
-            (
-                target_semester IS NULL
-                OR TRIM(target_semester) = ''
-                OR LOWER(TRIM(target_semester))
-                   =
-                   LOWER(TRIM(%s))
-            )
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'students')
+                  )
 
-            AND
-            (
-                target_department IS NULL
-                OR TRIM(target_department) = ''
-                OR LOWER(TRIM(target_department))
-                   =
-                   LOWER(TRIM(%s))
-            )
+              AND
+              (
+                    target_semester IS NULL
+                    OR TRIM(target_semester) = ''
+                    OR LOWER(TRIM(target_semester))
+                       =
+                       LOWER(TRIM(%s))
+              )
+
+              AND
+              (
+                    target_department IS NULL
+                    OR TRIM(target_department) = ''
+                    OR LOWER(TRIM(target_department))
+                       =
+                       LOWER(TRIM(%s))
+              )
 
             ORDER BY created_at DESC
             """,
@@ -173,7 +183,7 @@ def index():
             )
         )
 
-        notices = cursor.fetchall()
+        notices = cursor.fetchall() or []
 
         return render_template(
             "student/notices.html",
@@ -197,7 +207,6 @@ def index():
         )
 
     finally:
-
         cursor.close()
 
 
@@ -205,7 +214,9 @@ def index():
 # SINGLE NOTICE
 # ============================================================
 
-@student_notice.route("/view/<int:notice_id>")
+@student_notice.route(
+    "/view/<int:notice_id>"
+)
 def view(notice_id):
 
     if not student_required():
@@ -234,6 +245,11 @@ def view(notice_id):
             FROM notices
             WHERE id = %s
               AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'students')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -258,7 +274,6 @@ def view(notice_id):
         )
 
     finally:
-
         cursor.close()
 
 
@@ -266,7 +281,9 @@ def view(notice_id):
 # DOWNLOAD NOTICE PHOTO
 # ============================================================
 
-@student_notice.route("/download/image/<int:notice_id>")
+@student_notice.route(
+    "/download/image/<int:notice_id>"
+)
 def download_image(notice_id):
 
     if not student_required():
@@ -289,6 +306,11 @@ def download_image(notice_id):
             FROM notices
             WHERE id = %s
               AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'students')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -349,7 +371,6 @@ def download_image(notice_id):
                 )
             )
 
-        # Original extension
         extension = os.path.splitext(
             image_name
         )[1].lower()
@@ -367,7 +388,6 @@ def download_image(notice_id):
         )
 
     finally:
-
         cursor.close()
 
 
@@ -375,7 +395,9 @@ def download_image(notice_id):
 # DOWNLOAD NOTICE PDF
 # ============================================================
 
-@student_notice.route("/download/pdf/<int:notice_id>")
+@student_notice.route(
+    "/download/pdf/<int:notice_id>"
+)
 def download_pdf(notice_id):
 
     if not student_required():
@@ -398,6 +420,11 @@ def download_pdf(notice_id):
             FROM notices
             WHERE id = %s
               AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'students')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -472,5 +499,4 @@ def download_pdf(notice_id):
         )
 
     finally:
-
         cursor.close()

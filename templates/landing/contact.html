@@ -1,422 +1,769 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Contact Us | AI Smart Attendance System</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-          rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/landing.css') }}">
+    <!-- Landing CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/landing.css') }}"
+    >
 
+    <style>
+        body {
+            background: #f6f8fb;
+            color: #212529;
+        }
+
+        /* =========================
+           NAVBAR
+        ========================= */
+
+        .custom-navbar {
+            padding: 10px 0;
+        }
+
+        .navbar-brand {
+            font-size: 0.98rem !important;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+        }
+
+        .navbar-brand i {
+            font-size: 1.05rem;
+        }
+
+        .home-btn {
+            font-size: 0.85rem;
+            padding: 6px 13px;
+            border-radius: 7px;
+        }
+
+        /* =========================
+           PAGE HEADER
+        ========================= */
+
+        .contact-header {
+            background: #ffffff;
+            border-bottom: 1px solid #e9ecef;
+            padding: 38px 0 34px;
+        }
+
+        .contact-header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .contact-header p {
+            font-size: 0.92rem;
+            margin-bottom: 0;
+        }
+
+        /* =========================
+           CONTACT SECTION
+        ========================= */
+
+        .contact-section {
+            padding: 38px 0 45px;
+        }
+
+        .contact-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* =========================
+           CARDS
+        ========================= */
+
+        .contact-card {
+            border: 1px solid #e8ebef;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .contact-card-header {
+            padding: 14px 18px;
+            font-size: 0.98rem;
+            font-weight: 600;
+        }
+
+        .contact-card-body {
+            padding: 20px;
+        }
+
+        /* =========================
+           FORM
+        ========================= */
+
+        .form-label {
+            font-size: 0.83rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            font-size: 0.86rem;
+            border-radius: 7px;
+            padding: 9px 11px;
+            border-color: #dfe3e8;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.12);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .send-btn {
+            font-size: 0.86rem;
+            font-weight: 500;
+            padding: 9px 17px;
+            border-radius: 7px;
+        }
+
+        /* =========================
+           CONTACT INFORMATION
+        ========================= */
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            margin-bottom: 16px;
+        }
+
+        .info-icon {
+            width: 31px;
+            height: 31px;
+            min-width: 31px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            background: #f1f5ff;
+            font-size: 0.9rem;
+        }
+
+        .info-content {
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+
+        .info-content strong {
+            display: block;
+            font-size: 0.78rem;
+            color: #6c757d;
+            margin-bottom: 1px;
+            font-weight: 600;
+        }
+
+        .info-content a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .info-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* =========================
+           TECHNOLOGY
+        ========================= */
+
+        .technology-title {
+            font-size: 0.92rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .tech-badge {
+            font-size: 0.7rem;
+            padding: 6px 9px;
+            margin: 2px;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+
+        /* =========================
+           ALERT
+        ========================= */
+
+        .alert {
+            font-size: 0.86rem;
+            border-radius: 8px;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            background: #111827;
+            padding: 28px 0 22px;
+        }
+
+        footer h5 {
+            font-size: 0.98rem;
+            margin-bottom: 8px;
+        }
+
+        footer p {
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+            color: #cbd5e1;
+        }
+
+        footer strong {
+            color: #fff;
+        }
+
+        footer hr {
+            margin: 14px 0;
+            opacity: 0.15;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 767px) {
+
+            .custom-navbar {
+                padding: 9px 0;
+            }
+
+            .navbar-brand {
+                font-size: 0.88rem !important;
+            }
+
+            .navbar-brand i {
+                font-size: 0.95rem;
+            }
+
+            .home-btn {
+                font-size: 0.78rem;
+                padding: 5px 10px;
+            }
+
+            .contact-header {
+                padding: 30px 0 27px;
+            }
+
+            .contact-header h1 {
+                font-size: 1.65rem;
+            }
+
+            .contact-header p {
+                font-size: 0.82rem;
+            }
+
+            .contact-section {
+                padding: 25px 0 35px;
+            }
+
+            .contact-card-body {
+                padding: 17px;
+            }
+
+            .info-item {
+                margin-bottom: 14px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
+<!-- =====================================================
+     FLASH MESSAGES
+===================================================== -->
+
 {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
 
-{% if messages %}
+            {% for category, message in messages %}
 
-<div class="container mt-4">
+                <div
+                    class="alert alert-{{ category }} alert-dismissible fade show"
+                    role="alert"
+                >
+                    {{ message }}
 
-    {% for category, message in messages %}
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="Close"
+                    ></button>
+                </div>
 
-    <div class="alert alert-{{ category }} alert-dismissible fade show">
+            {% endfor %}
 
-        {{ message }}
-
-        <button
-            class="btn-close"
-            data-bs-dismiss="alert">
-        </button>
-
-    </div>
-
-    {% endfor %}
-
-</div>
-
-{% endif %}
-
+        </div>
+    {% endif %}
 {% endwith %}
 
-<!-- Navbar -->
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<!-- =====================================================
+     NAVBAR
+===================================================== -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark custom-navbar">
 
     <div class="container">
 
-        <a class="navbar-brand fw-bold"
-           href="/">
+        <!-- Small Brand -->
+        <a
+            class="navbar-brand d-flex align-items-center gap-2"
+            href="/"
+        >
+            <i class="bi bi-robot"></i>
 
-            🤖 AI Smart Attendance
-
+            <span>
+                AI Smart Attendance
+            </span>
         </a>
 
-        <a href="/"
-           class="btn btn-outline-light">
 
-            <i class="bi bi-house-fill"></i>
+        <!-- Home Button -->
+        <a
+            href="/"
+            class="btn btn-outline-light home-btn"
+        >
+            <i class="bi bi-house-fill me-1"></i>
             Home
-
         </a>
 
     </div>
 
 </nav>
 
-<!-- Header -->
 
-<section class="py-5 text-center bg-light">
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<section class="contact-header text-center">
 
     <div class="container">
 
         <h1 class="fw-bold">
-
             Contact Us
-
         </h1>
 
         <p class="text-muted">
-
-            Have any questions, suggestions or feedback?
-            Feel free to contact us anytime.
-
+            Have a question or suggestion?
+            We'd love to hear from you.
         </p>
 
     </div>
 
 </section>
 
-<!-- Contact -->
 
-<section class="pb-5">
+<!-- =====================================================
+     CONTACT SECTION
+===================================================== -->
 
-<div class="container">
+<section class="contact-section">
 
-<div class="row g-4">
+    <div class="container">
 
-<!-- Contact Form -->
+        <div class="contact-wrapper">
 
-<div class="col-lg-7">
+            <div class="row g-4">
 
-<div class="card shadow border-0">
 
-<div class="card-header bg-primary text-white">
+                <!-- =================================================
+                     CONTACT FORM
+                ================================================== -->
 
-<h4 class="mb-0">
+                <div class="col-lg-7">
 
-<i class="bi bi-send-fill"></i>
+                    <div class="contact-card shadow-sm h-100">
 
-Send Message
+                        <div class="contact-card-header bg-primary text-white">
 
-</h4>
+                            <i class="bi bi-send-fill me-2"></i>
 
-</div>
+                            Send us a Message
 
-<div class="card-body p-4">
+                        </div>
 
-<form method="POST"
-      action="{{ url_for('home.contact') }}">
 
-<div class="mb-3">
+                        <div class="contact-card-body">
 
-<label class="form-label">
+                            <form
+                                method="POST"
+                                action="{{ url_for('home.contact') }}"
+                            >
 
-Full Name
+                                <!-- Name -->
+                                <div class="mb-3">
 
-</label>
+                                    <label class="form-label">
+                                        Full Name
+                                    </label>
 
-<input
-type="text"
-name="name"
-class="form-control"
-required>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        class="form-control"
+                                        placeholder="Enter your full name"
+                                        required
+                                    >
 
-</div>
+                                </div>
 
-<div class="mb-3">
 
-<label class="form-label">
+                                <!-- Email -->
+                                <div class="mb-3">
 
-Email Address
+                                    <label class="form-label">
+                                        Email Address
+                                    </label>
 
-</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        class="form-control"
+                                        placeholder="Enter your email address"
+                                        required
+                                    >
 
-<input
-type="email"
-name="email"
-class="form-control"
-required>
+                                </div>
 
-</div>
 
-<div class="mb-3">
+                                <!-- Subject -->
+                                <div class="mb-3">
 
-<label class="form-label">
+                                    <label class="form-label">
+                                        Subject
+                                    </label>
 
-Subject
+                                    <input
+                                        type="text"
+                                        name="subject"
+                                        class="form-control"
+                                        placeholder="What is this about?"
+                                        required
+                                    >
 
-</label>
+                                </div>
 
-<input
-type="text"
-name="subject"
-class="form-control"
-required>
 
-</div>
+                                <!-- Message -->
+                                <div class="mb-3">
 
-<div class="mb-3">
+                                    <label class="form-label">
+                                        Message
+                                    </label>
 
-<label class="form-label">
+                                    <textarea
+                                        name="message"
+                                        class="form-control"
+                                        rows="5"
+                                        placeholder="Write your message here..."
+                                        required
+                                    ></textarea>
 
-Message
+                                </div>
 
-</label>
 
-<textarea
-name="message"
-rows="6"
-class="form-control"
-required></textarea>
+                                <!-- Submit -->
+                                <button
+                                    type="submit"
+                                    class="btn btn-primary send-btn"
+                                >
+                                    <i class="bi bi-send-fill me-1"></i>
+                                    Send Message
+                                </button>
 
-</div>
+                            </form>
 
-<button class="btn btn-primary">
+                        </div>
 
-<i class="bi bi-send-fill"></i>
+                    </div>
 
-Send Message
+                </div>
 
-</button>
 
-</form>
+                <!-- =================================================
+                     CONTACT INFORMATION
+                ================================================== -->
 
-</div>
+                <div class="col-lg-5">
 
-</div>
+                    <div class="contact-card shadow-sm h-100">
 
-</div>
+                        <div class="contact-card-header bg-dark text-white">
 
-<!-- Contact Info -->
+                            <i class="bi bi-person-lines-fill me-2"></i>
 
-<div class="col-lg-5">
+                            Contact Information
 
-<div class="card shadow border-0 h-100">
+                        </div>
 
-<div class="card-header bg-dark text-white">
 
-<h4 class="mb-0">
+                        <div class="contact-card-body">
 
-<i class="bi bi-person-lines-fill"></i>
 
-Contact Information
+                            <!-- Developer -->
+                            <div class="info-item">
 
-</h4>
+                                <div class="info-icon text-primary">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
 
-</div>
+                                <div class="info-content">
 
-<div class="card-body">
+                                    <strong>
+                                        Developer
+                                    </strong>
 
-<p>
+                                    Khagendra Bohora
 
-<i class="bi bi-person-circle fs-5 text-primary"></i>
+                                </div>
 
-<strong>Developer:</strong>
+                            </div>
 
-Khagendra Bohora
 
-</p>
+                            <!-- Phone -->
+                            <div class="info-item">
 
-<hr>
+                                <div class="info-icon text-success">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </div>
 
-<p>
+                                <div class="info-content">
 
-<i class="bi bi-telephone-fill text-success"></i>
+                                    <strong>
+                                        Phone
+                                    </strong>
 
-<strong>Phone:</strong>
+                                    <a href="tel:+9779742217886">
+                                        +977 9742217886
+                                    </a>
 
-<a href="tel:+9779742217886"
-class="text-decoration-none">
+                                </div>
 
-+977 9742217886
+                            </div>
 
-</a>
 
-</p>
+                            <!-- Email -->
+                            <div class="info-item">
 
-<p>
+                                <div class="info-icon text-danger">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
 
-<i class="bi bi-envelope-fill text-danger"></i>
+                                <div class="info-content">
 
-<strong>Email:</strong>
+                                    <strong>
+                                        Email
+                                    </strong>
 
-<a href="mailto:khagendrabohora2062@gmail.com"
-class="text-decoration-none">
+                                    <a href="mailto:khagendrabohora2062@gmail.com">
+                                        khagendrabohora2062@gmail.com
+                                    </a>
 
-khagendrabohora2062@gmail.com
+                                </div>
 
-</a>
+                            </div>
 
-</p>
 
-<p>
+                            <!-- WhatsApp -->
+                            <div class="info-item">
 
-<i class="bi bi-whatsapp text-success"></i>
+                                <div class="info-icon text-success">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
 
-<strong>WhatsApp:</strong>
+                                <div class="info-content">
 
-<a href="https://wa.me/9779742217886"
-target="_blank"
-class="text-decoration-none">
+                                    <strong>
+                                        WhatsApp
+                                    </strong>
 
-Chat on WhatsApp
+                                    <a
+                                        href="https://wa.me/9779742217886"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Chat on WhatsApp
+                                    </a>
 
-</a>
+                                </div>
 
-</p>
+                            </div>
 
-<p>
 
-<i class="bi bi-geo-alt-fill text-primary"></i>
+                            <!-- Location -->
+                            <div class="info-item">
 
-<strong>Location:</strong>
+                                <div class="info-icon text-primary">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </div>
 
-Nepal
+                                <div class="info-content">
 
-</p>
+                                    <strong>
+                                        Location
+                                    </strong>
 
-<p>
+                                    Nepal
 
-<i class="bi bi-laptop-fill text-info"></i>
+                                </div>
 
-<strong>Project:</strong>
+                            </div>
 
-AI Smart Attendance System
 
-</p>
+                            <!-- Project -->
+                            <div class="info-item mb-3">
 
-<hr>
+                                <div class="info-icon text-info">
+                                    <i class="bi bi-laptop-fill"></i>
+                                </div>
 
-<h5 class="mb-3">
+                                <div class="info-content">
 
-Technology Stack
+                                    <strong>
+                                        Project
+                                    </strong>
 
-</h5>
+                                    AI Smart Attendance System
 
-<span class="badge bg-primary">
+                                </div>
 
-Python
+                            </div>
 
-</span>
 
-<span class="badge bg-success">
+                            <hr>
 
-Flask
 
-</span>
+                            <!-- Technology -->
+                            <div class="technology-title">
 
-<span class="badge bg-warning text-dark">
+                                <i class="bi bi-code-slash me-1"></i>
 
-OpenCV
+                                Technology Stack
 
-</span>
+                            </div>
 
-<span class="badge bg-danger">
 
-MySQL
+                            <div>
 
-</span>
+                                <span class="badge bg-primary tech-badge">
+                                    Python
+                                </span>
 
-<span class="badge bg-info text-dark">
+                                <span class="badge bg-success tech-badge">
+                                    Flask
+                                </span>
 
-Bootstrap 5
+                                <span class="badge bg-warning text-dark tech-badge">
+                                    OpenCV
+                                </span>
 
-</span>
+                                <span class="badge bg-danger tech-badge">
+                                    MySQL
+                                </span>
 
-<span class="badge bg-secondary">
+                                <span class="badge bg-info text-dark tech-badge">
+                                    Bootstrap 5
+                                </span>
 
-Face Recognition
+                                <span class="badge bg-secondary tech-badge">
+                                    Face Recognition
+                                </span>
 
-</span>
+                                <span class="badge bg-dark tech-badge">
+                                    QR Code
+                                </span>
 
-<span class="badge bg-dark">
+                            </div>
 
-QR Code
+                        </div>
 
-</span>
+                    </div>
 
-</div>
+                </div>
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-</div>
-
-</div>
+    </div>
 
 </section>
 
-<footer class="bg-black text-white py-4">
 
-<div class="container text-center">
+<!-- =====================================================
+     FOOTER
+===================================================== -->
 
-<h5>
+<footer class="text-white">
 
-🤖 AI Smart Attendance System
+    <div class="container text-center">
 
-</h5>
+        <h5>
+            <i class="bi bi-robot me-1"></i>
+            AI Smart Attendance System
+        </h5>
 
-<p class="mb-1">
+        <p>
+            Developed by
+            <strong>Khagendra Bohora</strong>
+        </p>
 
-Developed by
+        <p>
+            <i class="bi bi-telephone me-1"></i>
+            +977 9742217886
+        </p>
 
-<strong>
+        <p>
+            <i class="bi bi-envelope me-1"></i>
+            khagendrabohora2062@gmail.com
+        </p>
 
-Khagendra Bohora
+        <hr class="border-light">
 
-</strong>
+        <p class="mb-0">
+            © 2026 AI Smart Attendance System.
+            All Rights Reserved.
+        </p>
 
-</p>
-
-<p class="mb-1">
-
-📞 +977 9742217886
-
-</p>
-
-<p>
-
-📧 khagendrabohora2062@gmail.com
-
-</p>
-
-<hr class="border-light">
-
-<p class="mb-0">
-
-© 2026 All Rights Reserved.
-
-</p>
-
-</div>
+    </div>
 
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Bootstrap JS -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
 
 </body>
-
 </html>

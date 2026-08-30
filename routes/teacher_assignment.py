@@ -1,3 +1,9 @@
+
+# ============================================================
+# TEACHER ASSIGNMENT MANAGEMENT
+# File: routes/teacher_assignment.py
+# ============================================================
+
 from flask import (
     Blueprint,
     render_template,
@@ -68,7 +74,8 @@ SUBMISSION_ALLOWED_EXTENSIONS = {
 
 def allowed_file(filename):
     return (
-        "." in filename
+        bool(filename)
+        and "." in filename
         and filename.rsplit(".", 1)[1].lower()
         in ALLOWED_EXTENSIONS
     )
@@ -76,7 +83,8 @@ def allowed_file(filename):
 
 def allowed_submission_file(filename):
     return (
-        "." in filename
+        bool(filename)
+        and "." in filename
         and filename.rsplit(".", 1)[1].lower()
         in SUBMISSION_ALLOWED_EXTENSIONS
     )
@@ -86,6 +94,53 @@ def teacher_logged_in():
     return "teacher_id" in session
 
 
+# ============================================================
+# GENERATE UNIQUE ASSIGNMENT ID
+# ============================================================
+
+def generate_assignment_id(cursor):
+    """
+    Generates a unique positive integer ID for assignments.
+
+    This is used because the TiDB assignments.id column
+    currently does NOT have AUTO_INCREMENT.
+    """
+
+    max_id = 2147483647
+
+    for _ in range(20):
+
+        # Generate a positive 32-bit integer
+        new_id = uuid.uuid4().int % max_id
+
+        # Make sure ID is never 0
+        if new_id <= 0:
+            new_id = 1
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM assignments
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        existing = cursor.fetchone()
+
+        if not existing:
+            return new_id
+
+    raise RuntimeError(
+        "Unable to generate a unique assignment ID."
+    )
+
+
+# ============================================================
+# ASSIGNMENT UPLOAD FOLDER
+# ============================================================
+
 def assignment_upload_folder():
     folder = os.path.join(
         current_app.root_path,
@@ -94,10 +149,17 @@ def assignment_upload_folder():
         "assignments"
     )
 
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(
+        folder,
+        exist_ok=True
+    )
 
     return folder
 
+
+# ============================================================
+# SUBMISSION UPLOAD FOLDER
+# ============================================================
 
 def submission_upload_folder():
     folder = os.path.join(
@@ -107,7 +169,10 @@ def submission_upload_folder():
         "assignment_submissions"
     )
 
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(
+        folder,
+        exist_ok=True
+    )
 
     return folder
 
@@ -119,11 +184,7 @@ def submission_upload_folder():
 @teacher_assignment.route("/")
 def index():
 
-    # --------------------------------------------------------
-    # LOGIN CHECK
-    # --------------------------------------------------------
-
-    if "teacher_id" not in session:
+    if not teacher_logged_in():
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -135,10 +196,6 @@ def index():
     assignments = []
 
     try:
-
-        # ====================================================
-        # GET ASSIGNMENTS
-        # ====================================================
 
         cursor.execute(
             """
@@ -152,28 +209,19 @@ def index():
                 a.total_marks,
                 a.status,
                 a.created_at,
-
                 s.subject_code,
                 s.subject_name,
                 s.semester
-
             FROM assignments a
-
             INNER JOIN subjects s
                 ON a.subject_id = s.id
-
             WHERE a.teacher_id = %s
-
             ORDER BY a.created_at DESC
             """,
             (teacher_id,)
         )
 
         rows = cursor.fetchall()
-
-        # ====================================================
-        # CREATE DICTIONARY OBJECTS
-        # ====================================================
 
         for row in rows:
 
@@ -223,7 +271,7 @@ def index():
             )
 
             # ------------------------------------------------
-            # DICTIONARY
+            # ASSIGNMENT DICTIONARY
             # ------------------------------------------------
 
             assignments.append({
@@ -236,11 +284,9 @@ def index():
                 "total_marks": row[6],
                 "status": row[7],
                 "created_at": row[8],
-
                 "subject_code": row[9],
                 "subject_name": row[10],
                 "semester": row[11],
-
                 "submission_count": submission_count,
                 "pending_count": pending_count
             })
@@ -262,17 +308,13 @@ def index():
         assignments = []
 
     finally:
-
         cursor.close()
-
-    # ========================================================
-    # RENDER
-    # ========================================================
 
     return render_template(
         "teacher/assignments.html",
         assignments=assignments
     )
+
 
 # ============================================================
 # CREATE ASSIGNMENT
@@ -308,11 +350,8 @@ def create():
                 subject_code,
                 subject_name,
                 semester
-
             FROM subjects
-
             WHERE teacher_id = %s
-
             ORDER BY semester, subject_name
             """,
             (teacher_id,)
@@ -424,7 +463,10 @@ def create():
 
             subject_id_int = int(subject_id)
 
-        except (ValueError, TypeError):
+        except (
+            ValueError,
+            TypeError
+        ):
 
             cursor.close()
 
@@ -480,7 +522,6 @@ def create():
         else:
 
             try:
-
                 total_marks = int(total_marks)
 
             except (
@@ -555,7 +596,9 @@ def create():
                 f"{uuid.uuid4().hex}.{extension}"
             )
 
-            upload_folder = assignment_upload_folder()
+            upload_folder = (
+                assignment_upload_folder()
+            )
 
             file_path = os.path.join(
                 upload_folder,
@@ -584,7 +627,39 @@ def create():
                 )
 
         # ====================================================
-        # INSERT
+        # GENERATE ASSIGNMENT ID
+        # ====================================================
+
+        try:
+
+            assignment_id = generate_assignment_id(
+                cursor
+            )
+
+        except Exception as e:
+
+            cursor.close()
+
+            if file_path:
+                try:
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                except Exception:
+                    pass
+
+            flash(
+                f"Unable to generate assignment ID: {e}",
+                "danger"
+            )
+
+            return redirect(
+                url_for(
+                    "teacher_assignment.create"
+                )
+            )
+
+        # ====================================================
+        # INSERT ASSIGNMENT
         # ====================================================
 
         try:
@@ -593,6 +668,7 @@ def create():
                 """
                 INSERT INTO assignments
                 (
+                    id,
                     teacher_id,
                     subject_id,
                     title,
@@ -603,9 +679,9 @@ def create():
                     total_marks,
                     status
                 )
-
                 VALUES
                 (
+                    %s,
                     %s,
                     %s,
                     %s,
@@ -618,6 +694,7 @@ def create():
                 )
                 """,
                 (
+                    assignment_id,
                     teacher_id,
                     subject_id_int,
                     title,
@@ -646,6 +723,11 @@ def create():
                     pass
 
             cursor.close()
+
+            print(
+                "Create assignment error:",
+                e
+            )
 
             flash(
                 f"Failed to create assignment: {e}",
@@ -678,11 +760,13 @@ def create():
     cursor.close()
 
     return render_template(
-    "teacher/assignment_form.html",
-    assignment=None,
-    subjects=subjects,
-    mode="create"
-)
+        "teacher/assignment_form.html",
+        assignment=None,
+        subjects=subjects,
+        mode="create"
+    )
+
+
 # ============================================================
 # EDIT ASSIGNMENT
 # ============================================================
@@ -694,11 +778,13 @@ def create():
 def edit(assignment_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
 
     teacher_id = session["teacher_id"]
+
     cursor = mysql.connection.cursor()
 
     try:
@@ -741,7 +827,9 @@ def edit(assignment_id):
             )
 
             return redirect(
-                url_for("teacher_assignment.index")
+                url_for(
+                    "teacher_assignment.index"
+                )
             )
 
         # ====================================================
@@ -759,9 +847,7 @@ def edit(assignment_id):
             WHERE teacher_id = %s
             ORDER BY semester, subject_name
             """,
-            (
-                teacher_id,
-            )
+            (teacher_id,)
         )
 
         subjects = cursor.fetchall()
@@ -816,6 +902,7 @@ def edit(assignment_id):
             # =================================================
 
             if not subject_id:
+
                 flash(
                     "Please select a subject.",
                     "danger"
@@ -829,6 +916,7 @@ def edit(assignment_id):
                 )
 
             if not title:
+
                 flash(
                     "Assignment title is required.",
                     "danger"
@@ -842,6 +930,7 @@ def edit(assignment_id):
                 )
 
             if not due_date:
+
                 flash(
                     "Due date is required.",
                     "danger"
@@ -858,6 +947,27 @@ def edit(assignment_id):
             # VERIFY SUBJECT
             # =================================================
 
+            try:
+
+                subject_id_int = int(subject_id)
+
+            except (
+                ValueError,
+                TypeError
+            ):
+
+                flash(
+                    "Invalid subject selected.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "teacher_assignment.edit",
+                        assignment_id=assignment_id
+                    )
+                )
+
             cursor.execute(
                 """
                 SELECT id
@@ -867,7 +977,7 @@ def edit(assignment_id):
                 LIMIT 1
                 """,
                 (
-                    subject_id,
+                    subject_id_int,
                     teacher_id
                 )
             )
@@ -893,11 +1003,16 @@ def edit(assignment_id):
             # =================================================
 
             try:
-                total_marks = int(total_marks)
+
+                total_marks = int(
+                    total_marks
+                )
+
             except (
                 ValueError,
                 TypeError
             ):
+
                 total_marks = 100
 
             if total_marks < 1:
@@ -914,6 +1029,7 @@ def edit(assignment_id):
                 "ACTIVE",
                 "INACTIVE"
             }:
+
                 status = "ACTIVE"
 
             # =================================================
@@ -921,7 +1037,9 @@ def edit(assignment_id):
             # =================================================
 
             old_attachment = assignment[5]
+
             new_filename = old_attachment
+
             new_file_path = None
 
             # =================================================
@@ -1028,7 +1146,7 @@ def edit(assignment_id):
                     AND teacher_id = %s
                     """,
                     (
-                        subject_id,
+                        subject_id_int,
                         title,
                         description if description else None,
                         new_filename,
@@ -1090,8 +1208,12 @@ def edit(assignment_id):
 
                 try:
 
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
+                    if os.path.exists(
+                        old_path
+                    ):
+                        os.remove(
+                            old_path
+                        )
 
                 except Exception as e:
 
@@ -1116,11 +1238,11 @@ def edit(assignment_id):
         # ====================================================
 
         return render_template(
-    "teacher/assignment_form.html",
-    assignment=assignment,
-    subjects=subjects,
-    mode="edit"
-)
+            "teacher/assignment_form.html",
+            assignment=assignment,
+            subjects=subjects,
+            mode="edit"
+        )
 
     except Exception as e:
 
@@ -1141,6 +1263,7 @@ def edit(assignment_id):
 
         cursor.close()
 
+
 # ============================================================
 # TOGGLE STATUS
 # ============================================================
@@ -1152,6 +1275,7 @@ def edit(assignment_id):
 def toggle_status(assignment_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1250,6 +1374,7 @@ def toggle_status(assignment_id):
 def submissions(assignment_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1259,6 +1384,7 @@ def submissions(assignment_id):
     cursor = mysql.connection.cursor()
 
     assignment = None
+
     submissions_list = []
 
     try:
@@ -1281,19 +1407,14 @@ def submissions(assignment_id):
                 a.created_at,
                 a.total_marks,
                 a.status,
-
                 s.subject_code,
                 s.subject_name,
                 s.semester
-
             FROM assignments a
-
             INNER JOIN subjects s
                 ON a.subject_id = s.id
-
             WHERE a.id = %s
             AND a.teacher_id = %s
-
             LIMIT 1
             """,
             (
@@ -1333,24 +1454,17 @@ def submissions(assignment_id):
                 sub.marks,
                 sub.feedback,
                 sub.status,
-
                 st.student_id,
                 st.full_name,
                 st.email,
                 st.photo
-
             FROM assignment_submissions sub
-
             INNER JOIN students st
                 ON sub.student_id = st.id
-
             WHERE sub.assignment_id = %s
-
             ORDER BY sub.submitted_at DESC
             """,
-            (
-                assignment_id,
-            )
+            (assignment_id,)
         )
 
         submissions_list = cursor.fetchall()
@@ -1386,6 +1500,7 @@ def submissions(assignment_id):
 def grade_submission(submission_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1414,26 +1529,19 @@ def grade_submission(submission_id):
                 sub.marks,
                 sub.feedback,
                 sub.status,
-
                 st.student_id,
                 st.full_name,
                 st.email,
-
                 a.title,
                 a.total_marks,
                 a.teacher_id
-
             FROM assignment_submissions sub
-
             INNER JOIN students st
                 ON sub.student_id = st.id
-
             INNER JOIN assignments a
                 ON sub.assignment_id = a.id
-
             WHERE sub.id = %s
             AND a.teacher_id = %s
-
             LIMIT 1
             """,
             (
@@ -1478,9 +1586,9 @@ def grade_submission(submission_id):
                 "Graded"
             ).strip()
 
-            # ------------------------------------------------
+            # =================================================
             # MARKS
-            # ------------------------------------------------
+            # =================================================
 
             if marks == "":
 
@@ -1490,7 +1598,9 @@ def grade_submission(submission_id):
 
                 try:
 
-                    marks = float(marks)
+                    marks = float(
+                        marks
+                    )
 
                 except (
                     ValueError,
@@ -1509,12 +1619,10 @@ def grade_submission(submission_id):
                         )
                     )
 
-            # ------------------------------------------------
+            # =================================================
             # MAX MARKS
-            #
-            # submission index:
-            # 13 = total_marks
-            # ------------------------------------------------
+            # submission index 13 = total_marks
+            # =================================================
 
             max_marks = submission[13]
 
@@ -1548,9 +1656,9 @@ def grade_submission(submission_id):
                         )
                     )
 
-            # ------------------------------------------------
+            # =================================================
             # STATUS
-            # ------------------------------------------------
+            # =================================================
 
             if status not in {
                 "Submitted",
@@ -1560,19 +1668,17 @@ def grade_submission(submission_id):
 
                 status = "Graded"
 
-            # ------------------------------------------------
+            # =================================================
             # UPDATE
-            # ------------------------------------------------
+            # =================================================
 
             cursor.execute(
                 """
                 UPDATE assignment_submissions
-
                 SET
                     marks = %s,
                     feedback = %s,
                     status = %s
-
                 WHERE id = %s
                 """,
                 (
@@ -1626,6 +1732,7 @@ def grade_submission(submission_id):
 def download(assignment_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1697,6 +1804,7 @@ def download(assignment_id):
 def submission_file(submission_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1713,15 +1821,11 @@ def submission_file(submission_id):
             """
             SELECT
                 sub.attachment
-
             FROM assignment_submissions sub
-
             INNER JOIN assignments a
                 ON sub.assignment_id = a.id
-
             WHERE sub.id = %s
             AND a.teacher_id = %s
-
             LIMIT 1
             """,
             (
@@ -1776,6 +1880,7 @@ def submission_file(submission_id):
 def delete(assignment_id):
 
     if not teacher_logged_in():
+
         return redirect(
             url_for("teacher_auth.login")
         )
@@ -1785,6 +1890,7 @@ def delete(assignment_id):
     cursor = mysql.connection.cursor()
 
     old_attachment = None
+
     submission_files = []
 
     try:
@@ -1834,9 +1940,7 @@ def delete(assignment_id):
             FROM assignment_submissions
             WHERE assignment_id = %s
             """,
-            (
-                assignment_id,
-            )
+            (assignment_id,)
         )
 
         submission_files = cursor.fetchall()
@@ -1850,9 +1954,7 @@ def delete(assignment_id):
             DELETE FROM assignment_submissions
             WHERE assignment_id = %s
             """,
-            (
-                assignment_id,
-            )
+            (assignment_id,)
         )
 
         # ====================================================
@@ -1887,7 +1989,10 @@ def delete(assignment_id):
             if os.path.exists(old_path):
 
                 try:
-                    os.remove(old_path)
+
+                    os.remove(
+                        old_path
+                    )
 
                 except Exception as e:
 
@@ -1916,6 +2021,7 @@ def delete(assignment_id):
                 ):
 
                     try:
+
                         os.remove(
                             submission_path
                         )

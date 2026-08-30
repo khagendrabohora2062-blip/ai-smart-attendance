@@ -6,9 +6,13 @@ Add Notice - AI Smart Attendance System
 
 {% block content %}
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3 py-md-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- HEADER -->
+    <div class="d-flex flex-column flex-sm-row
+                justify-content-between
+                align-items-start align-items-sm-center
+                gap-3 mb-4">
 
         <div>
             <h3 class="fw-bold mb-1">
@@ -17,7 +21,7 @@ Add Notice - AI Smart Attendance System
             </h3>
 
             <p class="text-muted mb-0">
-                Create a new notice for students
+                Create a new notice for students and teachers
             </p>
         </div>
 
@@ -32,20 +36,20 @@ Add Notice - AI Smart Attendance System
     </div>
 
 
+    <!-- CARD -->
     <div class="card border-0 shadow-sm">
 
-        <div class="card-body p-4">
+        <div class="card-body p-3 p-md-4">
 
             <form
                 method="POST"
                 enctype="multipart/form-data"
             >
 
-                <div class="row g-4">
+                <div class="row g-3 g-md-4">
 
                     <!-- TITLE -->
-
-                    <div class="col-md-8">
+                    <div class="col-12 col-md-8">
 
                         <label class="form-label fw-semibold">
                             Notice Title
@@ -63,8 +67,7 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- TYPE -->
-
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
 
                         <label class="form-label fw-semibold">
                             Notice Type
@@ -104,8 +107,41 @@ Add Notice - AI Smart Attendance System
                     </div>
 
 
-                    <!-- DESCRIPTION -->
+                    <!-- AUDIENCE -->
+                    <div class="col-12">
 
+                        <label class="form-label fw-semibold">
+                            Notice Audience
+                        </label>
+
+                        <select
+                            name="audience"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="Everyone">
+                                Everyone - Teachers & Students
+                            </option>
+
+                            <option value="Students">
+                                Students Only
+                            </option>
+
+                            <option value="Teachers">
+                                Teachers Only
+                            </option>
+
+                        </select>
+
+                        <small class="text-muted">
+                            Select who should be able to see this notice.
+                        </small>
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
                     <div class="col-12">
 
                         <label class="form-label fw-semibold">
@@ -123,8 +159,7 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- SEMESTER -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Target Semester
@@ -177,8 +212,7 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- DEPARTMENT -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Target Department
@@ -195,8 +229,7 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- IMAGE -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Notice Photo / Letter
@@ -217,8 +250,7 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- PDF -->
-
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
 
                         <label class="form-label fw-semibold">
                             Official Notice PDF
@@ -239,7 +271,6 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- PUBLISH -->
-
                     <div class="col-12">
 
                         <div class="form-check form-switch">
@@ -265,12 +296,13 @@ Add Notice - AI Smart Attendance System
 
 
                     <!-- BUTTONS -->
-
                     <div class="col-12">
 
                         <hr>
 
-                        <div class="d-flex gap-2">
+                        <div class="d-flex flex-column
+                                    flex-sm-row
+                                    gap-2">
 
                             <button
                                 type="submit"

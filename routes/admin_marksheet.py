@@ -1,3 +1,4 @@
+
 from flask import (
     Blueprint,
     render_template,
@@ -95,7 +96,6 @@ def calculate_grade(total_marks, full_marks):
 def index():
 
     if not admin_required():
-
         flash(
             "Please login as administrator.",
             "warning"
@@ -120,7 +120,6 @@ def index():
 
                 sub.subject_code,
                 sub.subject_name,
-
                 sub.theory_full_marks,
                 sub.practical_full_marks,
                 sub.full_marks,
@@ -129,11 +128,9 @@ def index():
                 m.theory_marks,
                 m.practical_marks,
                 m.total_marks,
-
                 m.grade,
                 m.grade_point,
                 m.remarks,
-
                 m.created_at,
                 m.updated_at
 
@@ -152,37 +149,24 @@ def index():
 
         raw_marksheets = cursor.fetchall()
 
-        # ====================================================
-        # CONVERT DECIMAL / STRING VALUES TO FLOAT
-        # ====================================================
-
         marksheets = []
 
         for mark in raw_marksheets:
 
             mark = list(mark)
 
-            # -----------------------------------------------
             # SUBJECT FULL MARKS
-            # -----------------------------------------------
-
             mark[7] = float(mark[7] or 0)
             mark[8] = float(mark[8] or 0)
             mark[9] = float(mark[9] or 0)
             mark[10] = float(mark[10] or 0)
 
-            # -----------------------------------------------
-            # STUDENT OBTAINED MARKS
-            # -----------------------------------------------
-
+            # STUDENT MARKS
             mark[11] = float(mark[11] or 0)
             mark[12] = float(mark[12] or 0)
             mark[13] = float(mark[13] or 0)
 
-            # -----------------------------------------------
             # GRADE POINT
-            # -----------------------------------------------
-
             if mark[15] is not None:
                 mark[15] = float(mark[15])
 
@@ -210,7 +194,6 @@ def index():
         )
 
     finally:
-
         cursor.close()
 
 
@@ -287,7 +270,36 @@ def add():
                 )
 
             # ------------------------------------------------
-            # GET SUBJECT MARK CONFIGURATION
+            # CHECK STUDENT
+            # ------------------------------------------------
+
+            cursor.execute("""
+                SELECT
+                    id,
+                    student_id,
+                    full_name,
+                    department,
+                    semester
+                FROM students
+                WHERE id = %s
+                LIMIT 1
+            """, (student_id,))
+
+            student = cursor.fetchone()
+
+            if not student:
+
+                flash(
+                    "Selected student was not found.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("admin_marksheet.add")
+                )
+
+            # ------------------------------------------------
+            # GET SUBJECT CONFIGURATION
             # ------------------------------------------------
 
             cursor.execute("""
@@ -299,11 +311,8 @@ def add():
                     practical_full_marks,
                     full_marks,
                     pass_marks
-
                 FROM subjects
-
                 WHERE id = %s
-
                 LIMIT 1
             """, (subject_id,))
 
@@ -331,9 +340,6 @@ def add():
             practical_full = float(
                 subject[4] or 0
             )
-
-            # Total FULL MARKS is ALWAYS calculated
-            # from Theory + Practical
 
             total_full = (
                 theory_full +
@@ -500,11 +506,8 @@ def add():
             # ------------------------------------------------
 
             if total >= pass_mark:
-
                 result_status = "Pass"
-
             else:
-
                 result_status = "Fail"
 
             # ------------------------------------------------
@@ -513,12 +516,9 @@ def add():
 
             cursor.execute("""
                 SELECT id
-
                 FROM marksheets
-
                 WHERE student_id = %s
                   AND subject_id = %s
-
                 LIMIT 1
             """, (
                 student_id,
@@ -538,6 +538,24 @@ def add():
                     url_for("admin_marksheet.add")
                 )
 
+            # =================================================
+            # IMPORTANT:
+            # marksheets.id HAS NO AUTO_INCREMENT
+            #
+            # So manually generate next ID.
+            # =================================================
+
+            cursor.execute("""
+                SELECT COALESCE(MAX(id), 0) + 1
+                FROM marksheets
+            """)
+
+            next_id_result = cursor.fetchone()
+
+            next_id = int(
+                next_id_result[0]
+            )
+
             # ------------------------------------------------
             # INSERT
             # ------------------------------------------------
@@ -545,8 +563,15 @@ def add():
             cursor.execute("""
                 INSERT INTO marksheets
                 (
+                    id,
                     student_id,
                     subject_id,
+
+                    internal_theory_marks,
+                    internal_practical_marks,
+                    external_theory_marks,
+                    external_practical_marks,
+
                     theory_marks,
                     practical_marks,
                     total_marks,
@@ -554,11 +579,17 @@ def add():
                     grade_point,
                     remarks
                 )
-
                 VALUES
                 (
                     %s,
                     %s,
+                    %s,
+
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+
                     %s,
                     %s,
                     %s,
@@ -567,13 +598,27 @@ def add():
                     %s
                 )
             """, (
+
+                next_id,
+
                 student_id,
                 subject_id,
+
+                # Existing internal/external columns
+                # are kept at 0 because this form uses
+                # combined theory/practical marks.
+
+                0,
+                0,
+                0,
+                0,
+
                 theory,
                 practical,
                 total,
                 grade,
                 grade_point,
+
                 remarks if remarks else result_status
             ))
 
@@ -599,10 +644,10 @@ def add():
                 full_name,
                 department,
                 semester
-
             FROM students
-
             ORDER BY
+                semester ASC,
+                department ASC,
                 full_name ASC
         """)
 
@@ -623,11 +668,10 @@ def add():
                 practical_full_marks,
                 full_marks,
                 pass_marks
-
             FROM subjects
-
             ORDER BY
                 semester ASC,
+                department ASC,
                 subject_name ASC
         """)
 
@@ -705,7 +749,6 @@ def edit(marksheet_id):
 
                 sub.subject_code,
                 sub.subject_name,
-
                 sub.theory_full_marks,
                 sub.practical_full_marks,
                 sub.full_marks,
@@ -777,7 +820,6 @@ def edit(marksheet_id):
                 marksheet[10] or 0
             )
 
-            # ALWAYS calculate total full marks
             total_full = (
                 theory_full +
                 practical_full
@@ -885,11 +927,8 @@ def edit(marksheet_id):
             # ------------------------------------------------
 
             if total >= pass_mark:
-
                 result_status = "Pass"
-
             else:
-
                 result_status = "Fail"
 
             # ------------------------------------------------
@@ -909,12 +948,15 @@ def edit(marksheet_id):
 
                 WHERE id = %s
             """, (
+
                 theory,
                 practical,
                 total,
                 grade,
                 grade_point,
+
                 remarks if remarks else result_status,
+
                 marksheet_id
             ))
 
@@ -988,7 +1030,6 @@ def delete(marksheet_id):
 
         cursor.execute("""
             DELETE FROM marksheets
-
             WHERE id = %s
         """, (marksheet_id,))
 
@@ -1032,3 +1073,4 @@ def delete(marksheet_id):
 
     finally:
         cursor.close()
+

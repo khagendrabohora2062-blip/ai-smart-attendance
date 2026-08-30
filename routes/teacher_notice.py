@@ -1,7 +1,6 @@
 # ============================================================
 # TEACHER NOTICE
-# File:
-# routes/teacher_notice.py
+# File: routes/teacher_notice.py
 # ============================================================
 
 import os
@@ -19,10 +18,6 @@ from flask import (
 from extensions import mysql
 
 
-# ============================================================
-# BLUEPRINT
-# ============================================================
-
 teacher_notice = Blueprint(
     "teacher_notice",
     __name__,
@@ -31,7 +26,7 @@ teacher_notice = Blueprint(
 
 
 # ============================================================
-# LOGIN CHECK
+# LOGIN
 # ============================================================
 
 def teacher_logged_in():
@@ -39,7 +34,7 @@ def teacher_logged_in():
 
 
 # ============================================================
-# NOTICE IMAGE FOLDER
+# FOLDERS
 # ============================================================
 
 def get_notice_image_folder():
@@ -51,17 +46,10 @@ def get_notice_image_folder():
         "notices"
     )
 
-    os.makedirs(
-        folder,
-        exist_ok=True
-    )
+    os.makedirs(folder, exist_ok=True)
 
     return folder
 
-
-# ============================================================
-# NOTICE PDF FOLDER
-# ============================================================
 
 def get_notice_pdf_folder():
 
@@ -73,10 +61,7 @@ def get_notice_pdf_folder():
         "pdf"
     )
 
-    os.makedirs(
-        folder,
-        exist_ok=True
-    )
+    os.makedirs(folder, exist_ok=True)
 
     return folder
 
@@ -87,10 +72,6 @@ def get_notice_pdf_folder():
 
 @teacher_notice.route("/")
 def index():
-
-    # --------------------------------------------------------
-    # LOGIN
-    # --------------------------------------------------------
 
     if not teacher_logged_in():
 
@@ -106,9 +87,9 @@ def index():
 
     try:
 
-        # ====================================================
-        # GET TEACHER DEPARTMENT
-        # ====================================================
+        # ----------------------------------------------------
+        # TEACHER DEPARTMENT
+        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -134,28 +115,20 @@ def index():
 
         department = teacher[1]
 
-        # ====================================================
-        # GET TEACHER NOTICES
+        # ----------------------------------------------------
+        # TEACHER NOTICE
         #
-        # RULES:
+        # audience:
+        # Everyone -> visible
+        # Teachers  -> visible
+        # Students  -> hidden
         #
-        # 1. General / College notice
-        #    -> Always visible to teachers
-        #
-        # 2. Department notice
-        #    -> Visible when department matches
-        #
-        # 3. Semester notice
-        #    -> Visible when teacher teaches that semester
-        #
-        # 4. Department + Semester
-        #    -> Both must match
-        # ====================================================
+        # Existing semester/department logic preserved.
+        # ----------------------------------------------------
 
         cursor.execute(
             """
             SELECT DISTINCT
-
                 n.id,
                 n.title,
                 n.description,
@@ -165,114 +138,95 @@ def index():
                 n.target_department,
                 n.notice_type,
                 n.created_at
-
             FROM notices n
-
             WHERE n.is_published = 1
 
-            AND
-            (
-                /* =========================================
-                   GENERAL / COLLEGE NOTICE
-                   ========================================= */
+              AND (
+                    n.audience IS NULL
+                    OR LOWER(TRIM(n.audience))
+                       IN ('everyone', 'teachers')
+                  )
 
-                (
+              AND
+              (
                     (
-                        n.target_department IS NULL
-                        OR TRIM(n.target_department) = ''
+                        (
+                            n.target_department IS NULL
+                            OR TRIM(n.target_department) = ''
+                        )
+                        AND
+                        (
+                            n.target_semester IS NULL
+                            OR TRIM(n.target_semester) = ''
+                        )
                     )
-                    AND
+
+                    OR
+
                     (
-                        n.target_semester IS NULL
-                        OR TRIM(n.target_semester) = ''
-                    )
-                )
+                        n.target_department IS NOT NULL
+                        AND TRIM(n.target_department) <> ''
 
-                OR
-
-                /* =========================================
-                   DEPARTMENT MATCH
-                   ========================================= */
-
-                (
-                    n.target_department IS NOT NULL
-                    AND TRIM(n.target_department) <> ''
-
-                    AND LOWER(TRIM(n.target_department))
-                        =
-                    LOWER(TRIM(%s))
-
-                    AND
-                    (
-                        n.target_semester IS NULL
-                        OR TRIM(n.target_semester) = ''
-                    )
-                )
-
-                OR
-
-                /* =========================================
-                   SEMESTER MATCH
-                   ========================================= */
-
-                (
-                    n.target_semester IS NOT NULL
-                    AND TRIM(n.target_semester) <> ''
-
-                    AND EXISTS
-                    (
-                        SELECT 1
-
-                        FROM subjects sub
-
-                        WHERE sub.teacher_id = %s
-
-                        AND LOWER(TRIM(sub.semester))
+                        AND LOWER(TRIM(n.target_department))
                             =
-                        LOWER(TRIM(n.target_semester))
+                        LOWER(TRIM(%s))
+
+                        AND
+                        (
+                            n.target_semester IS NULL
+                            OR TRIM(n.target_semester) = ''
+                        )
                     )
 
-                    AND
+                    OR
+
                     (
-                        n.target_department IS NULL
-                        OR TRIM(n.target_department) = ''
+                        n.target_semester IS NOT NULL
+                        AND TRIM(n.target_semester) <> ''
+
+                        AND EXISTS
+                        (
+                            SELECT 1
+                            FROM subjects sub
+                            WHERE sub.teacher_id = %s
+                              AND LOWER(TRIM(sub.semester))
+                                  =
+                              LOWER(TRIM(n.target_semester))
+                        )
+
+                        AND
+                        (
+                            n.target_department IS NULL
+                            OR TRIM(n.target_department) = ''
+                        )
                     )
-                )
 
-                OR
+                    OR
 
-                /* =========================================
-                   DEPARTMENT + SEMESTER MATCH
-                   ========================================= */
-
-                (
-                    n.target_department IS NOT NULL
-                    AND TRIM(n.target_department) <> ''
-
-                    AND LOWER(TRIM(n.target_department))
-                        =
-                    LOWER(TRIM(%s))
-
-                    AND n.target_semester IS NOT NULL
-                    AND TRIM(n.target_semester) <> ''
-
-                    AND EXISTS
                     (
-                        SELECT 1
+                        n.target_department IS NOT NULL
+                        AND TRIM(n.target_department) <> ''
 
-                        FROM subjects sub
-
-                        WHERE sub.teacher_id = %s
-
-                        AND LOWER(TRIM(sub.semester))
+                        AND LOWER(TRIM(n.target_department))
                             =
-                        LOWER(TRIM(n.target_semester))
-                    )
-                )
-            )
+                        LOWER(TRIM(%s))
 
-            ORDER BY
-                n.created_at DESC
+                        AND n.target_semester IS NOT NULL
+                        AND TRIM(n.target_semester) <> ''
+
+                        AND EXISTS
+                        (
+                            SELECT 1
+                            FROM subjects sub
+                            WHERE sub.teacher_id = %s
+                              AND LOWER(TRIM(sub.semester))
+                                  =
+                              LOWER(TRIM(n.target_semester))
+                        )
+                    )
+              )
+
+            ORDER BY n.created_at DESC
             """,
             (
                 department,
@@ -294,12 +248,7 @@ def index():
         notices = []
 
     finally:
-
         cursor.close()
-
-    # ========================================================
-    # RENDER
-    # ========================================================
 
     return render_template(
         "teacher/notices.html",
@@ -331,7 +280,6 @@ def view(notice_id):
         cursor.execute(
             """
             SELECT
-
                 id,
                 title,
                 description,
@@ -341,13 +289,14 @@ def view(notice_id):
                 target_department,
                 notice_type,
                 created_at
-
             FROM notices
-
             WHERE id = %s
-
-            AND is_published = 1
-
+              AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'teachers')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -363,7 +312,6 @@ def view(notice_id):
         )
 
     finally:
-
         cursor.close()
 
     if not notice:
@@ -379,7 +327,7 @@ def view(notice_id):
 
 
 # ============================================================
-# DOWNLOAD NOTICE IMAGE
+# DOWNLOAD IMAGE
 # ============================================================
 
 @teacher_notice.route(
@@ -402,13 +350,14 @@ def download_image(notice_id):
         cursor.execute(
             """
             SELECT image
-
             FROM notices
-
             WHERE id = %s
-
-            AND is_published = 1
-
+              AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'teachers')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -424,7 +373,6 @@ def download_image(notice_id):
         )
 
     finally:
-
         cursor.close()
 
     if not result or not result[0]:
@@ -433,9 +381,7 @@ def download_image(notice_id):
             url_for("teacher_notice.index")
         )
 
-    filename = os.path.basename(
-        result[0]
-    )
+    filename = os.path.basename(result[0])
 
     folder = get_notice_image_folder()
 
@@ -458,7 +404,7 @@ def download_image(notice_id):
 
 
 # ============================================================
-# DOWNLOAD NOTICE PDF
+# DOWNLOAD PDF
 # ============================================================
 
 @teacher_notice.route(
@@ -481,13 +427,14 @@ def download_pdf(notice_id):
         cursor.execute(
             """
             SELECT pdf_file
-
             FROM notices
-
             WHERE id = %s
-
-            AND is_published = 1
-
+              AND is_published = 1
+              AND (
+                    audience IS NULL
+                    OR LOWER(TRIM(audience))
+                       IN ('everyone', 'teachers')
+                  )
             LIMIT 1
             """,
             (notice_id,)
@@ -503,7 +450,6 @@ def download_pdf(notice_id):
         )
 
     finally:
-
         cursor.close()
 
     if not result or not result[0]:
@@ -512,9 +458,7 @@ def download_pdf(notice_id):
             url_for("teacher_notice.index")
         )
 
-    filename = os.path.basename(
-        result[0]
-    )
+    filename = os.path.basename(result[0])
 
     folder = get_notice_pdf_folder()
 

@@ -1,3 +1,4 @@
+
 from flask import (
     Blueprint,
     request,
@@ -58,7 +59,6 @@ def submit_feedback():
     # -------------------------------------------------
 
     if not name:
-
         flash(
             "Please enter your name.",
             "danger"
@@ -70,7 +70,6 @@ def submit_feedback():
 
 
     if not rating:
-
         flash(
             "Please select a rating.",
             "danger"
@@ -82,7 +81,6 @@ def submit_feedback():
 
 
     if not message:
-
         flash(
             "Please write your feedback.",
             "danger"
@@ -125,17 +123,51 @@ def submit_feedback():
         )
 
 
-    # -------------------------------------------------
-    # INSERT FEEDBACK
-    # -------------------------------------------------
+    # =================================================
+    # DATABASE INSERT
+    # =================================================
 
     cursor = mysql.connection.cursor()
 
     try:
 
+        # -------------------------------------------------
+        # GENERATE NEXT ID
+        # -------------------------------------------------
+        #
+        # feedback.id is NOT AUTO_INCREMENT.
+        # Therefore we generate the ID ourselves.
+        #
+        # FOR UPDATE locks the selected MAX(id) result
+        # during this transaction and reduces the chance
+        # of duplicate IDs from simultaneous requests.
+        # -------------------------------------------------
+
+        cursor.execute("""
+            SELECT COALESCE(MAX(id), 0) + 1
+            FROM feedback
+            FOR UPDATE
+        """)
+
+        result = cursor.fetchone()
+
+        if not result or result[0] is None:
+
+            next_id = 1
+
+        else:
+
+            next_id = int(result[0])
+
+
+        # -------------------------------------------------
+        # INSERT FEEDBACK
+        # -------------------------------------------------
+
         cursor.execute("""
             INSERT INTO feedback
             (
+                id,
                 name,
                 email,
                 rating,
@@ -146,15 +178,21 @@ def submit_feedback():
                 %s,
                 %s,
                 %s,
+                %s,
                 %s
             )
         """, (
+            next_id,
             name,
-            email,
+            email if email else None,
             rating_value,
             message
         ))
 
+
+        # -------------------------------------------------
+        # COMMIT
+        # -------------------------------------------------
 
         mysql.connection.commit()
 
@@ -167,11 +205,15 @@ def submit_feedback():
 
     except Exception as e:
 
+        # -------------------------------------------------
+        # ROLLBACK
+        # -------------------------------------------------
+
         mysql.connection.rollback()
 
         print(
-            "Feedback Error:",
-            e
+            "FEEDBACK INSERT ERROR:",
+            repr(e)
         )
 
         flash(
@@ -186,7 +228,7 @@ def submit_feedback():
 
 
     # -------------------------------------------------
-    # RETURN TO LANDING PAGE
+    # RETURN TO HOME PAGE
     # -------------------------------------------------
 
     return redirect(
@@ -222,12 +264,16 @@ def delete_feedback(id):
 
 
     # -------------------------------------------------
-    # DELETE FEEDBACK
+    # DATABASE
     # -------------------------------------------------
 
     cursor = mysql.connection.cursor()
 
     try:
+
+        # -------------------------------------------------
+        # DELETE FEEDBACK
+        # -------------------------------------------------
 
         cursor.execute("""
             DELETE FROM feedback
@@ -237,13 +283,30 @@ def delete_feedback(id):
         ))
 
 
+        # -------------------------------------------------
+        # COMMIT
+        # -------------------------------------------------
+
         mysql.connection.commit()
 
 
-        flash(
-            "Feedback deleted successfully!",
-            "success"
-        )
+        # -------------------------------------------------
+        # CHECK DELETE RESULT
+        # -------------------------------------------------
+
+        if cursor.rowcount > 0:
+
+            flash(
+                "Feedback deleted successfully!",
+                "success"
+            )
+
+        else:
+
+            flash(
+                "Feedback record was not found.",
+                "warning"
+            )
 
 
     except Exception as e:
@@ -251,8 +314,8 @@ def delete_feedback(id):
         mysql.connection.rollback()
 
         print(
-            "Delete Feedback Error:",
-            e
+            "DELETE FEEDBACK ERROR:",
+            repr(e)
         )
 
         flash(
@@ -273,3 +336,4 @@ def delete_feedback(id):
     return redirect(
         url_for("admin.feedbacks")
     )
+
