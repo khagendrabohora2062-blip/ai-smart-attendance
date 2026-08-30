@@ -1,9 +1,6 @@
 # ============================================================
 # ROUTINE MANAGEMENT
-#
-# File:
-# routes/routine.py
-#
+# File: routes/routine.py
 # ============================================================
 
 from flask import (
@@ -38,36 +35,22 @@ routine = Blueprint(
 
 def get_mysql():
 
-    # --------------------------------------------------------
-    # Method 1: Flask extension
-    # --------------------------------------------------------
-
     mysql = current_app.extensions.get("mysql")
 
     if mysql is not None:
         return mysql
 
-    # --------------------------------------------------------
-    # Method 2: mysql object from app.py
-    # --------------------------------------------------------
-
     try:
-
         from app import mysql as app_mysql
 
         if app_mysql is not None:
             return app_mysql
 
     except Exception as e:
-
         print(
             "MYSQL IMPORT ERROR:",
             repr(e)
         )
-
-    # --------------------------------------------------------
-    # MySQL unavailable
-    # --------------------------------------------------------
 
     raise RuntimeError(
         "MySQL connection is not initialized. "
@@ -80,7 +63,6 @@ def get_mysql():
 # ============================================================
 
 def admin_required():
-
     return bool(
         session.get("admin_id")
     )
@@ -93,14 +75,63 @@ def admin_required():
 def admin_login_redirect():
 
     try:
-
         return redirect(
             url_for("auth.login")
         )
 
     except Exception:
-
         return redirect("/login")
+
+
+# ============================================================
+# SAFE INTEGER PARSER
+# ============================================================
+
+def parse_positive_int(value, field_name):
+
+    """
+    Convert form/API value to a positive integer.
+
+    This prevents values such as:
+        '?'
+        ''
+        'abc'
+        'None'
+
+    from reaching MySQL INTEGER columns.
+    """
+
+    if value is None:
+        raise ValueError(
+            f"{field_name} is required."
+        )
+
+    value = str(value).strip()
+
+    if not value:
+        raise ValueError(
+            f"{field_name} is required."
+        )
+
+    if value in ("?", "None", "null", "NULL"):
+        raise ValueError(
+            f"Invalid {field_name}: {value}"
+        )
+
+    try:
+        number = int(value)
+
+    except (ValueError, TypeError):
+        raise ValueError(
+            f"Invalid {field_name}: {value}"
+        )
+
+    if number <= 0:
+        raise ValueError(
+            f"{field_name} must be a positive integer."
+        )
+
+    return number
 
 
 # ============================================================
@@ -110,17 +141,14 @@ def admin_login_redirect():
 def render_routine_page(**context):
 
     possible_templates = [
-
         "admin/routines.html",
         "admin/routine.html",
         "routine.html",
-
     ]
 
     for template_name in possible_templates:
 
         try:
-
             current_app.jinja_env.get_template(
                 template_name
             )
@@ -136,7 +164,6 @@ def render_routine_page(**context):
             )
 
         except TemplateNotFound:
-
             continue
 
     raise TemplateNotFound(
@@ -151,17 +178,14 @@ def render_routine_page(**context):
 def render_routine_form(**context):
 
     possible_templates = [
-
         "admin/routine_form.html",
         "admin/routines_form.html",
         "admin/routine-form.html",
-
     ]
 
     for template_name in possible_templates:
 
         try:
-
             current_app.jinja_env.get_template(
                 template_name
             )
@@ -177,7 +201,6 @@ def render_routine_form(**context):
             )
 
         except TemplateNotFound:
-
             continue
 
     raise TemplateNotFound(
@@ -266,10 +289,6 @@ def get_form_data(cursor):
 @routine.route("/")
 def index():
 
-    # --------------------------------------------------------
-    # ADMIN CHECK
-    # --------------------------------------------------------
-
     if not admin_required():
 
         flash(
@@ -285,12 +304,7 @@ def index():
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
-
-        # ----------------------------------------------------
-        # GET ROUTINES
-        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -309,13 +323,17 @@ def index():
                 t.full_name,
                 r.room
             FROM routines r
+
             LEFT JOIN subjects s
                 ON r.subject_id = s.id
+
             LEFT JOIN teachers t
                 ON r.teacher_id = t.id
+
             ORDER BY
                 r.semester ASC,
                 r.department ASC,
+
                 CASE r.day
                     WHEN 'Sunday' THEN 1
                     WHEN 'Monday' THEN 2
@@ -326,6 +344,7 @@ def index():
                     WHEN 'Saturday' THEN 7
                     ELSE 8
                 END ASC,
+
                 r.start_time ASC
             """
         )
@@ -372,22 +391,13 @@ def index():
 
         semesters = cursor.fetchall()
 
-        # ----------------------------------------------------
-        # TEMPLATE
-        # ----------------------------------------------------
-
         return render_routine_page(
             routines=routines,
             departments=departments,
             semesters=semesters
         )
 
-    except TemplateNotFound as e:
-
-        print(
-            "ROUTINE TEMPLATE NOT FOUND:",
-            repr(e)
-        )
+    except TemplateNotFound:
 
         flash(
             "Routine page template not found.",
@@ -395,13 +405,11 @@ def index():
         )
 
         try:
-
             return redirect(
                 url_for("admin.dashboard")
             )
 
         except Exception:
-
             return redirect(
                 "/admin/dashboard"
             )
@@ -419,13 +427,11 @@ def index():
         )
 
         try:
-
             return redirect(
                 url_for("admin.dashboard")
             )
 
         except Exception:
-
             return redirect(
                 "/admin/dashboard"
             )
@@ -443,14 +449,6 @@ def index():
 
 # ============================================================
 # ADD ROUTINE
-#
-# IMPORTANT:
-# Both endpoints are supported:
-#
-# routine.add
-# routine.add_routine
-#
-# This fixes old/new template compatibility.
 # ============================================================
 
 @routine.route(
@@ -464,10 +462,6 @@ def index():
     endpoint="add_routine"
 )
 def add():
-
-    # --------------------------------------------------------
-    # ADMIN CHECK
-    # --------------------------------------------------------
 
     if not admin_required():
 
@@ -484,7 +478,6 @@ def add():
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
 
         # ====================================================
@@ -523,18 +516,32 @@ def add():
                 ""
             ).strip()
 
-            subject_id = request.form.get(
+            subject_raw = request.form.get(
                 "subject_id",
                 ""
-            ).strip()
+            )
 
             room = request.form.get(
                 "room",
                 ""
             ).strip()
 
+            print(
+                "ADD ROUTINE FORM:",
+                {
+                    "semester": semester,
+                    "department": department,
+                    "section": section,
+                    "day": day,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "subject_id": subject_raw,
+                    "room": room
+                }
+            )
+
             # ------------------------------------------------
-            # REQUIRED VALIDATION
+            # REQUIRED
             # ------------------------------------------------
 
             if not all([
@@ -542,8 +549,7 @@ def add():
                 department,
                 day,
                 start_time,
-                end_time,
-                subject_id
+                end_time
             ]):
 
                 flash(
@@ -556,7 +562,29 @@ def add():
                 )
 
             # ------------------------------------------------
-            # TIME VALIDATION
+            # SUBJECT ID INTEGER VALIDATION
+            # ------------------------------------------------
+
+            try:
+
+                subject_id = parse_positive_int(
+                    subject_raw,
+                    "Subject ID"
+                )
+
+            except ValueError as e:
+
+                flash(
+                    str(e),
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("routine.add")
+                )
+
+            # ------------------------------------------------
+            # TIME
             # ------------------------------------------------
 
             if start_time >= end_time:
@@ -570,9 +598,9 @@ def add():
                     url_for("routine.add")
                 )
 
-            # ------------------------------------------------
-            # SUBJECT
-            # ------------------------------------------------
+            # =================================================
+            # GET SUBJECT
+            # =================================================
 
             cursor.execute(
                 """
@@ -601,16 +629,60 @@ def add():
                     url_for("routine.add")
                 )
 
-            subject_db_id = subject[0]
+            # ------------------------------------------------
+            # SUBJECT ID FROM DB
+            # ------------------------------------------------
+
+            subject_db_id = parse_positive_int(
+                subject[0],
+                "Subject ID"
+            )
+
             subject_semester = subject[1]
             subject_department = subject[2]
-            teacher_id = subject[3]
+            teacher_raw = subject[3]
 
             # ------------------------------------------------
-            # SEMESTER VALIDATION
+            # TEACHER ID
             # ------------------------------------------------
 
-            if str(subject_semester) != str(semester):
+            if teacher_raw is None:
+
+                flash(
+                    "The selected subject does not have "
+                    "a teacher assigned.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("routine.add")
+                )
+
+            try:
+
+                teacher_id = parse_positive_int(
+                    teacher_raw,
+                    "Teacher ID"
+                )
+
+            except ValueError as e:
+
+                flash(
+                    str(e),
+                    "danger"
+                )
+
+                return redirect(
+                    url_for("routine.add")
+                )
+
+            # ------------------------------------------------
+            # SEMESTER
+            # ------------------------------------------------
+
+            if str(subject_semester).strip() != str(
+                semester
+            ).strip():
 
                 flash(
                     "Selected subject does not belong "
@@ -623,7 +695,7 @@ def add():
                 )
 
             # ------------------------------------------------
-            # DEPARTMENT VALIDATION
+            # DEPARTMENT
             # ------------------------------------------------
 
             if subject_department:
@@ -643,22 +715,6 @@ def add():
                     return redirect(
                         url_for("routine.add")
                     )
-
-            # ------------------------------------------------
-            # TEACHER VALIDATION
-            # ------------------------------------------------
-
-            if not teacher_id:
-
-                flash(
-                    "The selected subject does not "
-                    "have a teacher assigned.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("routine.add")
-                )
 
             # =================================================
             # TEACHER CONFLICT
@@ -831,7 +887,7 @@ def add():
             )
 
         # ====================================================
-        # GET FORM DATA
+        # GET FORM
         # ====================================================
 
         (
@@ -840,26 +896,15 @@ def add():
             semesters
         ) = get_form_data(cursor)
 
-        # ====================================================
-        # FORM
-        # ====================================================
-
         return render_routine_form(
-
             form_title="Add Routine",
-
             form_action=url_for(
                 "routine.add_routine"
             ),
-
             routine_data=None,
-
             subjects=subjects,
-
             departments=departments,
-
             semesters=semesters
-
         )
 
     except Exception as e:
@@ -922,8 +967,29 @@ def edit(routine_id):
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
+
+        # ====================================================
+        # ROUTINE ID VALIDATION
+        # ====================================================
+
+        try:
+
+            routine_id = parse_positive_int(
+                routine_id,
+                "Routine ID"
+            )
+
+        except ValueError as e:
+
+            flash(
+                str(e),
+                "danger"
+            )
+
+            return redirect(
+                url_for("routine.index")
+            )
 
         # ====================================================
         # CURRENT ROUTINE
@@ -998,15 +1064,30 @@ def edit(routine_id):
                 ""
             ).strip()
 
-            subject_id = request.form.get(
+            subject_raw = request.form.get(
                 "subject_id",
                 ""
-            ).strip()
+            )
 
             room = request.form.get(
                 "room",
                 ""
             ).strip()
+
+            print(
+                "EDIT ROUTINE FORM:",
+                {
+                    "routine_id": routine_id,
+                    "semester": semester,
+                    "department": department,
+                    "section": section,
+                    "day": day,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "subject_id": subject_raw,
+                    "room": room
+                }
+            )
 
             # ------------------------------------------------
             # REQUIRED
@@ -1017,12 +1098,36 @@ def edit(routine_id):
                 department,
                 day,
                 start_time,
-                end_time,
-                subject_id
+                end_time
             ]):
 
                 flash(
                     "Please fill all required fields.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "routine.edit",
+                        routine_id=routine_id
+                    )
+                )
+
+            # ------------------------------------------------
+            # SUBJECT ID
+            # ------------------------------------------------
+
+            try:
+
+                subject_id = parse_positive_int(
+                    subject_raw,
+                    "Subject ID"
+                )
+
+            except ValueError as e:
+
+                flash(
+                    str(e),
                     "danger"
                 )
 
@@ -1051,9 +1156,9 @@ def edit(routine_id):
                     )
                 )
 
-            # ------------------------------------------------
-            # SUBJECT
-            # ------------------------------------------------
+            # =================================================
+            # GET SUBJECT
+            # =================================================
 
             cursor.execute(
                 """
@@ -1085,13 +1190,62 @@ def edit(routine_id):
                     )
                 )
 
-            teacher_id = subject[3]
+            # ------------------------------------------------
+            # SAFE SUBJECT ID
+            # ------------------------------------------------
+
+            subject_db_id = parse_positive_int(
+                subject[0],
+                "Subject ID"
+            )
+
+            # ------------------------------------------------
+            # TEACHER ID
+            # ------------------------------------------------
+
+            if subject[3] is None:
+
+                flash(
+                    "The selected subject does not have "
+                    "a teacher assigned.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "routine.edit",
+                        routine_id=routine_id
+                    )
+                )
+
+            try:
+
+                teacher_id = parse_positive_int(
+                    subject[3],
+                    "Teacher ID"
+                )
+
+            except ValueError as e:
+
+                flash(
+                    str(e),
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "routine.edit",
+                        routine_id=routine_id
+                    )
+                )
 
             # ------------------------------------------------
             # SEMESTER
             # ------------------------------------------------
 
-            if str(subject[1]) != str(semester):
+            if str(subject[1]).strip() != str(
+                semester
+            ).strip():
 
                 flash(
                     "Selected subject does not belong "
@@ -1130,25 +1284,6 @@ def edit(routine_id):
                             routine_id=routine_id
                         )
                     )
-
-            # ------------------------------------------------
-            # TEACHER
-            # ------------------------------------------------
-
-            if not teacher_id:
-
-                flash(
-                    "The selected subject does not "
-                    "have a teacher assigned.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "routine.edit",
-                        routine_id=routine_id
-                    )
-                )
 
             # =================================================
             # TEACHER CONFLICT
@@ -1284,6 +1419,15 @@ def edit(routine_id):
             # UPDATE
             # =================================================
 
+            print(
+                "UPDATING ROUTINE:",
+                {
+                    "routine_id": routine_id,
+                    "subject_id": subject_db_id,
+                    "teacher_id": teacher_id
+                }
+            )
+
             cursor.execute(
                 """
                 UPDATE routines
@@ -1306,7 +1450,7 @@ def edit(routine_id):
                     day,
                     start_time,
                     end_time,
-                    subject_id,
+                    subject_db_id,
                     teacher_id,
                     room or None,
                     routine_id
@@ -1314,6 +1458,11 @@ def edit(routine_id):
             )
 
             mysql.connection.commit()
+
+            print(
+                "ROUTINE UPDATE SUCCESS:",
+                routine_id
+            )
 
             flash(
                 "Routine updated successfully.",
@@ -1334,27 +1483,16 @@ def edit(routine_id):
             semesters
         ) = get_form_data(cursor)
 
-        # ====================================================
-        # FORM
-        # ====================================================
-
         return render_routine_form(
-
             form_title="Edit Routine",
-
             form_action=url_for(
                 "routine.edit",
                 routine_id=routine_id
             ),
-
             routine_data=routine_data,
-
             subjects=subjects,
-
             departments=departments,
-
             semesters=semesters
-
         )
 
     except Exception as e:
@@ -1417,8 +1555,12 @@ def delete(routine_id):
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
+
+        routine_id = parse_positive_int(
+            routine_id,
+            "Routine ID"
+        )
 
         cursor.execute(
             """
@@ -1472,10 +1614,6 @@ def delete(routine_id):
 
 # ============================================================
 # SUBJECTS API
-#
-# GET:
-# /admin/routines/subjects
-#
 # ============================================================
 
 @routine.route("/subjects")
@@ -1504,7 +1642,6 @@ def subjects_api():
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
 
         query = """
@@ -1553,10 +1690,6 @@ def subjects_api():
                 department
             )
 
-        # ----------------------------------------------------
-        # ORDER
-        # ----------------------------------------------------
-
         query += """
             ORDER BY
                 s.subject_name ASC
@@ -1574,32 +1707,21 @@ def subjects_api():
         for row in rows:
 
             data.append({
-
                 "id": row[0],
-
                 "subject_code": row[1],
-
                 "subject_name": row[2],
-
                 "semester": row[3],
-
                 "department": row[4],
-
                 "teacher_id": row[5],
-
                 "teacher_name":
                     row[6]
                     if row[6]
                     else "No teacher assigned"
-
             })
 
         return jsonify({
-
             "success": True,
-
             "subjects": data
-
         })
 
     except Exception as e:
@@ -1610,11 +1732,8 @@ def subjects_api():
         )
 
         return jsonify({
-
             "success": False,
-
             "message": str(e)
-
         }), 500
 
     finally:
@@ -1630,10 +1749,6 @@ def subjects_api():
 
 # ============================================================
 # DEPARTMENTS API
-#
-# GET:
-# /admin/routines/departments
-#
 # ============================================================
 
 @routine.route("/departments")
@@ -1642,11 +1757,8 @@ def departments_api():
     if not admin_required():
 
         return jsonify({
-
             "success": False,
-
             "message": "Unauthorized"
-
         }), 401
 
     semester = request.args.get(
@@ -1660,7 +1772,6 @@ def departments_api():
     try:
 
         mysql = get_mysql()
-
         cursor = mysql.connection.cursor()
 
         query = """
@@ -1673,10 +1784,6 @@ def departments_api():
 
         params = []
 
-        # ----------------------------------------------------
-        # SEMESTER FILTER
-        # ----------------------------------------------------
-
         if semester:
 
             query += """
@@ -1686,10 +1793,6 @@ def departments_api():
             params.append(
                 semester
             )
-
-        # ----------------------------------------------------
-        # ORDER
-        # ----------------------------------------------------
 
         query += """
             ORDER BY
@@ -1714,11 +1817,8 @@ def departments_api():
                 )
 
         return jsonify({
-
             "success": True,
-
             "departments": departments
-
         })
 
     except Exception as e:
@@ -1729,11 +1829,8 @@ def departments_api():
         )
 
         return jsonify({
-
             "success": False,
-
             "message": str(e)
-
         }), 500
 
     finally:
