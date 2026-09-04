@@ -1,2608 +1,196 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
 
 <head>
 
-```
-<meta charset="UTF-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>AI Smart Attendance System</title>
-
-<!-- BOOTSTRAP -->
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet">
-
-<!-- BOOTSTRAP ICONS -->
-<link
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-    rel="stylesheet">
-
-<!-- GOOGLE FONT -->
-<link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
-    rel="stylesheet">
-
-<!-- LANDING CSS -->
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/landing.css') }}">
-
-<style>
-
-    /* =====================================================
-       GLOBAL
-    ===================================================== */
-
-    html {
-        scroll-behavior: smooth;
-        scroll-padding-top: 90px;
-    }
-
-    body {
-        overflow-x: hidden;
-    }
-
-
-    /* =====================================================
-       NAVBAR
-    ===================================================== */
-
-    .custom-navbar {
-        padding: 12px 0;
-        z-index: 1030;
-    }
-
-    .logo-text {
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .logo-icon {
-        font-size: 25px;
-    }
-
-    .navbar-nav {
-        gap: 3px;
-    }
-
-    .navbar-nav .nav-link {
-        padding: 9px 11px !important;
-        border-radius: 10px;
-        transition: all 0.25s ease;
-        white-space: nowrap;
-    }
-
-    .navbar-nav .nav-link:hover {
-        background: rgba(255,255,255,0.08);
-        transform: translateY(-1px);
-    }
-
-    .navbar-nav .nav-link.active {
-        background: rgba(13,110,253,0.15);
-    }
-
-    .navbar-nav .nav-link i {
-        margin-right: 4px;
-    }
-
-    .navbar-login {
-        display: flex;
-        align-items: center;
-    }
-
-    .login-btn {
-        border-radius: 10px;
-        padding: 9px 17px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .contact-nav-link {
-        color: #ffffff !important;
-    }
-
-    .contact-nav-link:hover {
-        background: rgba(13,202,240,0.12) !important;
-        color: #0dcaf0 !important;
-    }
-
-
-    /* =====================================================
-       LOGIN PORTAL
-    ===================================================== */
-
-    .login-portal-section {
-        padding: 90px 0;
-    }
-
-    .login-portal-card {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 24px;
-        padding: 35px;
-        height: 100%;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(12px);
-    }
-
-    .login-portal-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(13,110,253,0.7);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.25);
-    }
-
-    .login-portal-icon {
-        width: 75px;
-        height: 75px;
-        margin: 0 auto 20px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 34px;
-        background: rgba(13,110,253,0.15);
-    }
-
-    .student-login-card {
-        border-color: rgba(25,135,84,0.35);
-    }
-
-    .student-login-card:hover {
-        border-color: rgba(25,135,84,0.8);
-    }
-
-    .teacher-login-card {
-        border-color: rgba(13,202,240,0.35);
-    }
-
-    .teacher-login-card:hover {
-        border-color: rgba(13,202,240,0.8);
-    }
-
-    .admin-login-card {
-        border-color: rgba(13,110,253,0.35);
-    }
-
-    .admin-login-card:hover {
-        border-color: rgba(13,110,253,0.8);
-    }
-
-
-    /* =====================================================
-       LOGIN TABLE
-    ===================================================== */
-
-    .login-table-wrapper {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px;
-        overflow: hidden;
-    }
-
-    .login-table {
-        margin-bottom: 0;
-    }
-
-    .login-table th,
-    .login-table td {
-        padding: 18px 20px;
-        vertical-align: middle;
-    }
-
-    .login-table thead th {
-        background: rgba(13,110,253,0.15);
-        color: #fff;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .login-table tbody td {
-        color: rgba(255,255,255,0.85);
-        border-color: rgba(255,255,255,0.08);
-    }
-
-    .login-role-icon {
-        width: 42px;
-        height: 42px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        margin-right: 10px;
-    }
-
-    .student-role-icon {
-        background: rgba(25,135,84,0.15);
-        color: #20c997;
-    }
-
-    .teacher-role-icon {
-        background: rgba(13,202,240,0.15);
-        color: #0dcaf0;
-    }
-
-    .admin-role-icon {
-        background: rgba(13,110,253,0.15);
-        color: #0d6efd;
-    }
-
-
-    /* =====================================================
-       STUDENT BADGE
-    ===================================================== */
-
-    .student-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 7px 14px;
-        border-radius: 50px;
-        background: rgba(25,135,84,0.15);
-        color: #20c997;
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-
-    /* =====================================================
-       FEEDBACK MODAL - COMPACT FIX
-    ===================================================== */
-
-    .feedback-modal {
-        z-index: 2000 !important;
-    }
-
-    .feedback-modal .modal-dialog {
-        width: 100%;
-        max-width: 430px !important;
-        margin: 90px auto 25px !important;
-        padding: 0 12px;
-    }
-
-    .feedback-modal .modal-content {
-        width: 100%;
-        max-width: 430px;
-        margin: 0 auto;
-        background: rgba(10,15,30,0.99);
-        border: 1px solid rgba(255,255,255,0.14);
-        border-radius: 18px;
-        color: #fff;
-        backdrop-filter: blur(18px);
-        box-shadow: 0 25px 80px rgba(0,0,0,0.65);
-        overflow: hidden;
-    }
-
-    .feedback-modal-content {
-        background: rgba(10,15,30,0.99);
-        border: 1px solid rgba(255,255,255,0.14);
-        border-radius: 18px;
-        color: #fff;
-    }
-
-    .feedback-modal-content .modal-header {
-        padding: 20px 22px 8px;
-    }
-
-    .feedback-modal-content .modal-body {
-        padding: 8px 22px 22px;
-    }
-
-    .feedback-modal-content .modal-title {
-        font-size: 22px;
-    }
-
-    .feedback-modal-content p {
-        font-size: 13px;
-        line-height: 1.5;
-    }
-
-    .feedback-modal-content .form-label {
-        color: #fff;
-        font-weight: 500;
-        font-size: 13px;
-        margin-bottom: 6px;
-    }
-
-    .feedback-modal-content .mb-3 {
-        margin-bottom: 13px !important;
-    }
-
-    .feedback-modal-content .form-control,
-    .feedback-modal-content .form-select {
-        background: rgba(255,255,255,0.07);
-        border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
-        border-radius: 10px;
-        padding: 9px 12px;
-        font-size: 13px;
-        min-height: 40px;
-    }
-
-    .feedback-modal-content textarea.form-control {
-        min-height: 90px;
-        resize: vertical;
-    }
-
-    .feedback-modal-content .form-control::placeholder {
-        color: rgba(255,255,255,0.42);
-    }
-
-    .feedback-modal-content .form-control:focus,
-    .feedback-modal-content .form-select:focus {
-        background: rgba(255,255,255,0.09);
-        color: #fff;
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.15rem rgba(13,110,253,0.2);
-    }
-
-    .feedback-modal-content .form-select option {
-        background: #111827;
-        color: #fff;
-    }
-
-    .feedback-modal-content .btn {
-        border-radius: 9px;
-        font-size: 13px;
-        padding: 8px 14px;
-    }
-
-    .feedback-modal-content .hero-badge {
-        font-size: 10px;
-        padding: 5px 10px;
-    }
-
-    .feedback-modal-content .d-flex.gap-2 {
-        margin-top: 15px !important;
-    }
-
-
-    /* =====================================================
-       MODAL BACKDROP
-    ===================================================== */
-
-    .modal-backdrop {
-        z-index: 1990 !important;
-    }
-
-
-    /* =====================================================
-       TESTIMONIALS
-    ===================================================== */
-
-    .testimonial-card {
-        height: 100%;
-        text-align: center;
-        padding: 35px 25px;
-        border-radius: 22px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.10);
-        transition: all 0.3s ease;
-    }
-
-    .testimonial-card:hover {
-        transform: translateY(-8px);
-        border-color: rgba(13,110,253,0.55);
-        box-shadow: 0 18px 45px rgba(0,0,0,0.25);
-    }
-
-    .testimonial-img {
-        width: 90px;
-        height: 90px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid rgba(255,255,255,0.15);
-    }
-
-
-    /* =====================================================
-       FOOTER
-    ===================================================== */
-
-    .footer-contact-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .footer-contact-item i {
-        margin-top: 4px;
-        color: #0dcaf0;
-    }
-
-
-    /* =====================================================
-       SOCIAL MEDIA
-    ===================================================== */
-
-    .social-links {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .social-links a {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        color: #ffffff;
-        text-decoration: none;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.10);
-        transition: all 0.3s ease;
-    }
-
-    .social-links a:hover {
-        transform: translateY(-4px);
-        background: rgba(13,110,253,0.15);
-        border-color: rgba(13,110,253,0.55);
-        color: #0dcaf0;
-    }
-
-    .social-links a i {
-        margin: 0 !important;
-    }
-
-
-    /* =====================================================
-       TABLET
-    ===================================================== */
-
-    @media (max-width: 1199px) {
-
-        .navbar-nav .nav-link {
-            font-size: 13px;
-            padding: 8px 8px !important;
-        }
-
-        .logo-text {
-            font-size: 17px;
-        }
-
-        .login-btn {
-            padding: 8px 13px;
-            font-size: 13px;
-        }
-    }
-
-
-    /* =====================================================
-       MOBILE NAVBAR
-    ===================================================== */
-
-    @media (max-width: 991px) {
-
-        .custom-navbar {
-            padding: 10px 15px;
-        }
-
-        .navbar-collapse {
-            margin-top: 12px;
-            padding: 15px;
-            border-radius: 16px;
-            background: rgba(10,15,30,0.98);
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-        }
-
-        .navbar-nav {
-            width: 100%;
-            gap: 4px;
-        }
-
-        .navbar-nav .nav-item {
-            width: 100%;
-        }
-
-        .navbar-nav .nav-link {
-            width: 100%;
-            padding: 12px 14px !important;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .navbar-login {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .navbar-login .login-btn {
-            width: 100%;
-            display: block;
-            text-align: center;
-            padding: 12px;
-        }
-
-        .hero-section {
-            padding-top: 120px !important;
-            text-align: center;
-        }
-
-        .hero-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-        }
-
-        .hero-buttons .btn {
-            width: 100%;
-            margin: 0 !important;
-        }
-
-        .hero-image {
-            margin-top: 50px;
-            max-width: 90%;
-        }
-    }
-
-
-    /* =====================================================
-       MOBILE
-    ===================================================== */
-
-    @media (max-width: 767px) {
-
-        .login-portal-section {
-            padding: 60px 0;
-        }
-
-        .login-portal-card {
-            padding: 25px 20px;
-        }
-
-        .login-table-wrapper {
-            overflow-x: auto;
-        }
-
-        .login-table {
-            min-width: 700px;
-        }
-
-        .footer-section {
-            text-align: center;
-        }
-
-        .footer-section ul {
-            padding-left: 0;
-        }
-
-        .footer-contact-item {
-            justify-content: center;
-        }
-
-        .social-links {
-            justify-content: center;
-        }
-
-        /* COMPACT FEEDBACK ON MOBILE */
-
-        .feedback-modal .modal-dialog {
-            max-width: 100% !important;
-            width: 100%;
-            margin: 70px auto 15px !important;
-            padding: 0 12px;
-        }
-
-        .feedback-modal .modal-content {
-            max-width: 100%;
-            border-radius: 16px;
-        }
-
-        .feedback-modal-content .modal-header {
-            padding: 18px 18px 6px;
-        }
-
-        .feedback-modal-content .modal-body {
-            padding: 6px 18px 18px;
-        }
-
-        .feedback-modal-content .modal-title {
-            font-size: 19px;
-        }
-
-        .feedback-modal-content .form-control,
-        .feedback-modal-content .form-select {
-            min-height: 38px;
-            padding: 8px 10px;
-            font-size: 12px;
-        }
-
-        .feedback-modal-content textarea.form-control {
-            min-height: 75px;
-        }
-
-        .feedback-modal-content .btn {
-            padding: 8px 11px;
-            font-size: 12px;
-        }
-    }
-
-
-    /* =====================================================
-       SMALL PHONE
-    ===================================================== */
-
-    @media (max-width: 575px) {
-
-        .custom-navbar {
-            padding: 8px 10px;
-        }
-
-        .logo-text {
-            font-size: 15px;
-        }
-
-        .logo-icon {
-            font-size: 21px;
-        }
-
-        .navbar-toggler {
-            padding: 5px 8px;
-            border-radius: 8px;
-        }
-
-        .navbar-collapse {
-            margin-top: 10px;
-            padding: 12px;
-        }
-
-        .navbar-nav .nav-link {
-            font-size: 14px;
-            padding: 11px 12px !important;
-        }
-
-        .hero-title {
-            font-size: 38px !important;
-            line-height: 1.2;
-        }
-
-        .hero-description {
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .hero-buttons {
-            margin-top: 30px !important;
-        }
-
-        .hero-buttons .btn {
-            font-size: 14px;
-            padding: 11px 15px;
-        }
-
-        .mini-stat h2 {
-            font-size: 24px;
-        }
-
-        .mini-stat p {
-            font-size: 12px;
-        }
-
-        .display-4 {
-            font-size: 2rem !important;
-        }
-
-        .lead {
-            font-size: 0.95rem;
-        }
-
-        .container {
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-
-        .glass-card {
-            padding: 25px 15px;
-        }
-
-        .tech-card {
-            min-height: 150px;
-        }
-
-        .testimonial-card {
-            padding: 25px 18px;
-        }
-
-        /* EXTRA SMALL FEEDBACK */
-
-        .feedback-modal .modal-dialog {
-            margin-top: 65px !important;
-            padding: 0 10px;
-        }
-
-        .feedback-modal-content {
-            border-radius: 15px;
-        }
-
-        .feedback-modal-content .modal-header {
-            padding: 16px 16px 5px;
-        }
-
-        .feedback-modal-content .modal-body {
-            padding: 5px 16px 16px;
-        }
-
-        .feedback-modal-content .form-label {
-            font-size: 12px;
-        }
-
-        .feedback-modal-content .form-control,
-        .feedback-modal-content .form-select {
-            font-size: 12px;
-            padding: 7px 9px;
-            min-height: 36px;
-        }
-
-        .feedback-modal-content textarea.form-control {
-            min-height: 70px;
-        }
-
-        .feedback-modal-content .d-flex.gap-2 {
-            gap: 6px !important;
-        }
-
-        .social-links a {
-            width: 40px;
-            height: 40px;
-        }
-    }
-
-</style>
-```
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="description"
+        content="User feedback for AI Smart Attendance System."
+    >
+
+    <title>
+        Feedback | AI Smart Attendance System
+    </title>
+
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/landing.css') }}"
+    >
 
 </head>
 
+
 <body>
 
-<!-- =====================================================
-     NAVBAR
-====================================================== -->
 
-<nav class="navbar navbar-expand-lg navbar-dark custom-navbar fixed-top">
+<nav class="navbar navbar-expand-lg custom-navbar">
 
-```
-<div class="container">
-
-    <a
-        class="navbar-brand logo-text d-flex align-items-center"
-        href="#home">
-
-        <span class="logo-icon me-2">🤖</span>
-
-        <span>AI Smart Attendance</span>
-
-    </a>
+    <div class="container">
 
 
-    <button
-        class="navbar-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#mainNavbar"
-        aria-controls="mainNavbar"
-        aria-expanded="false"
-        aria-label="Toggle navigation">
+        <a
+            class="navbar-brand brand-mark"
+            href="{{ url_for('home.index') }}"
+        >
 
-        <span class="navbar-toggler-icon"></span>
-
-    </button>
-
-
-    <div
-        class="collapse navbar-collapse"
-        id="mainNavbar">
-
-        <ul class="navbar-nav mx-auto align-items-lg-center">
-
-            <li class="nav-item">
-                <a class="nav-link active" href="#home">
-                    <i class="bi bi-house-door-fill"></i>
-                    Home
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#features">
-                    <i class="bi bi-stars"></i>
-                    Features
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#about">
-                    <i class="bi bi-info-circle-fill"></i>
-                    About
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#workflow">
-                    <i class="bi bi-diagram-3-fill"></i>
-                    Workflow
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#technology">
-                    <i class="bi bi-cpu-fill"></i>
-                    Technology
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a
-                    class="nav-link contact-nav-link"
-                    href="/contact">
-
-                    <i class="bi bi-envelope-fill"></i>
-                    Contact Us
-
-                </a>
-            </li>
-
-            <li class="nav-item">
-
-                <a
-                    class="nav-link"
-                    href="#"
-                    data-bs-toggle="modal"
-                    data-bs-target="#feedbackModal">
-
-                    <i class="bi bi-chat-square-text-fill"></i>
-                    Feedback
-
-                </a>
-
-            </li>
-
-        </ul>
-
-
-        <div class="navbar-login">
-
-            <a
-                href="/login"
-                class="btn btn-primary login-btn">
-
-                <i class="bi bi-box-arrow-in-right"></i>
-                Login
-
-            </a>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</nav>
-
-<!-- =====================================================
-     HERO
-====================================================== -->
-
-<section id="home" class="hero-section">
-
-```
-<div class="container">
-
-    <div class="row align-items-center">
-
-        <div class="col-lg-6">
-
-            <span class="hero-badge">
-                AI Powered Attendance System
+            <span class="brand-icon">
+                <i class="bi bi-cpu-fill"></i>
             </span>
 
-            <h1 class="hero-title mt-4">
+            <span class="brand-copy">
 
-                Smart Attendance
-                <br>
+                <strong>
+                    AI Smart Attendance
+                </strong>
 
-                Using
-
-                <span class="gradient-text">
-                    Artificial Intelligence
-                </span>
-
-            </h1>
-
-            <p class="hero-description mt-4">
-
-                A complete attendance management platform
-                powered by Artificial Intelligence,
-                Face Recognition,
-                QR Code Technology,
-                Flask and MySQL.
-                Designed for schools,
-                colleges and universities.
-
-            </p>
-
-            <div class="hero-buttons mt-5">
-
-                <a
-                    href="/login"
-                    class="btn btn-primary btn-lg">
-
-                    <i class="bi bi-shield-lock-fill"></i>
-                    Admin Login
-
-                </a>
-
-                <a
-                    href="/teacher/login"
-                    class="btn btn-outline-light btn-lg">
-
-                    <i class="bi bi-person-workspace"></i>
-                    Teacher Login
-
-                </a>
-
-                <a
-                    href="/student/login"
-                    class="btn btn-success btn-lg">
-
-                    <i class="bi bi-person-badge-fill"></i>
-                    Student Login
-
-                </a>
-
-                <a
-                    href="#features"
-                    class="btn btn-success btn-lg">
-
-                    <i class="bi bi-arrow-down-circle"></i>
-                    Explore
-
-                </a>
-
-            </div>
-
-
-            <div class="row mt-5">
-
-                <div class="col-6 col-md-3">
-                    <div class="mini-stat">
-                        <h2>{{ total_students }}</h2>
-                        <p>Students</p>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="mini-stat">
-                        <h2>{{ total_teachers }}</h2>
-                        <p>Teachers</p>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="mini-stat">
-                        <h2>{{ total_subjects }}</h2>
-                        <p>Subjects</p>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="mini-stat">
-                        <h2>{{ today_attendance }}</h2>
-                        <p>Today</p>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-6 text-center">
-
-            <img
-                src="{{ url_for('static', filename='images/hero.png') }}"
-                class="img-fluid hero-image"
-                alt="AI Smart Attendance System">
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     LOGIN PORTAL
-====================================================== -->
-
-<section id="portal" class="login-portal-section">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            SYSTEM ACCESS
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            Choose Your Login
-        </h2>
-
-        <p class="lead text-light mt-3">
-            Select your role to access the
-            AI Smart Attendance System.
-        </p>
-
-    </div>
-
-
-    <div class="row g-4">
-
-
-        <div class="col-lg-4 col-md-6">
-
-            <div class="login-portal-card admin-login-card text-center">
-
-                <div class="login-portal-icon text-primary">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </div>
-
-                <h3>Admin</h3>
-
-                <p class="text-light">
-                    Manage the complete attendance system,
-                    students, teachers, subjects and reports.
-                </p>
-
-                <a
-                    href="/login"
-                    class="btn btn-primary w-100 mt-3">
-
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Admin Login
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-4 col-md-6">
-
-            <div class="login-portal-card teacher-login-card text-center">
-
-                <div class="login-portal-icon text-info">
-                    <i class="bi bi-person-workspace"></i>
-                </div>
-
-                <h3>Teacher</h3>
-
-                <p class="text-light">
-                    Open attendance sessions,
-                    use Face/QR attendance and
-                    manage attendance reports.
-                </p>
-
-                <a
-                    href="/teacher/login"
-                    class="btn btn-info text-dark w-100 mt-3">
-
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Teacher Login
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-4 col-md-6 mx-auto">
-
-            <div class="login-portal-card student-login-card text-center">
-
-                <div class="login-portal-icon text-success">
-                    <i class="bi bi-person-badge-fill"></i>
-                </div>
-
-                <h3>Student</h3>
-
-                <span class="student-badge mb-3">
-
-                    <i class="bi bi-mortarboard-fill"></i>
-                    Student Portal
-
-                </span>
-
-                <p class="text-light">
-                    Students can securely login
-                    to view their attendance,
-                    subjects and personal information.
-                </p>
-
-                <a
-                    href="/student/login"
-                    class="btn btn-success w-100 mt-3">
-
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Student Login
-
-                </a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="mt-5">
-
-        <div class="login-table-wrapper">
-
-            <div class="table-responsive">
-
-                <table class="table login-table">
-
-                    <thead>
-
-                        <tr>
-                            <th>Role</th>
-                            <th>Access</th>
-                            <th>Main Features</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        <tr>
-
-                            <td>
-                                <span class="login-role-icon admin-role-icon">
-                                    <i class="bi bi-shield-lock-fill"></i>
-                                </span>
-
-                                <strong>Admin</strong>
-                            </td>
-
-                            <td>Full System Access</td>
-
-                            <td>
-                                Students,
-                                Teachers,
-                                Subjects,
-                                Attendance,
-                                Reports
-                            </td>
-
-                            <td class="text-center">
-
-                                <a
-                                    href="/login"
-                                    class="btn btn-primary btn-sm">
-
-                                    Login
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-
-                                <span class="login-role-icon teacher-role-icon">
-                                    <i class="bi bi-person-workspace"></i>
-                                </span>
-
-                                <strong>Teacher</strong>
-
-                            </td>
-
-                            <td>Teacher Dashboard</td>
-
-                            <td>
-                                Attendance Session,
-                                Face Recognition,
-                                QR,
-                                Reports
-                            </td>
-
-                            <td class="text-center">
-
-                                <a
-                                    href="/teacher/login"
-                                    class="btn btn-info btn-sm text-dark">
-
-                                    Login
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-
-                        <tr>
-
-                            <td>
-
-                                <span class="login-role-icon student-role-icon">
-                                    <i class="bi bi-person-badge-fill"></i>
-                                </span>
-
-                                <strong>Student</strong>
-
-                            </td>
-
-                            <td>Student Dashboard</td>
-
-                            <td>
-                                Attendance,
-                                Subjects,
-                                Profile,
-                                Personal Records
-                            </td>
-
-                            <td class="text-center">
-
-                                <a
-                                    href="/student/login"
-                                    class="btn btn-success btn-sm">
-
-                                    Login
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     FEATURES
-====================================================== -->
-
-<section id="features" class="py-5">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            WHY CHOOSE US
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            Smarter Attendance with AI
-        </h2>
-
-        <p class="lead text-light mt-3">
-            Replace traditional attendance systems with
-            Artificial Intelligence,
-            Face Recognition and QR Code technology.
-        </p>
-
-    </div>
-
-
-    <div class="row g-4">
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-camera-video-fill"></i>
-                </div>
-                <h4>AI Face Recognition</h4>
-                <p>
-                    Automatically recognizes registered
-                    students within seconds using
-                    OpenCV Face Recognition technology.
-                </p>
-            </div>
-        </div>
-
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-qr-code-scan"></i>
-                </div>
-                <h4>QR Attendance</h4>
-                <p>
-                    Students can mark attendance
-                    instantly using secure QR codes.
-                </p>
-            </div>
-        </div>
-
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-speedometer2"></i>
-                </div>
-                <h4>Real Time Dashboard</h4>
-                <p>
-                    Monitor attendance,
-                    students,
-                    teachers
-                    and reports in real time.
-                </p>
-            </div>
-        </div>
-
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-shield-check"></i>
-                </div>
-                <h4>Highly Secure</h4>
-                <p>
-                    Duplicate attendance prevention
-                    with AI verification and
-                    database validation.
-                </p>
-            </div>
-        </div>
-
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-bar-chart-line-fill"></i>
-                </div>
-                <h4>Analytics</h4>
-                <p>
-                    Generate daily,
-                    weekly,
-                    monthly attendance reports
-                    with graphical analytics.
-                </p>
-            </div>
-        </div>
-
-
-        <div class="col-lg-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-cloud-check-fill"></i>
-                </div>
-                <h4>Cloud Ready</h4>
-                <p>
-                    Hosting ready architecture using
-                    Flask,
-                    MySQL and modern web technologies.
-                </p>
-            </div>
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     ABOUT
-====================================================== -->
-
-<section id="about" class="py-5 bg-dark">
-
-```
-<div class="container">
-
-    <div class="row align-items-center">
-
-        <div class="col-lg-6">
-
-            <img
-                src="{{ url_for('static', filename='images/dashboard.png') }}"
-                class="img-fluid dashboard-preview"
-                alt="Dashboard Preview">
-
-        </div>
-
-
-        <div class="col-lg-6">
-
-            <span class="hero-badge">
-                ABOUT SYSTEM
-            </span>
-
-            <h2 class="display-4 fw-bold mt-4">
-                Professional Attendance Management
-            </h2>
-
-            <p class="mt-4">
-
-                AI Smart Attendance System combines
-                Artificial Intelligence,
-                Face Recognition,
-                QR Code,
-                Flask and MySQL
-                to automate attendance with high accuracy.
-
-            </p>
-
-
-            <div class="row mt-5">
-
-                <div class="col-6">
-
-                    <h3 class="text-info">
-                        100%
-                    </h3>
-
-                    <p>
-                        Paperless Attendance
-                    </p>
-
-                </div>
-
-
-                <div class="col-6">
-
-                    <h3 class="text-success">
-                        24/7
-                    </h3>
-
-                    <p>
-                        Available
-                    </p>
-
-                </div>
-
-
-                <div class="col-6 mt-4">
-
-                    <h3 class="text-warning">
-                        AI
-                    </h3>
-
-                    <p>
-                        Face Detection
-                    </p>
-
-                </div>
-
-
-                <div class="col-6 mt-4">
-
-                    <h3 class="text-danger">
-                        QR
-                    </h3>
-
-                    <p>
-                        Attendance
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     WORKFLOW
-====================================================== -->
-
-<section id="workflow" class="py-5">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            SYSTEM WORKFLOW
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            How It Works
-        </h2>
-
-        <p class="lead text-light">
-            Attendance is completed in four
-            simple intelligent steps.
-        </p>
-
-    </div>
-
-
-    <div class="row g-4">
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="step-card text-center">
-
-                <div class="step-number">1</div>
-
-                <i class="bi bi-person-plus-fill display-3 text-primary"></i>
-
-                <h4 class="mt-4">
-                    Register
-                </h4>
-
-                <p>
-                    Register students and teachers
-                    into the system.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="step-card text-center">
-
-                <div class="step-number">2</div>
-
-                <i class="bi bi-camera-video-fill display-3 text-success"></i>
-
-                <h4 class="mt-4">
-                    Detect
-                </h4>
-
-                <p>
-                    AI recognizes faces or scans
-                    QR Code instantly.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="step-card text-center">
-
-                <div class="step-number">3</div>
-
-                <i class="bi bi-database-check display-3 text-warning"></i>
-
-                <h4 class="mt-4">
-                    Store
-                </h4>
-
-                <p>
-                    Attendance is saved automatically
-                    inside MySQL.
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="step-card text-center">
-
-                <div class="step-number">4</div>
-
-                <i class="bi bi-bar-chart-fill display-3 text-danger"></i>
-
-                <h4 class="mt-4">
-                    Reports
-                </h4>
-
-                <p>
-                    Generate reports and analytics
-                    instantly.
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     LIVE STATISTICS
-====================================================== -->
-
-<section class="py-5 bg-dark">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            LIVE SYSTEM STATUS
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            Real Time Statistics
-        </h2>
-
-    </div>
-
-
-    <div class="row g-4">
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="glass-card text-center">
-
-                <i class="bi bi-people-fill display-3 text-primary"></i>
-
-                <h1 class="counter">
-                    {{ total_students }}
-                </h1>
-
-                <p>
-                    Registered Students
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="glass-card text-center">
-
-                <i class="bi bi-person-workspace display-3 text-success"></i>
-
-                <h1 class="counter">
-                    {{ total_teachers }}
-                </h1>
-
-                <p>
-                    Teachers
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="glass-card text-center">
-
-                <i class="bi bi-book-half display-3 text-warning"></i>
-
-                <h1 class="counter">
-                    {{ total_subjects }}
-                </h1>
-
-                <p>
-                    Subjects
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="col-lg-3 col-md-6">
-
-            <div class="glass-card text-center">
-
-                <i class="bi bi-calendar-check-fill display-3 text-danger"></i>
-
-                <h1 class="counter">
-                    {{ today_attendance }}
-                </h1>
-
-                <p>
-                    Today's Attendance
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     TECHNOLOGY
-====================================================== -->
-
-<section id="technology" class="py-5">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            TECHNOLOGY
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            Powered By Modern Technologies
-        </h2>
-
-        <p class="lead text-light">
-            Built using reliable and modern
-            open-source technologies.
-        </p>
-
-    </div>
-
-
-    <div class="row g-4">
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-filetype-py display-3 text-warning"></i>
-                <h5 class="mt-3">Python</h5>
-            </div>
-        </div>
-
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-window display-3 text-primary"></i>
-                <h5 class="mt-3">Flask</h5>
-            </div>
-        </div>
-
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-camera-fill display-3 text-success"></i>
-                <h5 class="mt-3">OpenCV</h5>
-            </div>
-        </div>
-
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-database-fill display-3 text-info"></i>
-                <h5 class="mt-3">MySQL</h5>
-            </div>
-        </div>
-
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-bootstrap-fill display-3"></i>
-                <h5 class="mt-3">Bootstrap</h5>
-            </div>
-        </div>
-
-
-        <div class="col-lg-2 col-md-4 col-6">
-            <div class="tech-card">
-                <i class="bi bi-cpu-fill display-3 text-danger"></i>
-                <h5 class="mt-3">Artificial Intelligence</h5>
-            </div>
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     DASHBOARD PREVIEW
-====================================================== -->
-
-<section class="py-5 bg-dark">
-
-```
-<div class="container">
-
-    <div class="row align-items-center">
-
-        <div class="col-lg-6">
-
-            <span class="hero-badge">
-                ADMIN DASHBOARD
-            </span>
-
-            <h2 class="display-4 fw-bold mt-4">
-                Powerful Management Dashboard
-            </h2>
-
-            <p class="mt-4 text-light">
-
-                Manage students, teachers, subjects,
-                attendance, QR attendance,
-                Face Recognition, reports and analytics
-                from one modern dashboard.
-
-            </p>
-
-
-            <ul class="list-unstyled mt-4">
-
-                <li class="mb-3">
-                    ✅ Face Recognition Attendance
-                </li>
-
-                <li class="mb-3">
-                    ✅ QR Code Attendance
-                </li>
-
-                <li class="mb-3">
-                    ✅ Student Management
-                </li>
-
-                <li class="mb-3">
-                    ✅ Teacher Management
-                </li>
-
-                <li class="mb-3">
-                    ✅ Attendance Reports
-                </li>
-
-                <li class="mb-3">
-                    ✅ Analytics Dashboard
-                </li>
-
-            </ul>
-
-
-            <a
-                href="/login"
-                class="btn btn-primary btn-lg mt-3">
-
-                Open Dashboard
-
-            </a>
-
-        </div>
-
-
-        <div class="col-lg-6 text-center mt-5 mt-lg-0">
-
-            <img
-                src="{{ url_for('static', filename='images/dashboard.png') }}"
-                class="dashboard-preview img-fluid"
-                alt="Dashboard">
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     REAL USER TESTIMONIALS
-====================================================== -->
-
-{% if feedbacks %}
-
-<section class="py-5">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            USER FEEDBACK
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            What Our Users Say
-        </h2>
-
-        <p class="lead text-light mt-3">
-            Real feedback from users of AI Smart Attendance System.
-        </p>
-
-    </div>
-
-
-    <div class="row g-4 justify-content-center">
-
-        {% for feedback in feedbacks %}
-
-        <div class="col-lg-4 col-md-6">
-
-            <div class="testimonial-card h-100">
-
-                <div
-                    class="testimonial-img d-flex align-items-center justify-content-center mx-auto">
-
-                    <i class="bi bi-person-fill"></i>
-
-                </div>
-
-
-                <h4 class="mt-4">
-                    {{ feedback[0] }}
-                </h4>
-
-
-                <div class="mt-2">
-
-                    {% set rating = feedback[1]|int %}
-
-                    {% for i in range(1, 6) %}
-
-                        {% if i <= rating %}
-
-                            <i class="bi bi-star-fill text-warning"></i>
-
-                        {% else %}
-
-                            <i class="bi bi-star text-secondary"></i>
-
-                        {% endif %}
-
-                    {% endfor %}
-
-                </div>
-
-
-                <p class="mt-3">
-                    "{{ feedback[2] }}"
-                </p>
-
-
-                {% if feedback[3] %}
-
-                <small class="text-light opacity-50">
-
-                    <i class="bi bi-calendar3 me-1"></i>
-
-                    {{ feedback[3].strftime('%d %b %Y') }}
-
+                <small>
+                    College Management
                 </small>
 
-                {% endif %}
-
-            </div>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-</div>
-```
-
-</section>
-
-{% endif %}
-
-<!-- =====================================================
-     FAQ
-====================================================== -->
-
-<section class="py-5 bg-dark">
-
-```
-<div class="container">
-
-    <div class="text-center mb-5">
-
-        <span class="hero-badge">
-            FAQ
-        </span>
-
-        <h2 class="display-4 fw-bold mt-4">
-            Frequently Asked Questions
-        </h2>
-
-    </div>
-
-
-    <div
-        class="accordion accordion-flush"
-        id="faq">
-
-        <div class="accordion-item">
-
-            <h2 class="accordion-header">
-
-                <button
-                    class="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#faq1">
-
-                    How does Face Recognition work?
-
-                </button>
-
-            </h2>
-
-
-            <div
-                id="faq1"
-                class="accordion-collapse collapse"
-                data-bs-parent="#faq">
-
-                <div class="accordion-body">
-
-                    The system detects registered students
-                    using OpenCV Face Recognition.
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="accordion-item">
-
-            <h2 class="accordion-header">
-
-                <button
-                    class="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#faq2">
-
-                    Can QR Attendance be used?
-
-                </button>
-
-            </h2>
-
-
-            <div
-                id="faq2"
-                class="accordion-collapse collapse"
-                data-bs-parent="#faq">
-
-                <div class="accordion-body">
-
-                    Yes.
-                    Every student receives a unique
-                    QR Code to mark attendance.
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="accordion-item">
-
-            <h2 class="accordion-header">
-
-                <button
-                    class="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#faq3">
-
-                    Can reports be exported?
-
-                </button>
-
-            </h2>
-
-
-            <div
-                id="faq3"
-                class="accordion-collapse collapse"
-                data-bs-parent="#faq">
-
-                <div class="accordion-body">
-
-                    Yes.
-                    Attendance reports can be exported
-                    to PDF and Excel.
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</section>
-
-<!-- =====================================================
-     CALL TO ACTION
-====================================================== -->
-
-<section class="py-5 text-center">
-
-```
-<div class="container">
-
-    <span class="hero-badge">
-        GET STARTED
-    </span>
-
-    <h2 class="display-4 fw-bold mt-4">
-        Ready to Modernize Your Attendance System?
-    </h2>
-
-    <p class="lead text-light mt-4">
-
-        Experience AI-powered attendance with
-        Face Recognition,
-        QR Code technology and real-time analytics.
-
-    </p>
-
-
-    <div class="mt-5">
-
-        <a
-            href="/login"
-            class="btn btn-primary btn-lg me-2 mb-2">
-
-            <i class="bi bi-shield-lock-fill"></i>
-            Admin Login
+            </span>
 
         </a>
 
 
-        <a
-            href="/teacher/login"
-            class="btn btn-outline-light btn-lg me-2 mb-2">
+        <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#feedbackNav"
+            aria-label="Toggle navigation"
+        >
 
-            <i class="bi bi-person-workspace"></i>
-            Teacher Login
+            <span class="navbar-toggler-icon"></span>
 
-        </a>
+        </button>
 
 
-        <a
-            href="/student/login"
-            class="btn btn-success btn-lg mb-2">
+        <div
+            class="collapse navbar-collapse"
+            id="feedbackNav"
+        >
 
-            <i class="bi bi-person-badge-fill"></i>
-            Student Login
+            <ul class="navbar-nav mx-auto">
 
-        </a>
 
-    </div>
+                <li class="nav-item">
 
-</div>
-```
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('home.index') }}"
+                    >
 
-</section>
-
-<!-- =====================================================
-     FEEDBACK MODAL
-====================================================== -->
-
-<div
-    class="modal fade feedback-modal"
-    id="feedbackModal"
-    tabindex="-1"
-    aria-labelledby="feedbackModalLabel"
-    aria-hidden="true">
-
-```
-<div class="modal-dialog modal-dialog-centered">
-
-    <div class="modal-content feedback-modal-content">
-
-
-        <!-- HEADER -->
-
-        <div class="modal-header border-0">
-
-            <div>
-
-                <span class="hero-badge">
-                    USER FEEDBACK
-                </span>
-
-                <h3
-                    class="modal-title fw-bold mt-2"
-                    id="feedbackModalLabel">
-
-                    Share Your Experience
-
-                </h3>
-
-                <p class="text-light mb-0 mt-1">
-
-                    Your feedback helps us improve
-                    AI Smart Attendance System.
-
-                </p>
-
-            </div>
-
-
-            <button
-                type="button"
-                class="btn-close btn-close-white"
-                data-bs-dismiss="modal"
-                aria-label="Close">
-            </button>
-
-        </div>
-
-
-        <!-- BODY -->
-
-        <div class="modal-body">
-
-            <form
-                method="POST"
-                action="{{ url_for('feedback.submit_feedback') }}">
-
-
-                <!-- NAME -->
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        <i class="bi bi-person-fill me-1"></i>
-                        Name
-
-                    </label>
-
-                    <input
-                        type="text"
-                        name="name"
-                        class="form-control"
-                        placeholder="Enter your name"
-                        required>
-
-                </div>
-
-
-                <!-- EMAIL -->
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        <i class="bi bi-envelope-fill me-1"></i>
-                        Email
-
-                    </label>
-
-                    <input
-                        type="email"
-                        name="email"
-                        class="form-control"
-                        placeholder="Enter your email">
-
-                </div>
-
-
-                <!-- RATING -->
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        <i class="bi bi-star-fill me-1"></i>
-                        Rating
-
-                    </label>
-
-                    <select
-                        name="rating"
-                        class="form-select"
-                        required>
-
-                        <option value="5">
-                            ⭐⭐⭐⭐⭐ Excellent
-                        </option>
-
-                        <option value="4">
-                            ⭐⭐⭐⭐ Very Good
-                        </option>
-
-                        <option value="3">
-                            ⭐⭐⭐ Good
-                        </option>
-
-                        <option value="2">
-                            ⭐⭐ Average
-                        </option>
-
-                        <option value="1">
-                            ⭐ Poor
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- MESSAGE -->
-
-                <div class="mb-3">
-
-                    <label class="form-label">
-
-                        <i class="bi bi-chat-left-text-fill me-1"></i>
-                        Message
-
-                    </label>
-
-                    <textarea
-                        name="message"
-                        rows="3"
-                        class="form-control"
-                        placeholder="Write your feedback..."
-                        required></textarea>
-
-                </div>
-
-
-                <!-- BUTTONS -->
-
-                <div class="d-flex gap-2 justify-content-end mt-3">
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-
-                        <i class="bi bi-x-circle me-1"></i>
-                        Cancel
-
-                    </button>
-
-
-                    <button
-                        type="submit"
-                        class="btn btn-primary">
-
-                        <i class="bi bi-send-fill me-1"></i>
-                        Submit Feedback
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
-</div>
-```
-
-</div>
-
-<!-- =====================================================
-     FOOTER
-====================================================== -->
-
-<footer class="footer-section">
-
-```
-<div class="container">
-
-    <div class="row gy-4">
-
-        <div class="col-lg-4">
-
-            <h3>
-                🤖 AI Smart Attendance
-            </h3>
-
-            <p class="mt-4">
-
-                A complete attendance management solution
-                powered by Artificial Intelligence,
-                Face Recognition,
-                QR Code,
-                Flask and MySQL.
-
-            </p>
-
-        </div>
-
-
-        <div class="col-lg-4">
-
-            <h4>
-                Quick Links
-            </h4>
-
-            <ul class="list-unstyled mt-4">
-
-                <li class="mb-2">
-                    <a href="#home">Home</a>
-                </li>
-
-                <li class="mb-2">
-                    <a href="#features">Features</a>
-                </li>
-
-                <li class="mb-2">
-                    <a href="#portal">Login Portal</a>
-                </li>
-
-                <li class="mb-2">
-                    <a href="#about">About</a>
-                </li>
-
-                <li class="mb-2">
-                    <a href="#workflow">Workflow</a>
-                </li>
-
-                <li class="mb-2">
-                    <a href="#technology">Technology</a>
-                </li>
-
-                <li class="mb-2">
-
-                    <a href="/contact">
-
-                        <i class="bi bi-envelope-fill me-1"></i>
-                        Contact Us
+                        <i class="bi bi-house-door"></i>
+                        Home
 
                     </a>
 
                 </li>
 
-                <li class="mb-2">
+
+                <li class="nav-item">
 
                     <a
-                        href="#"
-                        data-bs-toggle="modal"
-                        data-bs-target="#feedbackModal">
+                        class="nav-link"
+                        href="{{ url_for('home.about') }}"
+                    >
 
-                        <i class="bi bi-chat-square-text-fill me-1"></i>
+                        <i class="bi bi-info-circle"></i>
+                        About
+
+                    </a>
+
+                </li>
+
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('home.contact') }}"
+                    >
+
+                        <i class="bi bi-envelope"></i>
+                        Contact
+
+                    </a>
+
+                </li>
+
+
+                <li class="nav-item">
+
+                    <a
+                        class="nav-link active"
+                        href="{{ url_for('home.feedback_page') }}"
+                    >
+
+                        <i class="bi bi-chat-heart"></i>
                         Feedback
 
                     </a>
 
                 </li>
 
+
             </ul>
 
-        </div>
 
-
-        <div class="col-lg-4">
-
-            <h4>
-                Contact Us
-            </h4>
-
-            <p class="mt-4 footer-contact-item">
-
-                <i class="bi bi-envelope-fill"></i>
-
-                <span>
-                    khagendrabohora2062@gmail.com
-                </span>
-
-            </p>
-
-            <p class="footer-contact-item">
-
-                <i class="bi bi-telephone-fill"></i>
-
-                <span>
-                    +977 9742217886
-                </span>
-
-            </p>
-
-            <p class="footer-contact-item">
-
-                <i class="bi bi-geo-alt-fill"></i>
-
-                <span>
-                    Nepal
-                </span>
-
-            </p>
-
-
-            <div class="mt-4 social-links">
+            <div class="nav-actions">
 
                 <a
-                    href="https://www.facebook.com/khagendra.bohora.108307"
-                    class="me-3"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Facebook">
-
-                    <i class="bi bi-facebook fs-4"></i>
-
+                    href="{{ url_for('auth.login') }}"
+                    class="btn btn-primary btn-sm"
+                >
+                    Admin
                 </a>
 
-
                 <a
-                    href="https://github.com/khagendrabohora2062-blip"
-                    class="me-3"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="GitHub">
-
-                    <i class="bi bi-github fs-4"></i>
-
+                    href="{{ url_for('teacher_auth.login') }}"
+                    class="btn btn-outline-light btn-sm"
+                >
+                    Teacher
                 </a>
 
-
                 <a
-                    href="https://www.linkedin.com/in/khagendra-bohora-54a185430/"
-                    class="me-3"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="LinkedIn">
-
-                    <i class="bi bi-linkedin fs-4"></i>
-
-                </a>
-
-
-                <a
-                    href="https://www.youtube.com/@KHAGENDRABOHORA-t9r"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="YouTube">
-
-                    <i class="bi bi-youtube fs-4"></i>
-
+                    href="{{ url_for('student_auth.login') }}"
+                    class="btn btn-success btn-sm"
+                >
+                    Student
                 </a>
 
             </div>
@@ -2611,106 +199,476 @@
 
     </div>
 
+</nav>
 
-    <hr class="my-5">
 
 
-    <div class="text-center">
+<main>
 
-        <p class="mb-2">
-            © 2026 AI Smart Attendance System
-        </p>
 
-        <p>
-            Designed & Developed By
-            <strong>Khagendra Bohora</strong>
-        </p>
+<section class="inner-hero compact-inner">
+
+    <div class="container">
+
+        <div class="section-heading text-start reveal">
+
+            <span class="eyebrow">
+
+                <span class="status-dot"></span>
+
+                COMMUNITY FEEDBACK
+
+            </span>
+
+
+            <h1>
+
+                Every opinion helps us
+                <span class="gradient-text">
+                    improve.
+                </span>
+
+            </h1>
+
+
+            <p>
+
+                Share your experience with the platform.
+                Your feedback helps identify what works well
+                and where the system can become better.
+
+            </p>
+
+        </div>
 
     </div>
 
-</div>
-```
+</section>
+
+
+
+<section class="section-shell feedback-page">
+
+    <div class="container">
+
+        <div class="row g-4 g-lg-5">
+
+
+            <div class="col-lg-7">
+
+
+                <div class="section-heading text-start reveal">
+
+                    <span class="section-kicker">
+                        RECENT FEEDBACK
+                    </span>
+
+                    <h2>
+
+                        What people are
+                        <span class="gradient-text">
+                            saying.
+                        </span>
+
+                    </h2>
+
+                </div>
+
+
+                {% if feedbacks %}
+
+                <div class="feedback-list">
+
+
+                    {% for feedback in feedbacks %}
+
+                    <article class="feedback-page-card reveal">
+
+
+                        <div class="quote-mark">
+                            <i class="bi bi-quote"></i>
+                        </div>
+
+
+                        <div class="rating">
+
+                            {% for i in range(1, 6) %}
+
+                            <i
+                                class="bi {% if i <= feedback.rating %}bi-star-fill{% else %}bi-star{% endif %}"
+                            ></i>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <p>
+                            {{ feedback.message }}
+                        </p>
+
+
+                        <div class="reviewer">
+
+                            <span class="reviewer-avatar">
+
+                                {{ feedback.name[:1]|upper }}
+
+                            </span>
+
+
+                            <span>
+
+                                <strong>
+                                    {{ feedback.name }}
+                                </strong>
+
+                                <small>
+
+                                    {% if feedback.created_at %}
+
+                                        {{ feedback.created_at }}
+
+                                    {% else %}
+
+                                        Community member
+
+                                    {% endif %}
+
+                                </small>
+
+                            </span>
+
+                        </div>
+
+
+                    </article>
+
+                    {% endfor %}
+
+
+                </div>
+
+
+                {% else %}
+
+
+                <div class="empty-feedback reveal">
+
+                    <div class="empty-icon">
+                        <i class="bi bi-chat-square-heart"></i>
+                    </div>
+
+                    <h3>
+                        No feedback yet.
+                    </h3>
+
+                    <p>
+                        Be the first person to share an experience.
+                    </p>
+
+                </div>
+
+
+                {% endif %}
+
+
+            </div>
+
+
+
+            <div class="col-lg-5">
+
+
+                <div class="feedback-form-card reveal reveal-delay-1">
+
+
+                    <span class="section-kicker">
+                        SHARE YOUR EXPERIENCE
+                    </span>
+
+
+                    <h2>
+                        Leave feedback.
+                    </h2>
+
+
+                    <p>
+                        It only takes a minute.
+                    </p>
+
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+
+                        {% if messages %}
+
+                            {% for category, message in messages %}
+
+                            <div
+                                class="alert alert-{{ category }}"
+                                role="alert"
+                            >
+
+                                <i
+                                    class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2"
+                                ></i>
+
+                                {{ message }}
+
+                            </div>
+
+                            {% endfor %}
+
+                        {% endif %}
+
+                    {% endwith %}
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for('feedback.submit_feedback') }}"
+                    >
+
+
+                        <div class="mb-3">
+
+                            <label
+                                class="form-label"
+                                for="feedback-name"
+                            >
+                                Name
+                            </label>
+
+                            <input
+                                class="form-control"
+                                id="feedback-name"
+                                name="name"
+                                maxlength="100"
+                                required
+                                placeholder="Your name"
+                            >
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label
+                                class="form-label"
+                                for="feedback-email"
+                            >
+
+                                Email
+                                <span>
+                                    (optional)
+                                </span>
+
+                            </label>
+
+                            <input
+                                class="form-control"
+                                id="feedback-email"
+                                name="email"
+                                type="email"
+                                maxlength="150"
+                                placeholder="you@example.com"
+                            >
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label
+                                class="form-label"
+                                for="feedback-rating"
+                            >
+                                Rating
+                            </label>
+
+                            <select
+                                class="form-select"
+                                id="feedback-rating"
+                                name="rating"
+                                required
+                            >
+
+                                <option value="">
+                                    Select rating
+                                </option>
+
+                                <option value="5">
+                                    ★★★★★ — Excellent
+                                </option>
+
+                                <option value="4">
+                                    ★★★★☆ — Very Good
+                                </option>
+
+                                <option value="3">
+                                    ★★★☆☆ — Good
+                                </option>
+
+                                <option value="2">
+                                    ★★☆☆☆ — Needs Improvement
+                                </option>
+
+                                <option value="1">
+                                    ★☆☆☆☆ — Poor
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label
+                                class="form-label"
+                                for="feedback-message"
+                            >
+                                Your Feedback
+                            </label>
+
+                            <textarea
+                                class="form-control"
+                                id="feedback-message"
+                                name="message"
+                                maxlength="1000"
+                                required
+                                placeholder="Tell us what you think..."
+                            ></textarea>
+
+                        </div>
+
+
+                        <button
+                            class="btn btn-primary w-100"
+                            type="submit"
+                        >
+
+                            Submit Feedback
+
+                            <i class="bi bi-send ms-2"></i>
+
+                        </button>
+
+
+                    </form>
+
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="cta-section">
+
+    <div class="container">
+
+        <div class="cta-card reveal">
+
+
+            <div>
+
+                <span class="section-kicker">
+                    THANK YOU
+                </span>
+
+
+                <h2>
+                    Your feedback helps shape
+                    a better platform.
+                </h2>
+
+            </div>
+
+
+            <div class="cta-actions">
+
+                <a
+                    href="{{ url_for('home.index') }}"
+                    class="btn btn-light"
+                >
+                    Back to Home
+                </a>
+
+
+                <a
+                    href="{{ url_for('home.contact') }}"
+                    class="btn btn-outline-light"
+                >
+                    Contact Us
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+
+<footer class="footer-section">
+
+    <div class="container">
+
+        <div class="footer-bottom">
+
+            <span>
+                © 2026 AI Smart Attendance System.
+            </span>
+
+            <span>
+                Designed & Developed by
+                <strong>
+                    Khagendra Bohora
+                </strong>
+            </span>
+
+        </div>
+
+    </div>
 
 </footer>
 
-<!-- =====================================================
-     BACK TO TOP
-====================================================== -->
+
 
 <button
- id="backToTop"
- class="btn btn-primary"
- aria-label="Back to top">
+    id="backToTop"
+    class="back-to-top"
+    type="button"
+    aria-label="Back to top"
+>
 
-```
-<i class="bi bi-arrow-up"></i>
-```
+    <i class="bi bi-arrow-up"></i>
 
 </button>
 
-<!-- BOOTSTRAP JS -->
+
 
 <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-</script>
-
-<!-- LANDING JS -->
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+></script>
 
 <script
-    src="{{ url_for('static', filename='js/landing.js') }}">
-</script>
+    src="{{ url_for('static', filename='js/landing.js') }}"
+></script>
 
-<!-- =====================================================
-     MOBILE NAVBAR AUTO CLOSE
-====================================================== -->
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function () {
-
-    const navLinks = document.querySelectorAll(
-        "#mainNavbar .nav-link"
-    );
-
-    const navbarCollapse =
-        document.getElementById("mainNavbar");
-
-
-    navLinks.forEach(function (link) {
-
-        link.addEventListener("click", function () {
-
-            if (window.innerWidth < 992) {
-
-                const bsCollapse =
-                    bootstrap.Collapse.getInstance(
-                        navbarCollapse
-                    );
-
-                if (bsCollapse) {
-
-                    bsCollapse.hide();
-
-                } else {
-
-                    new bootstrap.Collapse(
-                        navbarCollapse,
-                        {
-                            toggle: false
-                        }
-                    ).hide();
-
-                }
-
-            }
-
-        });
-
-    });
-
-});
-
-</script>
 
 </body>
 

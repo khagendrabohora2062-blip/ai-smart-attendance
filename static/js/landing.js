@@ -1,204 +1,571 @@
-/* ==========================================================
-AI SMART ATTENDANCE SYSTEM
-Landing Page JavaScript
-========================================================== */
+(function () {
 
-// =========================================
-// Sticky Navbar
-// =========================================
+    "use strict";
 
-const navbar = document.querySelector(".custom-navbar");
 
-window.addEventListener("scroll", () => {
+    const navbar =
+        document.querySelector(
+            ".custom-navbar"
+        );
 
-    if (window.scrollY > 50) {
 
-        navbar.classList.add("scrolled");
+    const backToTop =
+        document.getElementById(
+            "backToTop"
+        );
 
-    } else {
 
-        navbar.classList.remove("scrolled");
+    const revealItems =
+        document.querySelectorAll(
+            ".reveal"
+        );
 
-    }
 
-});
+    const counters =
+        document.querySelectorAll(
+            ".counter[data-target]"
+        );
 
-// =========================================
-// Back To Top Button
-// =========================================
 
-const backToTop = document.getElementById("backToTop");
+    // =====================================================
+    // NAVBAR
+    // =====================================================
 
-window.addEventListener("scroll", () => {
+    const updateNavbar = () => {
 
-    if (window.scrollY > 400) {
+        if (navbar) {
 
-        backToTop.style.display = "block";
-
-    } else {
-
-        backToTop.style.display = "none";
-
-    }
-
-});
-
-backToTop.addEventListener("click", () => {
-
-    window.scrollTo({
-
-        top: 0,
-
-        behavior: "smooth"
-
-    });
-
-});
-
-// =========================================
-// Scroll Reveal Animation
-// =========================================
-
-const revealItems = document.querySelectorAll(
-
-    ".feature-card, .step-card, .glass-card, .tech-card, .testimonial-card"
-
-);
-
-const reveal = () => {
-
-    revealItems.forEach(item => {
-
-        const top = item.getBoundingClientRect().top;
-
-        const windowHeight = window.innerHeight;
-
-        if (top < windowHeight - 80) {
-
-            item.classList.add("show");
+            navbar.classList.toggle(
+                "scrolled",
+                window.scrollY > 25
+            );
 
         }
 
-    });
 
-};
+        if (backToTop) {
 
-window.addEventListener("scroll", reveal);
-
-window.addEventListener("load", reveal);
-
-// =========================================
-// Counter Animation
-// =========================================
-
-const counters = document.querySelectorAll(".counter");
-
-const animateCounter = counter => {
-
-    const target = Number(counter.innerText);
-
-    let count = 0;
-
-    const speed = Math.max(1, Math.ceil(target / 80));
-
-    const update = () => {
-
-        if (count < target) {
-
-            count += speed;
-
-            if (count > target) count = target;
-
-            counter.innerText = count;
-
-            requestAnimationFrame(update);
+            backToTop.classList.toggle(
+                "show",
+                window.scrollY > 450
+            );
 
         }
 
     };
 
-    update();
 
-};
+    window.addEventListener(
+        "scroll",
+        updateNavbar,
+        {
+            passive: true
+        }
+    );
 
-const counterObserver = new IntersectionObserver(entries => {
 
-    entries.forEach(entry => {
+    updateNavbar();
 
-        if (entry.isIntersecting) {
 
-            animateCounter(entry.target);
+    // =====================================================
+    // BACK TO TOP
+    // =====================================================
 
-            counterObserver.unobserve(entry.target);
+    if (backToTop) {
+
+        backToTop.addEventListener(
+            "click",
+            () => {
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // SCROLL REVEAL
+    // =====================================================
+
+    const revealObserver =
+        "IntersectionObserver" in window
+
+            ? new IntersectionObserver(
+                (
+                    entries,
+                    observer
+                ) => {
+
+                    entries.forEach(
+                        (entry) => {
+
+                            if (
+                                !entry.isIntersecting
+                            ) {
+                                return;
+                            }
+
+
+                            entry.target.classList.add(
+                                "show"
+                            );
+
+
+                            observer.unobserve(
+                                entry.target
+                            );
+
+                        }
+                    );
+
+                },
+                {
+                    threshold: 0.12,
+
+                    rootMargin:
+                        "0px 0px -40px 0px"
+                }
+            )
+
+            : null;
+
+
+    revealItems.forEach(
+        (item) => {
+
+            if (revealObserver) {
+
+                revealObserver.observe(
+                    item
+                );
+
+            } else {
+
+                item.classList.add(
+                    "show"
+                );
+
+            }
 
         }
+    );
 
-    });
 
-});
+    // =====================================================
+    // COUNTER ANIMATION
+    // =====================================================
 
-counters.forEach(counter => {
+    const animateCounter =
+        (element) => {
 
-    counterObserver.observe(counter);
+            const target =
+                Math.max(
+                    0,
+                    Number(
+                        element.dataset.target || 0
+                    )
+                );
 
-});
 
-// =========================================
-// Active Navbar Link
-// =========================================
+            if (
+                !Number.isFinite(
+                    target
+                )
+            ) {
 
-const sections = document.querySelectorAll("section");
+                element.textContent = "0";
 
-const navLinks = document.querySelectorAll(".nav-link");
+                return;
+            }
 
-window.addEventListener("scroll", () => {
 
-    let current = "";
+            if (target === 0) {
 
-    sections.forEach(section => {
+                element.textContent = "0";
 
-        const top = section.offsetTop - 120;
+                return;
+            }
 
-        const height = section.clientHeight;
 
-        if (pageYOffset >= top) {
+            const duration = 1100;
 
-            current = section.getAttribute("id");
+            const start =
+                performance.now();
 
-        }
 
-    });
+            const tick =
+                (now) => {
 
-    navLinks.forEach(link => {
+                    const progress =
+                        Math.min(
+                            (
+                                now - start
+                            ) / duration,
+                            1
+                        );
 
-        link.classList.remove("active");
 
-        const href = link.getAttribute("href");
+                    const eased =
+                        1 -
+                        Math.pow(
+                            1 - progress,
+                            3
+                        );
 
-        if (href === "#" + current) {
 
-            link.classList.add("active");
+                    element.textContent =
+                        Math.floor(
+                            target * eased
+                        ).toLocaleString();
 
-        }
 
-    });
+                    if (
+                        progress < 1
+                    ) {
 
-});
+                        requestAnimationFrame(
+                            tick
+                        );
 
-// =========================================
-// Smooth Fade-In on Load
-// =========================================
+                    } else {
 
-window.addEventListener("load", () => {
+                        element.textContent =
+                            target.toLocaleString();
 
-    document.body.style.opacity = "1";
+                    }
 
-});
+                };
 
-// =========================================
-// Console Message
-// =========================================
 
-console.log(
-    "AI Smart Attendance System Loaded Successfully 🚀"
-);
+            requestAnimationFrame(
+                tick
+            );
+
+        };
+
+
+    if (counters.length) {
+
+        const counterObserver =
+            "IntersectionObserver" in window
+
+                ? new IntersectionObserver(
+                    (
+                        entries,
+                        observer
+                    ) => {
+
+                        entries.forEach(
+                            (entry) => {
+
+                                if (
+                                    !entry.isIntersecting
+                                ) {
+                                    return;
+                                }
+
+
+                                animateCounter(
+                                    entry.target
+                                );
+
+
+                                observer.unobserve(
+                                    entry.target
+                                );
+
+                            }
+                        );
+
+                    },
+                    {
+                        threshold: 0.4
+                    }
+                )
+
+                : null;
+
+
+        counters.forEach(
+            (counter) => {
+
+                if (counterObserver) {
+
+                    counterObserver.observe(
+                        counter
+                    );
+
+                } else {
+
+                    animateCounter(
+                        counter
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // SAME-PAGE NAVIGATION
+    // =====================================================
+
+    document
+        .querySelectorAll(
+            'a[href^="#"]'
+        )
+        .forEach(
+            (link) => {
+
+                link.addEventListener(
+                    "click",
+                    (event) => {
+
+                        const selector =
+                            link.getAttribute(
+                                "href"
+                            );
+
+
+                        if (
+                            !selector ||
+                            selector === "#"
+                        ) {
+                            return;
+                        }
+
+
+                        const target =
+                            document.querySelector(
+                                selector
+                            );
+
+
+                        if (!target) {
+                            return;
+                        }
+
+
+                        event.preventDefault();
+
+
+                        target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+
+
+                        const nav =
+                            document.querySelector(
+                                ".navbar-collapse.show"
+                            );
+
+
+                        if (
+                            nav &&
+                            window.bootstrap
+                        ) {
+
+                            const instance =
+                                window.bootstrap.Collapse
+                                    .getInstance(
+                                        nav
+                                    )
+                                ||
+                                new window.bootstrap.Collapse(
+                                    nav,
+                                    {
+                                        toggle: false
+                                    }
+                                );
+
+
+                            instance.hide();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+    // =====================================================
+    // ACTIVE LANDING NAVIGATION
+    // =====================================================
+
+    const sectionLinks =
+        Array.from(
+            document.querySelectorAll(
+                '.custom-navbar .nav-link[href^="#"]'
+            )
+        );
+
+
+    const sections =
+        sectionLinks
+            .map(
+                (link) =>
+                    document.querySelector(
+                        link.getAttribute(
+                            "href"
+                        )
+                    )
+            )
+            .filter(Boolean);
+
+
+    if (
+        sections.length &&
+        "IntersectionObserver" in window
+    ) {
+
+        const navObserver =
+            new IntersectionObserver(
+                (entries) => {
+
+                    entries.forEach(
+                        (entry) => {
+
+                            if (
+                                !entry.isIntersecting
+                            ) {
+                                return;
+                            }
+
+
+                            const id =
+                                `#${entry.target.id}`;
+
+
+                            sectionLinks.forEach(
+                                (link) => {
+
+                                    link.classList.toggle(
+                                        "active",
+                                        link.getAttribute(
+                                            "href"
+                                        ) === id
+                                    );
+
+                                }
+                            );
+
+                        }
+                    );
+
+                },
+                {
+                    rootMargin:
+                        "-35% 0px -55% 0px",
+
+                    threshold: 0
+                }
+            );
+
+
+        sections.forEach(
+            (section) => {
+
+                navObserver.observe(
+                    section
+                );
+
+            }
+        );
+
+    }
+
+
+    // =====================================================
+    // MOBILE MENU CLOSE
+    // =====================================================
+
+    document
+        .querySelectorAll(
+            ".custom-navbar .nav-link:not([href^='#'])"
+        )
+        .forEach(
+            (link) => {
+
+                link.addEventListener(
+                    "click",
+                    () => {
+
+                        const nav =
+                            link.closest(
+                                ".navbar-collapse.show"
+                            );
+
+
+                        if (
+                            nav &&
+                            window.bootstrap
+                        ) {
+
+                            const instance =
+                                window.bootstrap.Collapse
+                                    .getInstance(
+                                        nav
+                                    )
+                                ||
+                                new window.bootstrap.Collapse(
+                                    nav,
+                                    {
+                                        toggle: false
+                                    }
+                                );
+
+
+                            instance.hide();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+    // =====================================================
+    // TOOLTIP SUPPORT
+    // =====================================================
+
+    if (window.bootstrap) {
+
+        document
+            .querySelectorAll(
+                '[data-bs-toggle="tooltip"]'
+            )
+            .forEach(
+                (element) => {
+
+                    new window.bootstrap.Tooltip(
+                        element
+                    );
+
+                }
+            );
+
+    }
+
+
+    // =====================================================
+    // JS READY
+    // =====================================================
+
+    document.documentElement.classList.add(
+        "landing-js-ready"
+    );
+
+})();
