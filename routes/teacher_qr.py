@@ -5,14 +5,13 @@ from flask import (
     session,
     redirect,
     url_for,
-    flash
+    flash,
+    render_template,
+    request,
+    jsonify
 )
 
 from extensions import mysql
-
-from utils.teacher_qr_scanner import (
-    start_teacher_qr_scanner
-)
 
 
 # ============================================================
@@ -65,7 +64,14 @@ def generate_attendance_id(cursor):
 # START QR ATTENDANCE
 # ============================================================
 
-@teacher_qr.route("/start/<int:session_id>")
+@teacher_qr.route(
+    "/start/<int:session_id>",
+    endpoint="start"
+)
+@teacher_qr.route(
+    "/start/<int:session_id>",
+    endpoint="start_qr_attendance"
+)
 def start(session_id):
 
     # ========================================================
@@ -168,332 +174,379 @@ def start(session_id):
 
 
     # ========================================================
-    # QR CALLBACK
+    # OPEN BROWSER QR CAMERA PAGE
     # ========================================================
 
-    def process_qr(qr_data):
+    return render_template(
+        "teacher/browser_qr.html",
+        session_id=session_id
+    )
 
-        cursor = mysql.connection.cursor()
 
-        try:
+# ============================================================
+# PROCESS QR FROM BROWSER CAMERA
+# ============================================================
 
-            # =================================================
-            # CLEAN QR DATA
-            # =================================================
+@teacher_qr.route(
+    "/scan/<int:session_id>",
+    methods=["POST"]
+)
+def scan_qr(session_id):
 
-            qr_data = str(qr_data).strip()
+    # ========================================================
+    # TEACHER LOGIN CHECK
+    # ========================================================
 
-            if not qr_data:
+    if "teacher_id" not in session:
 
-                return {
-                    "success": False,
-                    "student_id": "",
-                    "name": "",
-                    "message": "Invalid QR"
-                }
+        return jsonify({
+            "success": False,
+            "message": "Teacher login required."
+        }), 401
 
 
-            # =================================================
-            # FIND STUDENT
-            # =================================================
-
-            cursor.execute(
-                """
-                SELECT
-                    id,
-                    student_id,
-                    full_name,
-                    semester,
-                    department
-                FROM students
-                WHERE student_id = %s
-                LIMIT 1
-                """,
-                (qr_data,)
-            )
-
-            student = cursor.fetchone()
-
-
-            # =================================================
-            # STUDENT NOT FOUND
-            # =================================================
-
-            if not student:
-
-                return {
-                    "success": False,
-                    "student_id": qr_data,
-                    "name": "",
-                    "message": "Student Not Found"
-                }
-
-
-            # =================================================
-            # STUDENT INFORMATION
-            # =================================================
-
-            student_db_id = student[0]
-            student_code = student[1]
-            student_name = student[2]
-            student_semester = student[3]
-            student_department = student[4]
-
-
-            # =================================================
-            # VERIFY STUDENT BELONGS TO THIS SESSION
-            # =================================================
-
-            session_cursor = mysql.connection.cursor()
-
-            try:
-
-                session_cursor.execute(
-                    """
-                    SELECT
-                        sub.semester,
-                        sub.department
-                    FROM attendance_sessions s
-                    INNER JOIN subjects sub
-                        ON s.subject_id = sub.id
-                    WHERE s.id = %s
-                    AND s.teacher_id = %s
-                    LIMIT 1
-                    """,
-                    (
-                        session_id,
-                        teacher_id
-                    )
-                )
-
-                session_details = session_cursor.fetchone()
-
-            finally:
-
-                session_cursor.close()
-
-
-            if not session_details:
-
-                return {
-                    "success": False,
-                    "student_id": student_code,
-                    "name": student_name,
-                    "message": "Attendance Session Not Found"
-                }
-
-
-            session_semester = session_details[0]
-            session_department = session_details[1]
-
-
-            # =================================================
-            # CHECK SEMESTER
-            # =================================================
-
-            if student_semester != session_semester:
-
-                return {
-                    "success": False,
-                    "student_id": student_code,
-                    "name": student_name,
-                    "message": "Student does not belong to this semester"
-                }
-
-
-            # =================================================
-            # CHECK DEPARTMENT
-            # =================================================
-
-            same_department = (
-                student_department == session_department
-            )
-
-            if (
-                student_department is None
-                and session_department is None
-            ):
-                same_department = True
-
-
-            if not same_department:
-
-                return {
-                    "success": False,
-                    "student_id": student_code,
-                    "name": student_name,
-                    "message": "Student does not belong to this department"
-                }
-
-
-            # =================================================
-            # DUPLICATE ATTENDANCE CHECK
-            # =================================================
-
-            cursor.execute(
-                """
-                SELECT
-                    id,
-                    status
-                FROM attendance
-                WHERE session_id = %s
-                AND student_id = %s
-                LIMIT 1
-                """,
-                (
-                    session_id,
-                    student_db_id
-                )
-            )
-
-            already_marked = cursor.fetchone()
-
-
-            if already_marked:
-
-                return {
-                    "success": False,
-                    "student_id": student_code,
-                    "name": student_name,
-                    "message": "Already Marked"
-                }
-
-
-            # =================================================
-            # GENERATE UNIQUE ATTENDANCE ID
-            # =================================================
-
-            attendance_id = generate_attendance_id(
-                cursor
-            )
-
-
-            # =================================================
-            # INSERT QR ATTENDANCE
-            # =================================================
-
-            cursor.execute(
-                """
-                INSERT INTO attendance
-                (
-                    id,
-                    session_id,
-                    student_id,
-                    attendance_date,
-                    attendance_time,
-                    attendance_method,
-                    status,
-                    remarks
-                )
-                VALUES
-                (
-                    %s,
-                    %s,
-                    %s,
-                    CURDATE(),
-                    CURTIME(),
-                    'QR',
-                    'Present',
-                    'Attendance marked through QR'
-                )
-                """,
-                (
-                    attendance_id,
-                    session_id,
-                    student_db_id
-                )
-            )
-
-
-            # =================================================
-            # COMMIT
-            # =================================================
-
-            mysql.connection.commit()
-
-
-            # =================================================
-            # SUCCESS
-            # =================================================
-
-            print(
-                f"QR ATTENDANCE SUCCESS: "
-                f"{student_code} - {student_name}"
-            )
-
-            return {
-                "success": True,
-                "student_id": student_code,
-                "name": student_name,
-                "message": "Attendance Marked - Present"
-            }
-
-
-        except Exception as e:
-
-            # =================================================
-            # ROLLBACK
-            # =================================================
-
-            mysql.connection.rollback()
-
-            print(
-                "QR ATTENDANCE DATABASE ERROR:",
-                str(e)
-            )
-
-            return {
-                "success": False,
-                "student_id": "",
-                "name": "",
-                "message": f"Database Error: {e}"
-            }
-
-
-        finally:
-
-            cursor.close()
+    teacher_id = session["teacher_id"]
 
 
     # ========================================================
-    # START CAMERA SCANNER
+    # GET QR DATA
     # ========================================================
+
+    qr_data = request.form.get("qr_data", "")
+
+    qr_data = str(qr_data).strip()
+
+
+    if not qr_data:
+
+        return jsonify({
+            "success": False,
+            "student_id": "",
+            "name": "",
+            "message": "Invalid QR"
+        })
+
+
+    cursor = mysql.connection.cursor()
+
 
     try:
 
+        # ====================================================
+        # VERIFY ATTENDANCE SESSION
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                subject_id,
+                session_date,
+                session_status
+            FROM attendance_sessions
+            WHERE id = %s
+            AND teacher_id = %s
+            LIMIT 1
+            """,
+            (
+                session_id,
+                teacher_id
+            )
+        )
+
+        attendance_session = cursor.fetchone()
+
+
+        # ====================================================
+        # SESSION NOT FOUND
+        # ====================================================
+
+        if not attendance_session:
+
+            return jsonify({
+                "success": False,
+                "student_id": "",
+                "name": "",
+                "message": "Attendance Session Not Found"
+            })
+
+
+        # ====================================================
+        # SESSION CLOSED
+        # ====================================================
+
+        if attendance_session[3] != "OPEN":
+
+            return jsonify({
+                "success": False,
+                "student_id": "",
+                "name": "",
+                "message": "Attendance session is closed."
+            })
+
+
+        # ====================================================
+        # FIND STUDENT
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                student_id,
+                full_name,
+                semester,
+                department
+            FROM students
+            WHERE student_id = %s
+            LIMIT 1
+            """,
+            (qr_data,)
+        )
+
+        student = cursor.fetchone()
+
+
+        # ====================================================
+        # STUDENT NOT FOUND
+        # ====================================================
+
+        if not student:
+
+            return jsonify({
+                "success": False,
+                "student_id": qr_data,
+                "name": "",
+                "message": "Student Not Found"
+            })
+
+
+        # ====================================================
+        # STUDENT INFORMATION
+        # ====================================================
+
+        student_db_id = student[0]
+        student_code = student[1]
+        student_name = student[2]
+        student_semester = student[3]
+        student_department = student[4]
+
+
+        # ====================================================
+        # VERIFY STUDENT BELONGS TO THIS SESSION
+        # ====================================================
+
+        session_cursor = mysql.connection.cursor()
+
+        try:
+
+            session_cursor.execute(
+                """
+                SELECT
+                    sub.semester,
+                    sub.department
+                FROM attendance_sessions s
+                INNER JOIN subjects sub
+                    ON s.subject_id = sub.id
+                WHERE s.id = %s
+                AND s.teacher_id = %s
+                LIMIT 1
+                """,
+                (
+                    session_id,
+                    teacher_id
+                )
+            )
+
+            session_details = session_cursor.fetchone()
+
+        finally:
+
+            session_cursor.close()
+
+
+        # ====================================================
+        # SESSION DETAILS NOT FOUND
+        # ====================================================
+
+        if not session_details:
+
+            return jsonify({
+                "success": False,
+                "student_id": student_code,
+                "name": student_name,
+                "message": "Attendance Session Not Found"
+            })
+
+
+        session_semester = session_details[0]
+        session_department = session_details[1]
+
+
+        # ====================================================
+        # CHECK SEMESTER
+        # ====================================================
+
+        if student_semester != session_semester:
+
+            return jsonify({
+                "success": False,
+                "student_id": student_code,
+                "name": student_name,
+                "message": "Student does not belong to this semester"
+            })
+
+
+        # ====================================================
+        # CHECK DEPARTMENT
+        # ====================================================
+
+        same_department = (
+            student_department == session_department
+        )
+
+        if (
+            student_department is None
+            and session_department is None
+        ):
+            same_department = True
+
+
+        if not same_department:
+
+            return jsonify({
+                "success": False,
+                "student_id": student_code,
+                "name": student_name,
+                "message": "Student does not belong to this department"
+            })
+
+
+        # ====================================================
+        # DUPLICATE ATTENDANCE CHECK
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                status
+            FROM attendance
+            WHERE session_id = %s
+            AND student_id = %s
+            LIMIT 1
+            """,
+            (
+                session_id,
+                student_db_id
+            )
+        )
+
+        already_marked = cursor.fetchone()
+
+
+        if already_marked:
+
+            return jsonify({
+                "success": False,
+                "student_id": student_code,
+                "name": student_name,
+                "message": "Already Marked"
+            })
+
+
+        # ====================================================
+        # GENERATE UNIQUE ATTENDANCE ID
+        # ====================================================
+
+        attendance_id = generate_attendance_id(
+            cursor
+        )
+
+
+        # ====================================================
+        # INSERT QR ATTENDANCE
+        # ====================================================
+
+        cursor.execute(
+            """
+            INSERT INTO attendance
+            (
+                id,
+                session_id,
+                student_id,
+                attendance_date,
+                attendance_time,
+                attendance_method,
+                status,
+                remarks
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                CURDATE(),
+                CURTIME(),
+                'QR',
+                'Present',
+                'Attendance marked through QR'
+            )
+            """,
+            (
+                attendance_id,
+                session_id,
+                student_db_id
+            )
+        )
+
+
+        # ====================================================
+        # COMMIT
+        # ====================================================
+
+        mysql.connection.commit()
+
+
+        # ====================================================
+        # SUCCESS
+        # ====================================================
+
         print(
-            f"Starting QR scanner for session: {session_id}"
+            f"QR ATTENDANCE SUCCESS: "
+            f"{student_code} - {student_name}"
         )
 
-        start_teacher_qr_scanner(
-            process_qr
-        )
 
-        flash(
-            "QR Attendance Scanner Closed.",
-            "success"
-        )
+        return jsonify({
+            "success": True,
+            "student_id": student_code,
+            "name": student_name,
+            "message": "Attendance Marked - Present"
+        })
 
 
     except Exception as e:
 
+        # ====================================================
+        # ROLLBACK
+        # ====================================================
+
+        mysql.connection.rollback()
+
         print(
-            "QR SCANNER ERROR:",
+            "QR ATTENDANCE DATABASE ERROR:",
             str(e)
         )
 
-        flash(
-            f"QR Scanner Error: {e}",
-            "danger"
-        )
+        return jsonify({
+            "success": False,
+            "student_id": "",
+            "name": "",
+            "message": f"Database Error: {e}"
+        }), 500
 
 
-    # ========================================================
-    # RETURN TEACHER ATTENDANCE
-    # ========================================================
+    finally:
 
-    return redirect(
-        url_for(
-            "teacher_attendance.index"
-        )
-    )
+        cursor.close()

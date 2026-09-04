@@ -1,0 +1,867 @@
+
+{% extends 'layouts/base.html' %}
+
+{% block title %}
+QR Attendance
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-qr-code-scan"></i>
+                QR Attendance
+            </h2>
+
+            <small class="text-muted">
+                Scan student's QR code using your device camera
+            </small>
+        </div>
+
+        <a href="{{ url_for('teacher_attendance.index') }}"
+           class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Back
+        </a>
+    </div>
+
+
+    <!-- CAMERA CARD -->
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-dark text-white">
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-camera-video-fill"></i>
+                    QR Scanner Camera
+                </h5>
+
+                <span id="cameraStatus"
+                      class="badge bg-secondary">
+                    Starting...
+                </span>
+
+            </div>
+        </div>
+
+
+        <div class="card-body">
+
+            <div class="row g-4 align-items-start">
+
+                <!-- CAMERA -->
+                <div class="col-lg-8">
+
+                    <div class="camera-wrapper">
+
+                        <video
+                            id="qrVideo"
+                            autoplay
+                            playsinline
+                            muted>
+                        </video>
+
+                        <canvas id="qrCanvas"></canvas>
+
+                        <div id="scanOverlay"
+                             class="scan-overlay">
+
+                            <div class="scan-box">
+
+                                <div class="corner top-left"></div>
+                                <div class="corner top-right"></div>
+                                <div class="corner bottom-left"></div>
+                                <div class="corner bottom-right"></div>
+
+                                <div class="scan-line"></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CAMERA BUTTONS -->
+
+                    <div class="d-flex gap-2 mt-3">
+
+                        <button
+                            type="button"
+                            id="startCameraBtn"
+                            class="btn btn-success">
+
+                            <i class="bi bi-camera-fill"></i>
+                            Start Camera
+
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="stopCameraBtn"
+                            class="btn btn-danger"
+                            disabled>
+
+                            <i class="bi bi-stop-circle-fill"></i>
+                            Stop Camera
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- CAMERA ERROR -->
+
+                    <div
+                        id="cameraError"
+                        class="alert alert-danger mt-3 d-none">
+                    </div>
+
+                </div>
+
+
+                <!-- RESULT -->
+                <div class="col-lg-4">
+
+                    <div class="card border shadow-sm">
+
+                        <div class="card-header bg-primary text-white">
+
+                            <h6 class="mb-0">
+                                <i class="bi bi-person-check-fill"></i>
+                                Scan Result
+                            </h6>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="mb-3">
+
+                                <small class="text-muted">
+                                    Status
+                                </small>
+
+                                <div
+                                    id="scanStatus"
+                                    class="fw-bold text-primary">
+                                    Point the camera at a QR code.
+                                </div>
+
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <small class="text-muted">
+                                    Student ID
+                                </small>
+
+                                <div
+                                    id="studentId"
+                                    class="fw-bold">
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div class="mb-3">
+
+                                <small class="text-muted">
+                                    Student Name
+                                </small>
+
+                                <div
+                                    id="studentName"
+                                    class="fw-bold">
+                                    —
+                                </div>
+
+                            </div>
+
+
+                            <div>
+
+                                <small class="text-muted">
+                                    Attendance
+                                </small>
+
+                                <div
+                                    id="attendanceStatus"
+                                    class="fw-bold">
+                                    —
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- INSTRUCTIONS -->
+
+                    <div class="alert alert-info mt-3">
+
+                        <h6 class="fw-bold">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Instructions
+                        </h6>
+
+                        <ul class="mb-0 ps-3">
+
+                            <li>
+                                Allow camera permission when asked.
+                            </li>
+
+                            <li>
+                                Show the student's QR code inside the box.
+                            </li>
+
+                            <li>
+                                Attendance is marked automatically.
+                            </li>
+
+                            <li>
+                                Duplicate attendance is prevented.
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================================================= -->
+<!-- QR DECODER LIBRARY -->
+<!-- ========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
+
+<style>
+
+.camera-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 850px;
+    margin: auto;
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 360px;
+}
+
+#qrVideo {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 360px;
+    max-height: 70vh;
+    object-fit: cover;
+    background: #000;
+}
+
+#qrCanvas {
+    display: none;
+}
+
+.scan-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.scan-box {
+    width: min(65vw, 300px);
+    height: min(65vw, 300px);
+    position: relative;
+}
+
+.corner {
+    position: absolute;
+    width: 45px;
+    height: 45px;
+    border-width: 4px;
+    border-style: solid;
+}
+
+.corner.top-left {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+}
+
+.corner.top-right {
+    top: 0;
+    right: 0;
+    border-left: 0;
+    border-bottom: 0;
+}
+
+.corner.bottom-left {
+    bottom: 0;
+    left: 0;
+    border-right: 0;
+    border-top: 0;
+}
+
+.corner.bottom-right {
+    bottom: 0;
+    right: 0;
+    border-left: 0;
+    border-top: 0;
+}
+
+.scan-line {
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    top: 50%;
+    height: 2px;
+    animation: scanMove 2s linear infinite;
+}
+
+@keyframes scanMove {
+
+    0% {
+        top: 10%;
+    }
+
+    50% {
+        top: 90%;
+    }
+
+    100% {
+        top: 10%;
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .camera-wrapper {
+        min-height: 280px;
+        border-radius: 10px;
+    }
+
+    #qrVideo {
+        min-height: 280px;
+    }
+
+    .scan-box {
+        width: 230px;
+        height: 230px;
+    }
+
+    .corner {
+        width: 35px;
+        height: 35px;
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .camera-wrapper {
+        min-height: 240px;
+    }
+
+    #qrVideo {
+        min-height: 240px;
+    }
+
+    .scan-box {
+        width: 190px;
+        height: 190px;
+    }
+
+}
+
+</style>
+
+
+<script>
+
+const sessionId = {{ session_id|tojson }};
+
+const video = document.getElementById("qrVideo");
+const canvas = document.getElementById("qrCanvas");
+
+const ctx = canvas.getContext("2d", {
+    willReadFrequently: true
+});
+
+const startCameraBtn =
+    document.getElementById("startCameraBtn");
+
+const stopCameraBtn =
+    document.getElementById("stopCameraBtn");
+
+const cameraStatus =
+    document.getElementById("cameraStatus");
+
+const cameraError =
+    document.getElementById("cameraError");
+
+const scanStatus =
+    document.getElementById("scanStatus");
+
+const studentId =
+    document.getElementById("studentId");
+
+const studentName =
+    document.getElementById("studentName");
+
+const attendanceStatus =
+    document.getElementById("attendanceStatus");
+
+
+let cameraStream = null;
+let scanning = false;
+let animationFrame = null;
+
+let lastScannedCode = "";
+let lastScannedTime = 0;
+
+let processingQR = false;
+
+
+/* ============================================================
+   START CAMERA
+   ============================================================ */
+
+async function startCamera() {
+
+    cameraError.classList.add("d-none");
+    cameraError.textContent = "";
+
+    cameraStatus.textContent = "Starting...";
+    cameraStatus.className = "badge bg-warning text-dark";
+
+    try {
+
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+
+            throw new Error(
+                "Camera is not supported by this browser."
+            );
+        }
+
+
+        cameraStream =
+            await navigator.mediaDevices.getUserMedia({
+
+                video: {
+
+                    facingMode: {
+                        ideal: "environment"
+                    },
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+
+        video.srcObject = cameraStream;
+
+        await video.play();
+
+
+        scanning = true;
+
+        startCameraBtn.disabled = true;
+        stopCameraBtn.disabled = false;
+
+        cameraStatus.textContent = "Camera Active";
+        cameraStatus.className = "badge bg-success";
+
+        scanStatus.textContent =
+            "Point the camera at a QR code.";
+
+        scanStatus.className =
+            "fw-bold text-primary";
+
+
+        scanLoop();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "CAMERA ERROR:",
+            error
+        );
+
+        cameraStatus.textContent = "Camera Error";
+        cameraStatus.className = "badge bg-danger";
+
+        cameraError.textContent =
+            "Unable to access camera. " +
+            "Please allow camera permission and try again. " +
+            error.message;
+
+        cameraError.classList.remove("d-none");
+
+        startCameraBtn.disabled = false;
+        stopCameraBtn.disabled = true;
+
+    }
+
+}
+
+
+/* ============================================================
+   STOP CAMERA
+   ============================================================ */
+
+function stopCamera() {
+
+    scanning = false;
+
+    if (animationFrame) {
+
+        cancelAnimationFrame(
+            animationFrame
+        );
+
+        animationFrame = null;
+    }
+
+
+    if (cameraStream) {
+
+        cameraStream
+            .getTracks()
+            .forEach(track => track.stop());
+
+        cameraStream = null;
+    }
+
+
+    video.srcObject = null;
+
+    startCameraBtn.disabled = false;
+    stopCameraBtn.disabled = true;
+
+    cameraStatus.textContent = "Camera Stopped";
+    cameraStatus.className = "badge bg-secondary";
+
+}
+
+
+/* ============================================================
+   QR SCAN LOOP
+   ============================================================ */
+
+function scanLoop() {
+
+    if (!scanning) {
+        return;
+    }
+
+
+    if (video.readyState >= 2 &&
+        video.videoWidth > 0 &&
+        video.videoHeight > 0) {
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+
+        ctx.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        const imageData =
+            ctx.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+        if (typeof jsQR === "function") {
+
+            const code =
+                jsQR(
+                    imageData.data,
+                    imageData.width,
+                    imageData.height,
+                    {
+                        inversionAttempts:
+                            "attemptBoth"
+                    }
+                );
+
+
+            if (code && code.data) {
+
+                handleQRCode(
+                    code.data.trim()
+                );
+
+            }
+
+        }
+
+    }
+
+
+    animationFrame =
+        requestAnimationFrame(
+            scanLoop
+        );
+
+}
+
+
+/* ============================================================
+   HANDLE QR CODE
+   ============================================================ */
+
+async function handleQRCode(qrData) {
+
+    if (!qrData) {
+        return;
+    }
+
+
+    const now = Date.now();
+
+
+    if (
+        qrData === lastScannedCode &&
+        (now - lastScannedTime) < 3000
+    ) {
+
+        return;
+
+    }
+
+
+    if (processingQR) {
+        return;
+    }
+
+
+    lastScannedCode = qrData;
+    lastScannedTime = now;
+
+    processingQR = true;
+
+
+    scanStatus.textContent =
+        "QR detected. Checking student...";
+
+    scanStatus.className =
+        "fw-bold text-warning";
+
+
+    attendanceStatus.textContent =
+        "Processing...";
+
+    attendanceStatus.className =
+        "fw-bold text-warning";
+
+
+    try {
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "qr_data",
+            qrData
+        );
+
+
+        const response =
+            await fetch(
+                `/teacher/qr/scan/${sessionId}`,
+                {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        studentId.textContent =
+            result.student_id || "—";
+
+        studentName.textContent =
+            result.name || "—";
+
+
+        if (result.success) {
+
+            scanStatus.textContent =
+                result.message ||
+                "Attendance Marked";
+
+            scanStatus.className =
+                "fw-bold text-success";
+
+
+            attendanceStatus.textContent =
+                "Present";
+
+            attendanceStatus.className =
+                "fw-bold text-success";
+
+
+        } else {
+
+            scanStatus.textContent =
+                result.message ||
+                "QR could not be processed";
+
+            scanStatus.className =
+                "fw-bold text-danger";
+
+
+            if (
+                result.message ===
+                "Already Marked"
+            ) {
+
+                attendanceStatus.textContent =
+                    "Already Marked";
+
+            } else {
+
+                attendanceStatus.textContent =
+                    "Not Marked";
+
+            }
+
+            attendanceStatus.className =
+                "fw-bold text-danger";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "QR REQUEST ERROR:",
+            error
+        );
+
+        scanStatus.textContent =
+            "Server connection error.";
+
+        scanStatus.className =
+            "fw-bold text-danger";
+
+
+        attendanceStatus.textContent =
+            "Not Marked";
+
+        attendanceStatus.className =
+            "fw-bold text-danger";
+
+    }
+
+
+    setTimeout(
+        () => {
+            processingQR = false;
+        },
+        1200
+    );
+
+}
+
+
+/* ============================================================
+   BUTTON EVENTS
+   ============================================================ */
+
+startCameraBtn.addEventListener(
+    "click",
+    startCamera
+);
+
+stopCameraBtn.addEventListener(
+    "click",
+    stopCamera
+);
+
+
+/* ============================================================
+   PAGE LOAD
+   ============================================================ */
+
+window.addEventListener(
+    "load",
+    () => {
+
+        startCamera();
+
+    }
+);
+
+
+/* ============================================================
+   PAGE CLOSE
+   ============================================================ */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        stopCamera();
+
+    }
+);
+
+</script>
+
+{% endblock %}
