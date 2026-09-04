@@ -6,6 +6,7 @@ const stopBtn = document.getElementById("stopBtn");
 
 const studentName = document.getElementById("studentName");
 const studentId = document.getElementById("studentId");
+
 const status = document.getElementById("status");
 const confidence = document.getElementById("confidence");
 
@@ -17,16 +18,40 @@ let interval = null;
 let processing = false;
 let stopped = false;
 
+/*
+============================================================
+SESSION ID
+============================================================
+*/
 
-// ============================================================
-// START BROWSER CAMERA
-// ============================================================
+const currentSessionId =
+    typeof sessionId !== "undefined"
+        ? sessionId
+        : "";
+
+
+/*
+============================================================
+LAST PRESENT STUDENT
+============================================================
+*/
+
+let lastPresentStudentId = "";
+let lastPresentTime = 0;
+
+
+/*
+============================================================
+START CAMERA
+============================================================
+*/
 
 async function startCamera() {
 
     try {
 
         stopped = false;
+        processing = false;
 
         cameraError.classList.add("d-none");
         cameraError.innerText = "";
@@ -35,16 +60,17 @@ async function startCamera() {
             !navigator.mediaDevices ||
             !navigator.mediaDevices.getUserMedia
         ) {
-
             throw new Error(
                 "Browser camera is not supported."
             );
         }
 
 
-        // ----------------------------------------------------
-        // Stop old camera
-        // ----------------------------------------------------
+        /*
+        --------------------------------------------------------
+        STOP OLD CAMERA
+        --------------------------------------------------------
+        */
 
         if (stream) {
 
@@ -56,67 +82,86 @@ async function startCamera() {
         }
 
 
-        // ----------------------------------------------------
-        // OPEN DEVICE CAMERA
-        // ----------------------------------------------------
+        /*
+        --------------------------------------------------------
+        OPEN CAMERA
+        --------------------------------------------------------
+        */
 
-        stream = await navigator.mediaDevices.getUserMedia({
+        stream =
+            await navigator.mediaDevices.getUserMedia({
 
-            video: {
-                facingMode: {
-                    ideal: "user"
+                video: {
+
+                    facingMode: {
+                        ideal: "user"
+                    },
+
+                    width: {
+                        ideal: 1280
+                    },
+
+                    height: {
+                        ideal: 720
+                    }
+
                 },
 
-                width: {
-                    ideal: 1280
-                },
+                audio: false
 
-                height: {
-                    ideal: 720
-                }
-            },
-
-            audio: false
-        });
+            });
 
 
-        // ----------------------------------------------------
-        // SHOW CAMERA
-        // ----------------------------------------------------
+        /*
+        --------------------------------------------------------
+        SHOW CAMERA
+        --------------------------------------------------------
+        */
 
         video.srcObject = stream;
+
+        video.muted = true;
+        video.playsInline = true;
 
         await video.play();
 
 
-        cameraMessage.style.display = "none";
-
-        status.innerText = "Camera Started";
-
-        status.className =
-            "badge bg-success";
-
-
-        startBtn.disabled = true;
-
-        stopBtn.disabled = false;
-
-
-        // ----------------------------------------------------
-        // START FACE SCANNING
-        // ----------------------------------------------------
-
-        if (interval) {
-
-            clearInterval(
-                interval
-            );
+        if (cameraMessage) {
+            cameraMessage.style.display = "none";
         }
 
 
+        status.innerText = "Camera Started";
+        status.className = "badge bg-success";
+
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+
+        /*
+        --------------------------------------------------------
+        CLEAR OLD INTERVAL
+        --------------------------------------------------------
+        */
+
+        if (interval) {
+
+            clearInterval(interval);
+            interval = null;
+
+        }
+
+
+        /*
+        --------------------------------------------------------
+        START FACE SCANNING
+        --------------------------------------------------------
+        */
+
         interval = setInterval(
             captureFrame,
-            900
+            1000
         );
 
 
@@ -128,50 +173,65 @@ async function startCamera() {
         );
 
 
-        cameraMessage.style.display =
-            "flex";
+        if (cameraMessage) {
+            cameraMessage.style.display = "flex";
+        }
 
 
-        status.innerText =
-            "Camera Error";
-
-        status.className =
-            "badge bg-danger";
+        status.innerText = "Camera Error";
+        status.className = "badge bg-danger";
 
 
         cameraError.innerText =
-            "Camera access failed: "
-            +
-            error.message
-            +
+            "Camera access failed: " +
+            error.message +
             ". Allow camera permission and try again.";
 
 
         cameraError.classList.remove(
             "d-none"
         );
+
+
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+
     }
+
 }
 
 
-// ============================================================
-// STOP CAMERA
-// ============================================================
+/*
+============================================================
+STOP CAMERA
+============================================================
+*/
 
 function stopCamera() {
 
     stopped = true;
+    processing = false;
 
+
+    /*
+    --------------------------------------------------------
+    STOP SCANNING
+    --------------------------------------------------------
+    */
 
     if (interval) {
 
-        clearInterval(
-            interval
-        );
-
+        clearInterval(interval);
         interval = null;
+
     }
 
+
+    /*
+    --------------------------------------------------------
+    STOP CAMERA STREAM
+    --------------------------------------------------------
+    */
 
     if (stream) {
 
@@ -180,18 +240,30 @@ function stopCamera() {
         );
 
         stream = null;
+
     }
 
 
-    video.srcObject = null;
+    if (video) {
+        video.srcObject = null;
+    }
 
 
-    cameraMessage.innerText =
-        'Click "Start Camera"';
+    /*
+    --------------------------------------------------------
+    UI
+    --------------------------------------------------------
+    */
 
+    if (cameraMessage) {
 
-    cameraMessage.style.display =
-        "flex";
+        cameraMessage.innerText =
+            'Click "Start Camera"';
+
+        cameraMessage.style.display =
+            "flex";
+
+    }
 
 
     status.innerText =
@@ -201,21 +273,77 @@ function stopCamera() {
         "badge bg-secondary";
 
 
-    startBtn.disabled =
-        false;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
 
-    stopBtn.disabled =
-        true;
-
-
-    processing =
-        false;
 }
 
 
-// ============================================================
-// CAPTURE FRAME
-// ============================================================
+/*
+============================================================
+ATTENDANCE PRESENT
+IMPORTANT:
+CAMERA MUST CONTINUE FOR NEXT STUDENT
+============================================================
+*/
+
+function attendanceSuccess(data) {
+
+    /*
+    DO NOT STOP CAMERA
+    DO NOT STOP SCANNING
+    */
+
+    stopped = false;
+    processing = false;
+
+
+    lastPresentStudentId =
+        String(data.student_id || "");
+
+    lastPresentTime =
+        Date.now();
+
+
+    studentName.innerText =
+        data.name || "Student";
+
+
+    studentId.innerText =
+        data.student_id || "-";
+
+
+    confidence.innerText =
+        (data.confidence || 0) + "%";
+
+
+    status.innerText =
+        "Present";
+
+    status.className =
+        "badge bg-success";
+
+
+    if (cameraMessage) {
+        cameraMessage.style.display = "none";
+    }
+
+
+    /*
+    Keep camera buttons active.
+    */
+
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+}
+
+
+/*
+============================================================
+CAPTURE FRAME
+============================================================
+*/
 
 function captureFrame() {
 
@@ -224,7 +352,6 @@ function captureFrame() {
         !stream ||
         processing
     ) {
-
         return;
     }
 
@@ -234,6 +361,17 @@ function captureFrame() {
         video.videoWidth <= 0 ||
         video.videoHeight <= 0
     ) {
+        return;
+    }
+
+
+    if (!currentSessionId) {
+
+        status.innerText =
+            "Session ID missing";
+
+        status.className =
+            "badge bg-danger";
 
         return;
     }
@@ -241,6 +379,12 @@ function captureFrame() {
 
     processing = true;
 
+
+    /*
+    --------------------------------------------------------
+    CANVAS
+    --------------------------------------------------------
+    */
 
     canvas.width =
         video.videoWidth;
@@ -267,28 +411,38 @@ function captureFrame() {
     );
 
 
+    /*
+    --------------------------------------------------------
+    JPEG
+    --------------------------------------------------------
+    */
+
     canvas.toBlob(
         sendFrame,
         "image/jpeg",
         0.85
     );
+
 }
 
 
-// ============================================================
-// SEND FRAME TO FLASK
-// ============================================================
+/*
+============================================================
+SEND FRAME TO FLASK
+============================================================
+*/
 
 function sendFrame(blob) {
 
     if (
         !blob ||
-        stopped
+        stopped ||
+        !stream
     ) {
 
         processing = false;
-
         return;
+
     }
 
 
@@ -305,13 +459,14 @@ function sendFrame(blob) {
 
     formData.append(
         "session_id",
-        sessionId
+        currentSessionId
     );
 
 
     fetch(
         "/teacher/face/recognize",
         {
+
             method: "POST",
 
             body: formData,
@@ -319,248 +474,366 @@ function sendFrame(blob) {
             credentials: "same-origin",
 
             headers: {
+
                 "X-Requested-With":
                     "XMLHttpRequest"
+
             }
+
         }
     )
 
 
-    .then(
-        response => {
+    .then(async response => {
 
-            if (!response.ok) {
-
-                return response.json()
-                    .catch(
-                        () => {
-                            throw new Error(
-                                "Server error: "
-                                +
-                                response.status
-                            );
-                        }
-                    )
-                    .then(
-                        data => {
-                            throw new Error(
-                                data.status
-                                ||
-                                "Server error: "
-                                +
-                                response.status
-                            );
-                        }
-                    );
-            }
+        let data = null;
 
 
-            return response.json();
+        try {
+
+            data =
+                await response.json();
+
+        } catch (e) {
+
+            throw new Error(
+                "Invalid server response."
+            );
+
         }
-    )
 
 
-    .then(
-        data => {
+        if (!response.ok) {
 
-            // ----------------------------------------------
-            // STUDENT NAME
-            // ----------------------------------------------
+            throw new Error(
+                data.status ||
+                "Server error: " +
+                response.status
+            );
 
-            studentName.innerText =
-                data.name
-                ||
-                "Waiting...";
+        }
 
 
-            // ----------------------------------------------
-            // STUDENT ID
-            // ----------------------------------------------
+        return data;
 
-            studentId.innerText =
-                data.student_id
-                ||
-                "-";
+    })
 
 
-            // ----------------------------------------------
-            // CONFIDENCE
-            // ----------------------------------------------
+    .then(data => {
 
-            confidence.innerText =
+        if (stopped) {
+            return;
+        }
+
+
+        /*
+        ----------------------------------------------------
+        STUDENT NAME
+        ----------------------------------------------------
+        */
+
+        studentName.innerText =
+            data.name ||
+            "Waiting...";
+
+
+        /*
+        ----------------------------------------------------
+        STUDENT ID
+        ----------------------------------------------------
+        */
+
+        studentId.innerText =
+            data.student_id ||
+            "-";
+
+
+        /*
+        ----------------------------------------------------
+        CONFIDENCE
+        ----------------------------------------------------
+        */
+
+        confidence.innerText =
+            (
+                data.confidence || 0
+            ) + "%";
+
+
+        /*
+        ----------------------------------------------------
+        STATUS
+        ----------------------------------------------------
+        */
+
+        status.innerText =
+            data.status ||
+            "Processing";
+
+
+        const currentStatus =
+            (
+                data.status || ""
+            ).toLowerCase();
+
+
+        /*
+        ====================================================
+        PRESENT
+        ====================================================
+        */
+
+        if (data.success) {
+
+            attendanceSuccess(data);
+
+            return;
+
+        }
+
+
+        /*
+        ====================================================
+        CONFIRMING
+        ====================================================
+        */
+
+        if (
+            currentStatus.includes(
+                "confirming"
+            )
+        ) {
+
+            status.className =
+                "badge bg-warning text-dark";
+
+            return;
+
+        }
+
+
+        /*
+        ====================================================
+        ALREADY MARKED
+        ====================================================
+        */
+
+        if (
+            currentStatus.includes(
+                "already marked"
+            )
+        ) {
+
+            /*
+            Same student just marked?
+            Keep Present visible briefly.
+            */
+
+            if (
+                lastPresentStudentId &&
+                String(data.student_id || "") ===
+                    lastPresentStudentId &&
                 (
-                    data.confidence
-                    ||
-                    0
-                )
-                +
-                "%";
+                    Date.now() -
+                    lastPresentTime
+                ) < 6000
+            ) {
 
-
-            // ----------------------------------------------
-            // STATUS
-            // ----------------------------------------------
-
-            status.innerText =
-                data.status
-                ||
-                "Processing";
-
-
-            const currentStatus =
-                (
-                    data.status
-                    ||
-                    ""
-                )
-                .toLowerCase();
-
-
-            // ----------------------------------------------
-            // SUCCESS
-            // ----------------------------------------------
-
-            if (data.success) {
+                status.innerText =
+                    "Present";
 
                 status.className =
                     "badge bg-success";
 
-            }
+            } else {
 
-            // ----------------------------------------------
-            // CONFIRMING
-            // ----------------------------------------------
-
-            else if (
-                currentStatus.includes(
-                    "confirm"
-                )
-            ) {
-
-                status.className =
-                    "badge bg-warning text-dark";
-
-            }
-
-            // ----------------------------------------------
-            // ALREADY MARKED
-            // ----------------------------------------------
-
-            else if (
-                currentStatus.includes(
-                    "already"
-                )
-            ) {
+                status.innerText =
+                    "Already Marked";
 
                 status.className =
                     "badge bg-info text-dark";
 
             }
 
-            // ----------------------------------------------
-            // NO FACE
-            // ----------------------------------------------
 
-            else if (
-                currentStatus.includes(
-                    "no face"
-                )
-            ) {
+            /*
+            VERY IMPORTANT:
+            Camera keeps scanning.
+            */
 
-                status.className =
-                    "badge bg-secondary";
+            stopped = false;
 
-            }
+            return;
 
-            // ----------------------------------------------
-            // UNKNOWN
-            // ----------------------------------------------
-
-            else if (
-                currentStatus.includes(
-                    "unknown"
-                )
-            ) {
-
-                status.className =
-                    "badge bg-danger";
-
-            }
-
-            // ----------------------------------------------
-            // OTHER
-            // ----------------------------------------------
-
-            else {
-
-                status.className =
-                    "badge bg-danger";
-            }
         }
-    )
 
 
-    .catch(
-        error => {
+        /*
+        ====================================================
+        NO FACE
+        ====================================================
+        */
 
-            console.error(
-                "Face request error:",
-                error
-            );
+        if (
+            currentStatus.includes(
+                "no face"
+            )
+        ) {
 
-            if (!stopped) {
+            status.className =
+                "badge bg-secondary";
 
-                status.innerText =
-                    error.message
-                    ||
-                    "Connection error";
+            return;
 
-                status.className =
-                    "badge bg-danger";
-            }
         }
-    )
 
 
-    .finally(
-        () => {
+        /*
+        ====================================================
+        FACE TOO SMALL
+        ====================================================
+        */
 
-            processing =
-                false;
+        if (
+            currentStatus.includes(
+                "too small"
+            )
+        ) {
+
+            status.className =
+                "badge bg-warning text-dark";
+
+            return;
+
         }
-    );
+
+
+        /*
+        ====================================================
+        UNKNOWN FACE
+        ====================================================
+        */
+
+        if (
+            currentStatus.includes(
+                "unknown"
+            )
+        ) {
+
+            status.className =
+                "badge bg-danger";
+
+            return;
+
+        }
+
+
+        /*
+        ====================================================
+        OTHER
+        ====================================================
+        */
+
+        status.className =
+            "badge bg-danger";
+
+    })
+
+
+    .catch(error => {
+
+        console.error(
+            "Face request error:",
+            error
+        );
+
+
+        if (!stopped) {
+
+            status.innerText =
+                error.message ||
+                "Connection error";
+
+            status.className =
+                "badge bg-danger";
+
+        }
+
+    })
+
+
+    .finally(() => {
+
+        processing = false;
+
+    });
+
 }
 
 
-// ============================================================
-// BUTTON EVENTS
-// ============================================================
+/*
+============================================================
+BUTTON EVENTS
+============================================================
+*/
 
-startBtn.addEventListener(
-    "click",
-    startCamera
-);
+if (startBtn) {
 
+    startBtn.addEventListener(
+        "click",
+        startCamera
+    );
 
-stopBtn.addEventListener(
-    "click",
-    stopCamera
-);
-
-
-// ============================================================
-// INITIAL STATE
-// ============================================================
-
-stopBtn.disabled =
-    true;
+}
 
 
-// ============================================================
-// PAGE LEAVE
-// ============================================================
+if (stopBtn) {
+
+    stopBtn.addEventListener(
+        "click",
+        stopCamera
+    );
+
+}
+
+
+/*
+============================================================
+INITIAL STATE
+============================================================
+*/
+
+if (stopBtn) {
+    stopBtn.disabled = true;
+}
+
+
+/*
+============================================================
+PAGE LEAVE
+============================================================
+*/
 
 window.addEventListener(
     "beforeunload",
-    stopCamera
+    () => {
+
+        if (stream) {
+
+            stream
+                .getTracks()
+                .forEach(
+                    track => track.stop()
+                );
+
+        }
+
+
+        if (interval) {
+
+            clearInterval(interval);
+
+        }
+
+    }
 );

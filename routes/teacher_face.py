@@ -11,7 +11,6 @@ from flask import (
 )
 
 import os
-import time
 import cv2
 import numpy as np
 
@@ -37,11 +36,8 @@ FACE_SIZE = (200, 200)
 
 FACE_MARGIN = 0.15
 
+# LBPH distance threshold
 MAX_DISTANCE = 65.0
-
-REQUIRED_CONFIRMATIONS = 3
-
-CONFIRMATION_TIMEOUT = 3.0
 
 
 # ============================================================
@@ -66,30 +62,6 @@ TRAINER_PATH = os.path.join(
 
 
 # ============================================================
-# CLEAR CONFIRMATION
-# ============================================================
-
-def clear_face_confirmation(session_id):
-
-    session.pop(
-        f"face_candidate_{session_id}",
-        None
-    )
-
-    session.pop(
-        f"face_count_{session_id}",
-        None
-    )
-
-    session.pop(
-        f"face_time_{session_id}",
-        None
-    )
-
-    session.modified = True
-
-
-# ============================================================
 # START FACE ATTENDANCE
 # Browser Camera Page
 # ============================================================
@@ -99,17 +71,20 @@ def clear_face_confirmation(session_id):
 )
 def start_face_attendance(session_id):
 
+    # --------------------------------------------------------
+    # TEACHER LOGIN CHECK
+    # --------------------------------------------------------
+
     if "teacher_id" not in session:
-
         return redirect(
-            url_for("teacher_auth.login")
+            url_for(
+                "teacher_auth.login"
+            )
         )
-
 
     cursor = mysql.connection.cursor()
 
     try:
-
         cursor.execute(
             """
             SELECT
@@ -129,9 +104,12 @@ def start_face_attendance(session_id):
         attendance_session = cursor.fetchone()
 
     finally:
-
         cursor.close()
 
+
+    # --------------------------------------------------------
+    # SESSION NOT FOUND
+    # --------------------------------------------------------
 
     if not attendance_session:
 
@@ -141,9 +119,15 @@ def start_face_attendance(session_id):
         )
 
         return redirect(
-            url_for("teacher_attendance.index")
+            url_for(
+                "teacher_attendance.index"
+            )
         )
 
+
+    # --------------------------------------------------------
+    # SESSION MUST BE OPEN
+    # --------------------------------------------------------
 
     if attendance_session[1] != "OPEN":
 
@@ -153,9 +137,15 @@ def start_face_attendance(session_id):
         )
 
         return redirect(
-            url_for("teacher_attendance.index")
+            url_for(
+                "teacher_attendance.index"
+            )
         )
 
+
+    # --------------------------------------------------------
+    # OPEN BROWSER FACE PAGE
+    # --------------------------------------------------------
 
     return render_template(
         "teacher/browser_face.html",
@@ -180,7 +170,15 @@ def start_face_attendance(session_id):
 #       ↓
 # Student
 #       ↓
+# IMMEDIATE PRESENT
+#       ↓
 # Attendance
+#
+# IMPORTANT:
+# No 3-confirmation system.
+# First valid recognition = Present.
+#
+# Scanner remains active for next student.
 # ============================================================
 
 @teacher_face.route(
@@ -188,6 +186,10 @@ def start_face_attendance(session_id):
     methods=["POST"]
 )
 def recognize_browser_face():
+
+    # ========================================================
+    # TEACHER LOGIN CHECK
+    # ========================================================
 
     if "teacher_id" not in session:
 
@@ -203,17 +205,18 @@ def recognize_browser_face():
 
     teacher_id = session["teacher_id"]
 
+    session_id = None
+
 
     try:
 
         # ====================================================
-        # SESSION ID
+        # GET SESSION ID
         # ====================================================
 
         session_id = request.form.get(
             "session_id"
         )
-
 
         if not session_id:
 
@@ -227,13 +230,20 @@ def recognize_browser_face():
             }), 400
 
 
+        # ====================================================
+        # CONVERT SESSION ID TO INTEGER
+        # ====================================================
+
         try:
 
             session_id = int(
                 session_id
             )
 
-        except (TypeError, ValueError):
+        except (
+            TypeError,
+            ValueError
+        ):
 
             return jsonify({
                 "success": False,
@@ -246,13 +256,12 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # IMAGE
+        # GET IMAGE
         # ====================================================
 
         image_file = request.files.get(
             "image"
         )
-
 
         if image_file is None:
 
@@ -316,11 +325,11 @@ def recognize_browser_face():
             cursor.close()
 
 
-        if not attendance_session:
+        # ====================================================
+        # SESSION NOT FOUND
+        # ====================================================
 
-            clear_face_confirmation(
-                session_id
-            )
+        if not attendance_session:
 
             return jsonify({
                 "success": False,
@@ -339,10 +348,6 @@ def recognize_browser_face():
 
         if attendance_session[1] != "OPEN":
 
-            clear_face_confirmation(
-                session_id
-            )
-
             return jsonify({
                 "success": False,
                 "name": "",
@@ -357,33 +362,37 @@ def recognize_browser_face():
         # TRAINER PATH
         # ====================================================
 
-        trainer_path = os.path.join(
-            current_app.root_path,
-            "trainer",
-            "trainer.yml"
-        )
+        trainer_path = TRAINER_PATH
 
 
-        # Fallback to absolute project path
+        # ----------------------------------------------------
+        # FALLBACK PATH
+        # ----------------------------------------------------
 
         if not os.path.isfile(
             trainer_path
         ):
 
-            trainer_path = TRAINER_PATH
-
-
-        # ====================================================
-        # CHECK TRAINER
-        # ====================================================
-
-        if not os.path.isfile(
-            trainer_path
-        ):
-
-            clear_face_confirmation(
-                session_id
+            alternate_path = os.path.join(
+                current_app.root_path,
+                "trainer",
+                "trainer.yml"
             )
+
+            if os.path.isfile(
+                alternate_path
+            ):
+
+                trainer_path = alternate_path
+
+
+        # ====================================================
+        # CHECK TRAINER FILE
+        # ====================================================
+
+        if not os.path.isfile(
+            trainer_path
+        ):
 
             return jsonify({
                 "success": False,
@@ -392,11 +401,10 @@ def recognize_browser_face():
                 "confidence": 0,
                 "distance": 0,
                 "status":
-                    "trainer.yml not found at "
-                    + trainer_path
-                    + ". Please train the face model "
-                      "and make sure trainer/trainer.yml "
-                      "is deployed."
+                    "trainer.yml not found. "
+                    "Please train the face model and "
+                    "make sure trainer/trainer.yml "
+                    "is deployed."
             })
 
 
@@ -421,7 +429,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # OPENCV FACE MODULE
+        # OPENCV FACE MODULE CHECK
         # ====================================================
 
         if not hasattr(
@@ -526,10 +534,6 @@ def recognize_browser_face():
 
         if len(faces) == 0:
 
-            clear_face_confirmation(
-                session_id
-            )
-
             return jsonify({
                 "success": False,
                 "name": "",
@@ -545,10 +549,6 @@ def recognize_browser_face():
         # ====================================================
 
         if len(faces) > 1:
-
-            clear_face_confirmation(
-                session_id
-            )
 
             return jsonify({
                 "success": False,
@@ -568,6 +568,10 @@ def recognize_browser_face():
         x, y, w, h = faces[0]
 
 
+        # ====================================================
+        # FACE TOO SMALL
+        # ====================================================
+
         if w < 100 or h < 100:
 
             return jsonify({
@@ -583,7 +587,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # SAME CROP AS CAPTURE
+        # FACE MARGIN
         # ====================================================
 
         margin = int(
@@ -614,6 +618,10 @@ def recognize_browser_face():
         )
 
 
+        # ====================================================
+        # CROP FACE
+        # ====================================================
+
         face_image = gray[
             y1:y2,
             x1:x2
@@ -621,10 +629,6 @@ def recognize_browser_face():
 
 
         if face_image.size == 0:
-
-            clear_face_confirmation(
-                session_id
-            )
 
             return jsonify({
                 "success": False,
@@ -649,7 +653,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # EQUALIZE
+        # HISTOGRAM EQUALIZATION
         # ====================================================
 
         face_image = cv2.equalizeHist(
@@ -658,7 +662,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # CREATE RECOGNIZER
+        # CREATE LBPH RECOGNIZER
         # ====================================================
 
         recognizer = (
@@ -672,7 +676,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # LOAD MODEL
+        # LOAD TRAINER
         # ====================================================
 
         try:
@@ -700,7 +704,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # PREDICT
+        # PREDICT FACE
         # ====================================================
 
         try:
@@ -729,13 +733,17 @@ def recognize_browser_face():
             }), 500
 
 
-        label = int(label)
+        label = int(
+            label
+        )
 
-        distance = float(distance)
+        distance = float(
+            distance
+        )
 
 
         # ====================================================
-        # DISPLAY CONFIDENCE
+        # CONFIDENCE
         # ====================================================
 
         confidence = max(
@@ -748,7 +756,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # UNKNOWN
+        # UNKNOWN FACE
         # ====================================================
 
         if (
@@ -756,10 +764,6 @@ def recognize_browser_face():
             or
             distance > MAX_DISTANCE
         ):
-
-            clear_face_confirmation(
-                session_id
-            )
 
             return jsonify({
                 "success": False,
@@ -780,7 +784,9 @@ def recognize_browser_face():
 
         # ====================================================
         # FIND STUDENT
-        # MODEL LABEL = students.id
+        #
+        # IMPORTANT:
+        # Model label = students.id
         # ====================================================
 
         cursor = mysql.connection.cursor()
@@ -817,10 +823,6 @@ def recognize_browser_face():
 
         if not student:
 
-            clear_face_confirmation(
-                session_id
-            )
-
             return jsonify({
                 "success": False,
                 "name": "Unknown Student",
@@ -839,6 +841,10 @@ def recognize_browser_face():
             })
 
 
+        # ====================================================
+        # STUDENT DATA
+        # ====================================================
+
         student_db_id = int(
             student[0]
         )
@@ -847,7 +853,7 @@ def recognize_browser_face():
             student[1]
         )
 
-        student_name = (
+        student_name_value = (
             student[2]
             or
             "Unknown Student"
@@ -856,6 +862,9 @@ def recognize_browser_face():
 
         # ====================================================
         # DUPLICATE CHECK
+        #
+        # Same student + same attendance session
+        # cannot be marked twice.
         # ====================================================
 
         cursor = mysql.connection.cursor()
@@ -884,15 +893,18 @@ def recognize_browser_face():
             cursor.close()
 
 
-        if already_marked:
+        # ====================================================
+        # ALREADY MARKED
+        #
+        # IMPORTANT:
+        # Scanner does NOT stop.
+        # ====================================================
 
-            clear_face_confirmation(
-                session_id
-            )
+        if already_marked:
 
             return jsonify({
                 "success": False,
-                "name": student_name,
+                "name": student_name_value,
                 "student_id": student_code,
                 "confidence": round(
                     confidence,
@@ -908,101 +920,20 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # CONFIRMATION
-        # ====================================================
-
-        candidate_key = (
-            f"face_candidate_{session_id}"
-        )
-
-        count_key = (
-            f"face_count_{session_id}"
-        )
-
-        time_key = (
-            f"face_time_{session_id}"
-        )
-
-
-        old_candidate = session.get(
-            candidate_key
-        )
-
-        old_count = session.get(
-            count_key,
-            0
-        )
-
-        old_time = session.get(
-            time_key,
-            0
-        )
-
-
-        current_time = time.time()
-
-
-        if (
-            old_candidate == student_db_id
-            and
-            current_time - old_time
-            <= CONFIRMATION_TIMEOUT
-        ):
-
-            count = old_count + 1
-
-        else:
-
-            count = 1
-
-
-        session[candidate_key] = (
-            student_db_id
-        )
-
-        session[count_key] = (
-            count
-        )
-
-        session[time_key] = (
-            current_time
-        )
-
-        session.modified = True
-
-
-        # ====================================================
-        # NOT YET CONFIRMED
-        # ====================================================
-
-        if count < REQUIRED_CONFIRMATIONS:
-
-            return jsonify({
-                "success": False,
-                "name": student_name,
-                "student_id": student_code,
-                "confidence": round(
-                    confidence,
-                    1
-                ),
-                "distance": round(
-                    distance,
-                    2
-                ),
-                "status":
-                    f"Confirming "
-                    f"{count}/"
-                    f"{REQUIRED_CONFIRMATIONS}"
-            })
-
-
-        # ====================================================
         # SAVE ATTENDANCE
+        #
+        # NO 3-CONFIRMATION SYSTEM.
+        #
+        # First valid recognition = Present.
         # ====================================================
 
         cursor = mysql.connection.cursor()
 
         try:
+
+            # ------------------------------------------------
+            # FINAL DUPLICATE CHECK
+            # ------------------------------------------------
 
             cursor.execute(
                 """
@@ -1022,11 +953,24 @@ def recognize_browser_face():
             duplicate = cursor.fetchone()
 
 
+            # ------------------------------------------------
+            # IF DUPLICATE
+            # ------------------------------------------------
+
             if duplicate:
 
                 result = "Already Marked"
 
+
+            # ------------------------------------------------
+            # INSERT ATTENDANCE
+            # ------------------------------------------------
+
             else:
+
+                # --------------------------------------------
+                # GET NEXT ID
+                # --------------------------------------------
 
                 cursor.execute(
                     """
@@ -1043,6 +987,10 @@ def recognize_browser_face():
                     cursor.fetchone()[0]
                 )
 
+
+                # --------------------------------------------
+                # INSERT PRESENT
+                # --------------------------------------------
 
                 cursor.execute(
                     """
@@ -1078,6 +1026,10 @@ def recognize_browser_face():
                 )
 
 
+                # --------------------------------------------
+                # COMMIT
+                # --------------------------------------------
+
                 mysql.connection.commit()
 
                 result = "Present"
@@ -1095,16 +1047,10 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # CLEAR CONFIRMATION
-        # ====================================================
-
-        clear_face_confirmation(
-            session_id
-        )
-
-
-        # ====================================================
-        # RESPONSE
+        # FINAL RESPONSE
+        #
+        # Camera remains active because frontend should
+        # continue scanning after this response.
         # ====================================================
 
         return jsonify({
@@ -1112,7 +1058,7 @@ def recognize_browser_face():
                 result == "Present",
 
             "name":
-                student_name,
+                student_name_value,
 
             "student_id":
                 student_code,
@@ -1134,25 +1080,15 @@ def recognize_browser_face():
         })
 
 
+    # ========================================================
+    # GLOBAL ERROR
+    # ========================================================
+
     except Exception as e:
 
         current_app.logger.exception(
             "Browser Face Recognition Error"
         )
-
-
-        try:
-
-            if "session_id" in locals():
-
-                clear_face_confirmation(
-                    session_id
-                )
-
-        except Exception:
-
-            pass
-
 
         return jsonify({
             "success": False,
