@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
 
     <meta
@@ -12,14 +11,19 @@
 
     <meta
         name="description"
-        content="User feedback for AI Smart Attendance System."
+        content="Share your feedback about AI Smart Attendance System and help improve the college management experience."
+    >
+
+    <meta
+        name="theme-color"
+        content="#07111f"
     >
 
     <title>
         Feedback | AI Smart Attendance System
     </title>
 
-
+    <!-- Google Fonts -->
     <link
         rel="preconnect"
         href="https://fonts.googleapis.com"
@@ -36,639 +40,1702 @@
         rel="stylesheet"
     >
 
+    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
 
+    <!-- Bootstrap Icons -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
         rel="stylesheet"
     >
 
+    <!-- Landing CSS -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/landing.css') }}"
     >
 
+    <style>
+        /* =========================================================
+           FEEDBACK PAGE
+           ========================================================= */
+
+        :root {
+            --feedback-bg: #07111f;
+            --feedback-card: rgba(255, 255, 255, 0.055);
+            --feedback-border: rgba(255, 255, 255, 0.10);
+            --feedback-text: #f5f7fb;
+            --feedback-muted: #9ba9bb;
+            --feedback-primary: #4f8cff;
+            --feedback-success: #22c55e;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background:
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(79, 140, 255, 0.13),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(139, 92, 246, 0.12),
+                    transparent 28%
+                ),
+                var(--feedback-bg);
+            color: var(--feedback-text);
+            font-family: "Inter", sans-serif;
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           NAVBAR
+           ========================================================= */
+
+        .feedback-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+            background: rgba(7, 17, 31, 0.88);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .feedback-navbar .navbar-brand {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .feedback-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .feedback-brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f8cff,
+                    #7c3aed
+                );
+            color: #fff;
+            font-size: 21px;
+            box-shadow:
+                0 10px 30px rgba(79, 140, 255, 0.28);
+        }
+
+        .feedback-brand-copy {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .feedback-brand-copy strong {
+            font-family: "Poppins", sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .feedback-brand-copy small {
+            color: #8fa0b5;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .feedback-navbar .nav-link {
+            color: #aebbd0;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 14px !important;
+            transition: 0.25s ease;
+        }
+
+        .feedback-navbar .nav-link:hover,
+        .feedback-navbar .nav-link.active {
+            color: #fff;
+        }
+
+        .feedback-navbar .nav-link i {
+            margin-right: 5px;
+        }
+
+        .feedback-navbar .navbar-toggler {
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 10px;
+        }
+
+        .feedback-navbar .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        .feedback-navbar .navbar-toggler-icon {
+            filter: invert(1);
+        }
+
+        /* =========================================================
+           HERO
+           ========================================================= */
+
+        .feedback-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 100px 0 70px;
+        }
+
+        .feedback-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        .feedback-orb-one {
+            width: 280px;
+            height: 280px;
+            top: 30px;
+            left: -120px;
+            background: rgba(79, 140, 255, 0.14);
+        }
+
+        .feedback-orb-two {
+            width: 320px;
+            height: 320px;
+            right: -130px;
+            top: 100px;
+            background: rgba(124, 58, 237, 0.13);
+        }
+
+        .feedback-hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 850px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .feedback-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(79, 140, 255, 0.22);
+            background: rgba(79, 140, 255, 0.08);
+            color: #8fb7ff;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+        }
+
+        .feedback-kicker i {
+            font-size: 14px;
+        }
+
+        .feedback-hero h1 {
+            margin: 24px 0 18px;
+            font-family: "Poppins", sans-serif;
+            font-size: clamp(42px, 6vw, 72px);
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #fff;
+        }
+
+        .feedback-gradient {
+            background:
+                linear-gradient(
+                    90deg,
+                    #6ea8ff,
+                    #9b7cff,
+                    #c084fc
+                );
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .feedback-hero p {
+            max-width: 720px;
+            margin: 0 auto;
+            color: var(--feedback-muted);
+            font-size: 17px;
+            line-height: 1.8;
+        }
+
+        /* =========================================================
+           MAIN FEEDBACK AREA
+           ========================================================= */
+
+        .feedback-main {
+            padding: 20px 0 100px;
+        }
+
+        .feedback-layout {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        /* =========================================================
+           FORM CARD
+           ========================================================= */
+
+        .feedback-form-card {
+            position: relative;
+            height: 100%;
+            padding: 34px;
+            border-radius: 24px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(255,255,255,0.075),
+                    rgba(255,255,255,0.035)
+                );
+            border: 1px solid var(--feedback-border);
+            box-shadow:
+                0 25px 80px rgba(0, 0, 0, 0.22);
+            overflow: hidden;
+        }
+
+        .feedback-form-card::before {
+            content: "";
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            right: -80px;
+            top: -80px;
+            border-radius: 50%;
+            background: rgba(79, 140, 255, 0.12);
+            filter: blur(5px);
+        }
+
+        .feedback-card-heading {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 28px;
+        }
+
+        .feedback-card-heading .mini-label {
+            color: #78a7ff;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .feedback-card-heading h2 {
+            margin: 8px 0 8px;
+            font-family: "Poppins", sans-serif;
+            font-size: 30px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .feedback-card-heading p {
+            margin: 0;
+            color: #93a2b7;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .feedback-form-card .form-label {
+            color: #dce5f2;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feedback-form-card .form-control,
+        .feedback-form-card .form-select {
+            min-height: 52px;
+            border-radius: 13px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(0,0,0,0.20);
+            color: #fff;
+            font-size: 14px;
+            padding: 13px 15px;
+        }
+
+        .feedback-form-card textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .feedback-form-card .form-control::placeholder {
+            color: #6f7e92;
+        }
+
+        .feedback-form-card .form-control:focus,
+        .feedback-form-card .form-select:focus {
+            border-color: rgba(79, 140, 255, 0.65);
+            background: rgba(0,0,0,0.26);
+            color: #fff;
+            box-shadow:
+                0 0 0 4px rgba(79, 140, 255, 0.10);
+        }
+
+        .feedback-form-card .form-select option {
+            background: #101c2d;
+            color: #fff;
+        }
+
+        .feedback-submit {
+            width: 100%;
+            min-height: 54px;
+            border: 0;
+            border-radius: 13px;
+            font-weight: 800;
+            font-size: 15px;
+            color: #fff;
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f8cff,
+                    #6d5dfc
+                );
+            box-shadow:
+                0 14px 35px rgba(79, 140, 255, 0.22);
+            transition: 0.25s ease;
+        }
+
+        .feedback-submit:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 18px 40px rgba(79, 140, 255, 0.32);
+        }
+
+        .feedback-submit:active {
+            transform: translateY(0);
+        }
+
+        .feedback-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            margin-top: 14px;
+            color: #718096;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .feedback-note i {
+            color: #67a0ff;
+            margin-top: 2px;
+        }
+
+        /* =========================================================
+           INFO SIDE
+           ========================================================= */
+
+        .feedback-info-card {
+            height: 100%;
+            padding: 34px;
+            border-radius: 24px;
+            background:
+                linear-gradient(
+                    145deg,
+                    rgba(79, 140, 255, 0.10),
+                    rgba(124, 58, 237, 0.07)
+                );
+            border: 1px solid rgba(255,255,255,0.09);
+        }
+
+        .feedback-info-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(79, 140, 255, 0.22),
+                    rgba(124, 58, 237, 0.20)
+                );
+            border: 1px solid rgba(255,255,255,0.10);
+            color: #83adff;
+            font-size: 27px;
+            margin-bottom: 24px;
+        }
+
+        .feedback-info-card h2 {
+            font-family: "Poppins", sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 14px;
+        }
+
+        .feedback-info-card > p {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-bottom: 28px;
+        }
+
+        .feedback-benefit {
+            display: flex;
+            gap: 14px;
+            padding: 15px 0;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .feedback-benefit:first-of-type {
+            border-top: 0;
+        }
+
+        .feedback-benefit-icon {
+            flex: 0 0 38px;
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(79, 140, 255, 0.11);
+            color: #7aa7ff;
+        }
+
+        .feedback-benefit strong {
+            display: block;
+            color: #edf3fb;
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .feedback-benefit span {
+            display: block;
+            color: #7f8da1;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* =========================================================
+           PREVIOUS FEEDBACKS
+           ========================================================= */
+
+        .previous-feedback-section {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding-top: 90px;
+        }
+
+        .previous-heading {
+            text-align: center;
+            max-width: 650px;
+            margin: 0 auto 38px;
+        }
+
+        .previous-heading .mini-label {
+            color: #78a7ff;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .previous-heading h2 {
+            margin: 10px 0;
+            font-family: "Poppins", sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .previous-heading p {
+            color: #8d9caf;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .submitted-feedback-card {
+            height: 100%;
+            padding: 25px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.045);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: 0.25s ease;
+        }
+
+        .submitted-feedback-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(79, 140, 255, 0.25);
+            background: rgba(255,255,255,0.065);
+            box-shadow:
+                0 18px 45px rgba(0,0,0,0.18);
+        }
+
+        .feedback-top-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .feedback-user {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            min-width: 0;
+        }
+
+        .feedback-avatar {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 13px;
+            background:
+                linear-gradient(
+                    135deg,
+                    #4f8cff,
+                    #7c3aed
+                );
+            color: #fff;
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        .feedback-user strong {
+            display: block;
+            color: #f2f6fb;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .feedback-user small {
+            display: block;
+            color: #718096;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .feedback-rating {
+            display: flex;
+            gap: 2px;
+            color: #fbbf24;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .submitted-feedback-card > p {
+            color: #a8b5c7;
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 0;
+        }
+
+        /* =========================================================
+           EMPTY STATE
+           ========================================================= */
+
+        .empty-feedback-box {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 50px 30px;
+            text-align: center;
+            border-radius: 22px;
+            border: 1px dashed rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.025);
+        }
+
+        .empty-feedback-box i {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            background: rgba(79, 140, 255, 0.10);
+            color: #78a7ff;
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        .empty-feedback-box h3 {
+            font-family: "Poppins", sans-serif;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .empty-feedback-box p {
+            color: #7f8da1;
+            margin: 8px 0 0;
+            font-size: 14px;
+        }
+
+        /* =========================================================
+           FLASH MESSAGE
+           ========================================================= */
+
+        .feedback-flash-container {
+            position: fixed;
+            top: 85px;
+            right: 20px;
+            z-index: 2000;
+            width: min(420px, calc(100% - 40px));
+        }
+
+        .feedback-flash-container .alert {
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.10);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 18px 50px rgba(0,0,0,0.25);
+        }
+
+        /* =========================================================
+           FOOTER
+           ========================================================= */
+
+        .feedback-footer {
+            margin-top: 30px;
+            padding: 55px 0 30px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            background: rgba(0,0,0,0.14);
+        }
+
+        .feedback-footer-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+
+        .feedback-footer-brand strong {
+            display: block;
+            font-family: "Poppins", sans-serif;
+            font-size: 16px;
+        }
+
+        .feedback-footer-brand small {
+            display: block;
+            color: #738197;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .feedback-footer p {
+            color: #738197;
+            font-size: 13px;
+            line-height: 1.7;
+            max-width: 520px;
+        }
+
+        .feedback-footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: flex-end;
+        }
+
+        .feedback-footer-links a {
+            color: #8795a9;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .feedback-footer-links a:hover {
+            color: #fff;
+        }
+
+        .feedback-footer-bottom {
+            margin-top: 35px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            color: #5f6c7e;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 991.98px) {
+
+            .feedback-hero {
+                padding: 80px 0 55px;
+            }
+
+            .feedback-navbar .navbar-collapse {
+                padding: 15px 0 8px;
+            }
+
+            .feedback-navbar .nav-actions {
+                margin-top: 12px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .feedback-form-card,
+            .feedback-info-card {
+                padding: 28px;
+            }
+
+            .feedback-footer-links {
+                justify-content: flex-start;
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+
+            .feedback-hero {
+                padding: 65px 0 45px;
+            }
+
+            .feedback-hero h1 {
+                font-size: 42px;
+            }
+
+            .feedback-hero p {
+                font-size: 15px;
+            }
+
+            .feedback-main {
+                padding-bottom: 65px;
+            }
+
+            .feedback-form-card,
+            .feedback-info-card {
+                padding: 23px;
+                border-radius: 19px;
+            }
+
+            .feedback-card-heading h2 {
+                font-size: 25px;
+            }
+
+            .feedback-info-card h2 {
+                font-size: 25px;
+            }
+
+            .previous-feedback-section {
+                padding-top: 65px;
+            }
+
+            .previous-heading h2 {
+                font-size: 29px;
+            }
+
+            .feedback-top-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .feedback-rating {
+                padding-left: 53px;
+            }
+
+            .feedback-footer {
+                padding-top: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            .feedback-brand-copy strong {
+                font-size: 14px;
+            }
+
+            .feedback-brand-copy small {
+                font-size: 9px;
+            }
+
+            .feedback-brand-icon {
+                width: 39px;
+                height: 39px;
+                border-radius: 11px;
+            }
+
+            .feedback-hero h1 {
+                font-size: 36px;
+            }
+
+            .feedback-kicker {
+                font-size: 10px;
+            }
+
+            .feedback-form-card,
+            .feedback-info-card {
+                padding: 19px;
+            }
+
+            .feedback-form-card .form-control,
+            .feedback-form-card .form-select {
+                min-height: 49px;
+            }
+
+            .feedback-form-card textarea.form-control {
+                min-height: 130px;
+            }
+        }
+    </style>
 </head>
 
 
 <body>
 
+    <!-- =========================================================
+         NAVBAR
+         ========================================================= -->
 
-<nav class="navbar navbar-expand-lg custom-navbar">
+    <nav class="navbar navbar-expand-lg feedback-navbar">
 
-    <div class="container">
+        <div class="container">
 
+            <a
+                class="navbar-brand feedback-brand"
+                href="{{ url_for('home.index') }}"
+            >
 
-        <a
-            class="navbar-brand brand-mark"
-            href="{{ url_for('home.index') }}"
-        >
-
-            <span class="brand-icon">
-                <i class="bi bi-cpu-fill"></i>
-            </span>
-
-            <span class="brand-copy">
-
-                <strong>
-                    AI Smart Attendance
-                </strong>
-
-                <small>
-                    College Management
-                </small>
-
-            </span>
-
-        </a>
-
-
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#feedbackNav"
-            aria-label="Toggle navigation"
-        >
-
-            <span class="navbar-toggler-icon"></span>
-
-        </button>
-
-
-        <div
-            class="collapse navbar-collapse"
-            id="feedbackNav"
-        >
-
-            <ul class="navbar-nav mx-auto">
-
-
-                <li class="nav-item">
-
-                    <a
-                        class="nav-link"
-                        href="{{ url_for('home.index') }}"
-                    >
-
-                        <i class="bi bi-house-door"></i>
-                        Home
-
-                    </a>
-
-                </li>
-
-
-                <li class="nav-item">
-
-                    <a
-                        class="nav-link"
-                        href="{{ url_for('home.about') }}"
-                    >
-
-                        <i class="bi bi-info-circle"></i>
-                        About
-
-                    </a>
-
-                </li>
-
-
-                <li class="nav-item">
-
-                    <a
-                        class="nav-link"
-                        href="{{ url_for('home.contact') }}"
-                    >
-
-                        <i class="bi bi-envelope"></i>
-                        Contact
-
-                    </a>
-
-                </li>
-
-
-                <li class="nav-item">
-
-                    <a
-                        class="nav-link active"
-                        href="{{ url_for('home.feedback_page') }}"
-                    >
-
-                        <i class="bi bi-chat-heart"></i>
-                        Feedback
-
-                    </a>
-
-                </li>
-
-
-            </ul>
-
-
-            <div class="nav-actions">
-
-                <a
-                    href="{{ url_for('auth.login') }}"
-                    class="btn btn-primary btn-sm"
-                >
-                    Admin
-                </a>
-
-                <a
-                    href="{{ url_for('teacher_auth.login') }}"
-                    class="btn btn-outline-light btn-sm"
-                >
-                    Teacher
-                </a>
-
-                <a
-                    href="{{ url_for('student_auth.login') }}"
-                    class="btn btn-success btn-sm"
-                >
-                    Student
-                </a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</nav>
-
-
-
-<main>
-
-
-<section class="inner-hero compact-inner">
-
-    <div class="container">
-
-        <div class="section-heading text-start reveal">
-
-            <span class="eyebrow">
-
-                <span class="status-dot"></span>
-
-                COMMUNITY FEEDBACK
-
-            </span>
-
-
-            <h1>
-
-                Every opinion helps us
-                <span class="gradient-text">
-                    improve.
+                <span class="feedback-brand-icon">
+                    <i class="bi bi-cpu-fill"></i>
                 </span>
 
-            </h1>
+                <span class="feedback-brand-copy">
+                    <strong>AI Smart Attendance</strong>
+                    <small>College Management</small>
+                </span>
+
+            </a>
 
 
-            <p>
-
-                Share your experience with the platform.
-                Your feedback helps identify what works well
-                and where the system can become better.
-
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#feedbackNav"
+                aria-controls="feedbackNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation"
+            >
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
 
+            <div
+                class="collapse navbar-collapse"
+                id="feedbackNav"
+            >
 
-<section class="section-shell feedback-page">
+                <ul class="navbar-nav mx-auto">
 
-    <div class="container">
+                    <li class="nav-item">
+                        <a
+                            class="nav-link"
+                            href="{{ url_for('home.index') }}"
+                        >
+                            <i class="bi bi-house-door"></i>
+                            Home
+                        </a>
+                    </li>
 
-        <div class="row g-4 g-lg-5">
+                    <li class="nav-item">
+                        <a
+                            class="nav-link"
+                            href="{{ url_for('home.about') }}"
+                        >
+                            <i class="bi bi-info-circle"></i>
+                            About
+                        </a>
+                    </li>
 
+                    <li class="nav-item">
+                        <a
+                            class="nav-link"
+                            href="{{ url_for('home.contact') }}"
+                        >
+                            <i class="bi bi-envelope"></i>
+                            Contact
+                        </a>
+                    </li>
 
-            <div class="col-lg-7">
+                    <li class="nav-item">
+                        <a
+                            class="nav-link active"
+                            href="{{ url_for('home.feedback_page') }}"
+                        >
+                            <i class="bi bi-chat-square-heart"></i>
+                            Feedback
+                        </a>
+                    </li>
 
-
-                <div class="section-heading text-start reveal">
-
-                    <span class="section-kicker">
-                        RECENT FEEDBACK
-                    </span>
-
-                    <h2>
-
-                        What people are
-                        <span class="gradient-text">
-                            saying.
-                        </span>
-
-                    </h2>
-
-                </div>
-
-
-                {% if feedbacks %}
-
-                <div class="feedback-list">
-
-
-                    {% for feedback in feedbacks %}
-
-                    <article class="feedback-page-card reveal">
-
-
-                        <div class="quote-mark">
-                            <i class="bi bi-quote"></i>
-                        </div>
-
-
-                        <div class="rating">
-
-                            {% for i in range(1, 6) %}
-
-                            <i
-                                class="bi {% if i <= feedback.rating %}bi-star-fill{% else %}bi-star{% endif %}"
-                            ></i>
-
-                            {% endfor %}
-
-                        </div>
+                </ul>
 
 
-                        <p>
-                            {{ feedback.message }}
-                        </p>
+                <div class="nav-actions d-flex gap-2">
 
+                    <a
+                        href="{{ url_for('auth.login') }}"
+                        class="btn btn-primary btn-sm"
+                    >
+                        <i class="bi bi-shield-lock me-1"></i>
+                        Admin
+                    </a>
 
-                        <div class="reviewer">
+                    <a
+                        href="{{ url_for('teacher_auth.login') }}"
+                        class="btn btn-outline-light btn-sm"
+                    >
+                        <i class="bi bi-person-workspace me-1"></i>
+                        Teacher
+                    </a>
 
-                            <span class="reviewer-avatar">
-
-                                {{ feedback.name[:1]|upper }}
-
-                            </span>
-
-
-                            <span>
-
-                                <strong>
-                                    {{ feedback.name }}
-                                </strong>
-
-                                <small>
-
-                                    {% if feedback.created_at %}
-
-                                        {{ feedback.created_at }}
-
-                                    {% else %}
-
-                                        Community member
-
-                                    {% endif %}
-
-                                </small>
-
-                            </span>
-
-                        </div>
-
-
-                    </article>
-
-                    {% endfor %}
-
+                    <a
+                        href="{{ url_for('student_auth.login') }}"
+                        class="btn btn-success btn-sm"
+                    >
+                        <i class="bi bi-mortarboard me-1"></i>
+                        Student
+                    </a>
 
                 </div>
-
-
-                {% else %}
-
-
-                <div class="empty-feedback reveal">
-
-                    <div class="empty-icon">
-                        <i class="bi bi-chat-square-heart"></i>
-                    </div>
-
-                    <h3>
-                        No feedback yet.
-                    </h3>
-
-                    <p>
-                        Be the first person to share an experience.
-                    </p>
-
-                </div>
-
-
-                {% endif %}
-
 
             </div>
 
+        </div>
+
+    </nav>
 
 
-            <div class="col-lg-5">
+    <!-- =========================================================
+         FLASH MESSAGES
+         ========================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="feedback-flash-container">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="alert alert-{{ category }} alert-dismissible fade show"
+                        role="alert"
+                    >
+
+                        {% if category == "success" %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% else %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% endif %}
+
+                        {{ message }}
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
 
 
-                <div class="feedback-form-card reveal reveal-delay-1">
+    <!-- =========================================================
+         HERO
+         ========================================================= -->
+
+    <header class="feedback-hero">
+
+        <div class="feedback-orb feedback-orb-one"></div>
+        <div class="feedback-orb feedback-orb-two"></div>
 
 
-                    <span class="section-kicker">
-                        SHARE YOUR EXPERIENCE
+        <div class="container">
+
+            <div class="feedback-hero-content">
+
+                <span class="feedback-kicker">
+                    <i class="bi bi-chat-square-heart-fill"></i>
+                    COMMUNITY VOICE
+                </span>
+
+
+                <h1>
+                    Your feedback
+                    <br>
+                    <span class="feedback-gradient">
+                        makes us better.
                     </span>
+                </h1>
 
 
-                    <h2>
-                        Leave feedback.
-                    </h2>
+                <p>
+                    Tell us what you think about the AI Smart Attendance
+                    System. Your suggestions help us improve the platform
+                    and create a better digital experience for students,
+                    teachers and administrators.
+                </p>
+
+            </div>
+
+        </div>
+
+    </header>
 
 
-                    <p>
-                        It only takes a minute.
-                    </p>
+    <!-- =========================================================
+         MAIN CONTENT
+         ========================================================= -->
+
+    <main class="feedback-main">
+
+        <div class="container">
+
+            <div class="feedback-layout">
+
+                <div class="row g-4 align-items-stretch">
 
 
-                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    <!-- =================================================
+                         FEEDBACK FORM
+                         ================================================= -->
 
-                        {% if messages %}
+                    <div class="col-lg-7">
 
-                            {% for category, message in messages %}
+                        <div class="feedback-form-card">
 
-                            <div
-                                class="alert alert-{{ category }}"
-                                role="alert"
-                            >
+                            <div class="feedback-card-heading">
 
-                                <i
-                                    class="bi {% if category == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} me-2"
-                                ></i>
+                                <span class="mini-label">
+                                    SHARE YOUR EXPERIENCE
+                                </span>
 
-                                {{ message }}
+                                <h2>
+                                    Send us your feedback
+                                </h2>
+
+                                <p>
+                                    It only takes a minute. Every response
+                                    helps us understand what is working and
+                                    what can be improved.
+                                </p>
 
                             </div>
 
-                            {% endfor %}
 
-                        {% endif %}
-
-                    {% endwith %}
-
-
-                    <form
-                        method="POST"
-                        action="{{ url_for('feedback.submit_feedback') }}"
-                    >
-
-
-                        <div class="mb-3">
-
-                            <label
-                                class="form-label"
-                                for="feedback-name"
+                            <form
+                                action="{{ url_for('home.feedback_page') }}"
+                                method="POST"
+                                id="feedbackForm"
+                                novalidate
                             >
-                                Name
-                            </label>
 
-                            <input
-                                class="form-control"
-                                id="feedback-name"
-                                name="name"
-                                maxlength="100"
-                                required
-                                placeholder="Your name"
-                            >
+                                <div class="row g-3">
+
+
+                                    <!-- NAME -->
+
+                                    <div class="col-md-6">
+
+                                        <label
+                                            class="form-label"
+                                            for="feedback-name"
+                                        >
+                                            Your Name
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            id="feedback-name"
+                                            name="name"
+                                            class="form-control"
+                                            maxlength="100"
+                                            placeholder="Enter your name"
+                                            autocomplete="name"
+                                            required
+                                        >
+
+                                    </div>
+
+
+                                    <!-- EMAIL -->
+
+                                    <div class="col-md-6">
+
+                                        <label
+                                            class="form-label"
+                                            for="feedback-email"
+                                        >
+                                            Email
+                                            <span
+                                                style="color:#718096;font-weight:500;"
+                                            >
+                                                (Optional)
+                                            </span>
+                                        </label>
+
+                                        <input
+                                            type="email"
+                                            id="feedback-email"
+                                            name="email"
+                                            class="form-control"
+                                            maxlength="150"
+                                            placeholder="you@example.com"
+                                            autocomplete="email"
+                                        >
+
+                                    </div>
+
+
+                                    <!-- RATING -->
+
+                                    <div class="col-12">
+
+                                        <label
+                                            class="form-label"
+                                            for="feedback-rating"
+                                        >
+                                            Rating
+                                        </label>
+
+                                        <select
+                                            id="feedback-rating"
+                                            class="form-select"
+                                            name="rating"
+                                            required
+                                        >
+
+                                            <option value="">
+                                                Select a rating
+                                            </option>
+
+                                            <option value="5">
+                                                ★★★★★ — Excellent
+                                            </option>
+
+                                            <option value="4">
+                                                ★★★★☆ — Very Good
+                                            </option>
+
+                                            <option value="3">
+                                                ★★★☆☆ — Good
+                                            </option>
+
+                                            <option value="2">
+                                                ★★☆☆☆ — Needs Improvement
+                                            </option>
+
+                                            <option value="1">
+                                                ★☆☆☆☆ — Poor
+                                            </option>
+
+                                        </select>
+
+                                    </div>
+
+
+                                    <!-- MESSAGE -->
+
+                                    <div class="col-12">
+
+                                        <label
+                                            class="form-label"
+                                            for="feedback-message"
+                                        >
+                                            Message
+                                        </label>
+
+                                        <textarea
+                                            id="feedback-message"
+                                            class="form-control"
+                                            name="message"
+                                            maxlength="1000"
+                                            required
+                                            placeholder="Tell us about your experience..."
+                                        ></textarea>
+
+                                    </div>
+
+
+                                    <!-- SUBMIT -->
+
+                                    <div class="col-12">
+
+                                        <button
+                                            type="submit"
+                                            class="feedback-submit"
+                                            id="feedbackSubmit"
+                                        >
+
+                                            <i class="bi bi-send-fill me-2"></i>
+
+                                            Submit Feedback
+
+                                        </button>
+
+
+                                        <div class="feedback-note">
+
+                                            <i class="bi bi-shield-check"></i>
+
+                                            <span>
+                                                Your feedback is valuable to
+                                                us. Please provide honest and
+                                                constructive comments.
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </form>
 
                         </div>
 
+                    </div>
 
-                        <div class="mb-3">
 
-                            <label
-                                class="form-label"
-                                for="feedback-email"
-                            >
+                    <!-- =================================================
+                         INFORMATION CARD
+                         ================================================= -->
 
-                                Email
-                                <span>
-                                    (optional)
+                    <div class="col-lg-5">
+
+                        <div class="feedback-info-card">
+
+                            <div class="feedback-info-icon">
+                                <i class="bi bi-heart-fill"></i>
+                            </div>
+
+
+                            <h2>
+                                Why your feedback matters
+                            </h2>
+
+
+                            <p>
+                                A good platform grows through real user
+                                experiences. Tell us what you like, what
+                                needs improvement, and what features would
+                                make your daily college experience easier.
+                            </p>
+
+
+                            <div class="feedback-benefit">
+
+                                <span class="feedback-benefit-icon">
+                                    <i class="bi bi-lightbulb-fill"></i>
                                 </span>
 
-                            </label>
+                                <span>
+                                    <strong>
+                                        Suggest improvements
+                                    </strong>
 
-                            <input
-                                class="form-control"
-                                id="feedback-email"
-                                name="email"
-                                type="email"
-                                maxlength="150"
-                                placeholder="you@example.com"
-                            >
+                                    <span>
+                                        Share ideas for making the system
+                                        smarter and easier to use.
+                                    </span>
+                                </span>
+
+                            </div>
+
+
+                            <div class="feedback-benefit">
+
+                                <span class="feedback-benefit-icon">
+                                    <i class="bi bi-bug-fill"></i>
+                                </span>
+
+                                <span>
+                                    <strong>
+                                        Report problems
+                                    </strong>
+
+                                    <span>
+                                        Let us know when something does not
+                                        work as expected.
+                                    </span>
+                                </span>
+
+                            </div>
+
+
+                            <div class="feedback-benefit">
+
+                                <span class="feedback-benefit-icon">
+                                    <i class="bi bi-stars"></i>
+                                </span>
+
+                                <span>
+                                    <strong>
+                                        Share your experience
+                                    </strong>
+
+                                    <span>
+                                        Tell us what features are helping
+                                        you the most.
+                                    </span>
+                                </span>
+
+                            </div>
+
+
+                            <div class="feedback-benefit">
+
+                                <span class="feedback-benefit-icon">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                </span>
+
+                                <span>
+                                    <strong>
+                                        Help us improve
+                                    </strong>
+
+                                    <span>
+                                        Your feedback guides future
+                                        improvements to the platform.
+                                    </span>
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =====================================================
+                     PREVIOUS FEEDBACKS
+                     ===================================================== -->
+
+                <section class="previous-feedback-section">
+
+                    <div class="previous-heading">
+
+                        <span class="mini-label">
+                            COMMUNITY FEEDBACK
+                        </span>
+
+                        <h2>
+                            What users are saying
+                        </h2>
+
+                        <p>
+                            See what members of our college community
+                            have shared about their experience.
+                        </p>
+
+                    </div>
+
+
+                    {% if feedbacks %}
+
+                        <div class="row g-4">
+
+                            {% for feedback in feedbacks %}
+
+                                <div class="col-md-6 col-lg-4">
+
+                                    <article
+                                        class="submitted-feedback-card"
+                                    >
+
+                                        <div class="feedback-top-row">
+
+                                            <div class="feedback-user">
+
+                                                <span
+                                                    class="feedback-avatar"
+                                                >
+                                                    {{ feedback.name[:1]|upper }}
+                                                </span>
+
+                                                <div>
+
+                                                    <strong>
+                                                        {{ feedback.name }}
+                                                    </strong>
+
+                                                    <small>
+
+                                                        {% if feedback.created_at %}
+
+                                                            {{ feedback.created_at }}
+
+                                                        {% else %}
+
+                                                            Verified feedback
+
+                                                        {% endif %}
+
+                                                    </small>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div
+                                                class="feedback-rating"
+                                                aria-label="{{ feedback.rating }} out of 5 stars"
+                                            >
+
+                                                {% for i in range(1, 6) %}
+
+                                                    {% if i <= feedback.rating|int %}
+
+                                                        <i class="bi bi-star-fill"></i>
+
+                                                    {% else %}
+
+                                                        <i class="bi bi-star"></i>
+
+                                                    {% endif %}
+
+                                                {% endfor %}
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <p>
+                                            “{{ feedback.message }}”
+                                        </p>
+
+                                    </article>
+
+                                </div>
+
+                            {% endfor %}
 
                         </div>
 
 
-                        <div class="mb-3">
+                    {% else %}
 
-                            <label
-                                class="form-label"
-                                for="feedback-rating"
-                            >
-                                Rating
-                            </label>
+                        <div class="empty-feedback-box">
 
-                            <select
-                                class="form-select"
-                                id="feedback-rating"
-                                name="rating"
-                                required
-                            >
+                            <i class="bi bi-chat-square-heart"></i>
 
-                                <option value="">
-                                    Select rating
-                                </option>
+                            <h3>
+                                No feedback yet
+                            </h3>
 
-                                <option value="5">
-                                    ★★★★★ — Excellent
-                                </option>
-
-                                <option value="4">
-                                    ★★★★☆ — Very Good
-                                </option>
-
-                                <option value="3">
-                                    ★★★☆☆ — Good
-                                </option>
-
-                                <option value="2">
-                                    ★★☆☆☆ — Needs Improvement
-                                </option>
-
-                                <option value="1">
-                                    ★☆☆☆☆ — Poor
-                                </option>
-
-                            </select>
+                            <p>
+                                Be the first person to share your
+                                experience with us.
+                            </p>
 
                         </div>
 
+                    {% endif %}
 
-                        <div class="mb-3">
+                </section>
 
-                            <label
-                                class="form-label"
-                                for="feedback-message"
-                            >
-                                Your Feedback
-                            </label>
+            </div>
 
-                            <textarea
-                                class="form-control"
-                                id="feedback-message"
-                                name="message"
-                                maxlength="1000"
-                                required
-                                placeholder="Tell us what you think..."
-                            ></textarea>
+        </div>
 
-                        </div>
+    </main>
 
 
-                        <button
-                            class="btn btn-primary w-100"
-                            type="submit"
-                        >
+    <!-- =========================================================
+         FOOTER
+         ========================================================= -->
 
-                            Submit Feedback
+    <footer class="feedback-footer">
 
-                            <i class="bi bi-send ms-2"></i>
+        <div class="container">
 
-                        </button>
+            <div class="row g-4 align-items-start">
+
+                <div class="col-lg-7">
+
+                    <a
+                        href="{{ url_for('home.index') }}"
+                        class="feedback-footer-brand"
+                    >
+
+                        <span class="feedback-brand-icon">
+                            <i class="bi bi-cpu-fill"></i>
+                        </span>
+
+                        <span>
+
+                            <strong>
+                                AI Smart Attendance
+                            </strong>
+
+                            <small>
+                                College Management Platform
+                            </small>
+
+                        </span>
+
+                    </a>
 
 
-                    </form>
+                    <p>
+                        A modern academic management platform designed
+                        to simplify attendance, communication, assignments,
+                        routines, results and digital resources.
+                    </p>
 
+                </div>
+
+
+                <div class="col-lg-5">
+
+                    <div class="feedback-footer-links">
+
+                        <a href="{{ url_for('home.index') }}">
+                            Home
+                        </a>
+
+                        <a href="{{ url_for('home.about') }}">
+                            About
+                        </a>
+
+                        <a href="{{ url_for('home.contact') }}">
+                            Contact
+                        </a>
+
+                        <a href="{{ url_for('home.feedback_page') }}">
+                            Feedback
+                        </a>
+
+                    </div>
 
                 </div>
 
             </div>
 
 
-        </div>
+            <div class="feedback-footer-bottom">
 
-    </div>
-
-</section>
-
-
-
-<section class="cta-section">
-
-    <div class="container">
-
-        <div class="cta-card reveal">
-
-
-            <div>
-
-                <span class="section-kicker">
-                    THANK YOU
-                </span>
-
-
-                <h2>
-                    Your feedback helps shape
-                    a better platform.
-                </h2>
+                © {{ current_year|default(2026) }}
+                AI Smart Attendance System.
+                All rights reserved.
 
             </div>
 
-
-            <div class="cta-actions">
-
-                <a
-                    href="{{ url_for('home.index') }}"
-                    class="btn btn-light"
-                >
-                    Back to Home
-                </a>
-
-
-                <a
-                    href="{{ url_for('home.contact') }}"
-                    class="btn btn-outline-light"
-                >
-                    Contact Us
-                </a>
-
-            </div>
-
-
         </div>
 
-    </div>
-
-</section>
-
-</main>
+    </footer>
 
 
+    <!-- =========================================================
+         BOOTSTRAP JS
+         ========================================================= -->
 
-<footer class="footer-section">
-
-    <div class="container">
-
-        <div class="footer-bottom">
-
-            <span>
-                © 2026 AI Smart Attendance System.
-            </span>
-
-            <span>
-                Designed & Developed by
-                <strong>
-                    Khagendra Bohora
-                </strong>
-            </span>
-
-        </div>
-
-    </div>
-
-</footer>
+    <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    ></script>
 
 
+    <!-- =========================================================
+         FEEDBACK PAGE JS
+         ========================================================= -->
 
-<button
-    id="backToTop"
-    class="back-to-top"
-    type="button"
-    aria-label="Back to top"
->
+    <script>
 
-    <i class="bi bi-arrow-up"></i>
+        document.addEventListener("DOMContentLoaded", function () {
 
-</button>
+            const form = document.getElementById("feedbackForm");
+            const submitButton = document.getElementById("feedbackSubmit");
+
+            if (!form || !submitButton) {
+                return;
+            }
 
 
+            form.addEventListener("submit", function (event) {
 
-<script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-></script>
+                if (!form.checkValidity()) {
 
-<script
-    src="{{ url_for('static', filename='js/landing.js') }}"
-></script>
+                    event.preventDefault();
 
+                    event.stopPropagation();
+
+                    form.classList.add("was-validated");
+
+                    return;
+
+                }
+
+
+                submitButton.disabled = true;
+
+                submitButton.innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' +
+                    'Submitting Feedback...';
+
+            });
+
+
+            /*
+             * Automatically hide flash messages after a few seconds.
+             */
+
+            const alerts =
+                document.querySelectorAll(
+                    ".feedback-flash-container .alert"
+                );
+
+            alerts.forEach(function (alert) {
+
+                setTimeout(function () {
+
+                    const bsAlert =
+                        bootstrap.Alert.getOrCreateInstance(alert);
+
+                    bsAlert.close();
+
+                }, 5000);
+
+            });
+
+        });
+
+    </script>
 
 </body>
 
