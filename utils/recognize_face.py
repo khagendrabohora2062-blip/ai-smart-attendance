@@ -3,11 +3,25 @@ import os
 import cv2
 import time
 
-sys.path.append(
+
+# ============================================================
+# BASE DIRECTORY
+# ============================================================
+
+BASE_DIR = os.path.dirname(
     os.path.dirname(
-        os.path.dirname(__file__)
+        os.path.abspath(__file__)
     )
 )
+
+# Make project root available
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+
+# ============================================================
+# IMPORT DATABASE
+# ============================================================
 
 from extensions import mysql
 
@@ -16,7 +30,26 @@ from extensions import mysql
 # TRAINER PATH
 # ============================================================
 
-TRAINER_PATH = "trainer/trainer.yml"
+TRAINER_DIR = os.path.join(
+    BASE_DIR,
+    "trainer"
+)
+
+TRAINER_PATH = os.path.join(
+    TRAINER_DIR,
+    "trainer.yml"
+)
+
+
+# ============================================================
+# HAAR CASCADE PATH
+# ============================================================
+
+HAAR_CASCADE_PATH = os.path.join(
+    BASE_DIR,
+    "utils",
+    "haarcascade_frontalface_default.xml"
+)
 
 
 # ============================================================
@@ -28,14 +61,40 @@ TRAINER_PATH = "trainer/trainer.yml"
 
 MAX_DISTANCE = 45.0
 
+
 # Same student should be recognized several times
 # before attendance is marked.
 
 REQUIRED_CONFIRMATIONS = 3
 
+
 # Maximum time allowed between confirmations.
 
 CONFIRMATION_TIMEOUT = 3.0
+
+
+# ============================================================
+# DEBUG INFORMATION
+# ============================================================
+
+print()
+print("======================================")
+print("FACE RECOGNITION CONFIGURATION")
+print("======================================")
+print("BASE DIR        :", BASE_DIR)
+print("TRAINER DIR     :", TRAINER_DIR)
+print("TRAINER PATH    :", TRAINER_PATH)
+print(
+    "TRAINER EXISTS  :",
+    os.path.exists(TRAINER_PATH)
+)
+print("HAAR PATH       :", HAAR_CASCADE_PATH)
+print(
+    "HAAR EXISTS     :",
+    os.path.exists(HAAR_CASCADE_PATH)
+)
+print("======================================")
+print()
 
 
 # ============================================================
@@ -112,8 +171,8 @@ def save_face_attendance(
             )
 
         db_session_id = attendance_session[0]
-
         session_status = attendance_session[1]
+
 
         # ====================================================
         # SESSION MUST BE OPEN
@@ -125,6 +184,7 @@ def save_face_attendance(
                 False,
                 "Session Closed"
             )
+
 
         # ====================================================
         # DUPLICATE CHECK
@@ -154,6 +214,7 @@ def save_face_attendance(
                 "Already Marked"
             )
 
+
         # ====================================================
         # GENERATE NEXT ATTENDANCE ID
         # ====================================================
@@ -171,6 +232,7 @@ def save_face_attendance(
         next_attendance_id = (
             next_id_result[0]
         )
+
 
         # ====================================================
         # INSERT ATTENDANCE
@@ -209,7 +271,17 @@ def save_face_attendance(
             )
         )
 
+
+        # ====================================================
+        # COMMIT
+        # ====================================================
+
         mysql.connection.commit()
+
+
+        # ====================================================
+        # LOG
+        # ====================================================
 
         print(
             "======================================"
@@ -243,10 +315,12 @@ def save_face_attendance(
             "======================================"
         )
 
+
         return (
             True,
             "Present"
         )
+
 
     except Exception as e:
 
@@ -262,9 +336,169 @@ def save_face_attendance(
             str(e)
         )
 
+
     finally:
 
         cursor.close()
+
+
+# ============================================================
+# LOAD TRAINER
+# ============================================================
+
+def load_face_trainer():
+
+    # ========================================================
+    # CHECK FILE
+    # ========================================================
+
+    if not os.path.isfile(
+        TRAINER_PATH
+    ):
+
+        raise Exception(
+            "Face model not found at: "
+            f"{TRAINER_PATH}. "
+            "Please train the face model first."
+        )
+
+
+    # ========================================================
+    # CHECK FILE SIZE
+    # ========================================================
+
+    try:
+
+        file_size = os.path.getsize(
+            TRAINER_PATH
+        )
+
+    except Exception:
+
+        file_size = 0
+
+
+    if file_size <= 0:
+
+        raise Exception(
+            "trainer.yml exists but is empty. "
+            "Please train the face model again."
+        )
+
+
+    # ========================================================
+    # CHECK OPENCV FACE
+    # ========================================================
+
+    if not hasattr(
+        cv2,
+        "face"
+    ):
+
+        raise Exception(
+            "OpenCV face module is not available. "
+            "Install opencv-contrib-python."
+        )
+
+
+    # ========================================================
+    # CREATE RECOGNIZER
+    # ========================================================
+
+    recognizer = (
+        cv2.face.LBPHFaceRecognizer_create(
+            radius=1,
+            neighbors=8,
+            grid_x=8,
+            grid_y=8
+        )
+    )
+
+
+    # ========================================================
+    # LOAD MODEL
+    # ========================================================
+
+    try:
+
+        recognizer.read(
+            TRAINER_PATH
+        )
+
+    except Exception as e:
+
+        raise Exception(
+            "Unable to load trainer.yml: "
+            f"{str(e)}"
+        )
+
+
+    print(
+        "Face model loaded successfully:"
+    )
+
+    print(
+        TRAINER_PATH
+    )
+
+
+    return recognizer
+
+
+# ============================================================
+# LOAD FACE DETECTOR
+# ============================================================
+
+def load_face_detector():
+
+    # ========================================================
+    # FIRST TRY PROJECT CASCADE
+    # ========================================================
+
+    cascade_path = HAAR_CASCADE_PATH
+
+
+    # ========================================================
+    # FALLBACK TO OPENCV CASCADE
+    # ========================================================
+
+    if not os.path.isfile(
+        cascade_path
+    ):
+
+        cascade_path = (
+            cv2.data.haarcascades
+            +
+            "haarcascade_frontalface_default.xml"
+        )
+
+
+    # ========================================================
+    # LOAD CASCADE
+    # ========================================================
+
+    face_detector = cv2.CascadeClassifier(
+        cascade_path
+    )
+
+
+    if face_detector.empty():
+
+        raise Exception(
+            "Haar Cascade could not be loaded."
+        )
+
+
+    print(
+        "Face detector loaded:"
+    )
+
+    print(
+        cascade_path
+    )
+
+
+    return face_detector
 
 
 # ============================================================
@@ -301,6 +535,7 @@ def recognize_face(session_id):
                    teachers.id
 
             WHERE attendance_sessions.id=%s
+
             LIMIT 1
             """,
             (
@@ -314,6 +549,7 @@ def recognize_face(session_id):
 
         cursor.close()
 
+
     # ========================================================
     # SESSION NOT FOUND
     # ========================================================
@@ -323,6 +559,7 @@ def recognize_face(session_id):
         raise Exception(
             "Attendance session not found."
         )
+
 
     db_session_id = session_data[0]
 
@@ -336,6 +573,7 @@ def recognize_face(session_id):
 
     teacher_name = session_data[5]
 
+
     # ========================================================
     # SESSION MUST BE OPEN
     # ========================================================
@@ -346,73 +584,46 @@ def recognize_face(session_id):
             "Attendance session is closed."
         )
 
-    # ========================================================
-    # CHECK TRAINER
-    # ========================================================
-
-    if not os.path.exists(
-        TRAINER_PATH
-    ):
-
-        raise Exception(
-            "trainer.yml not found. "
-            "Please train the face model first."
-        )
-
-    # ========================================================
-    # CHECK OPENCV FACE
-    # ========================================================
-
-    if not hasattr(cv2, "face"):
-
-        raise Exception(
-            "OpenCV face module is not available. "
-            "Install opencv-contrib-python."
-        )
 
     # ========================================================
     # LOAD TRAINER
     # ========================================================
 
-    recognizer = (
-        cv2.face.LBPHFaceRecognizer_create(
-            radius=1,
-            neighbors=8,
-            grid_x=8,
-            grid_y=8
-        )
-    )
+    recognizer = load_face_trainer()
 
-    recognizer.read(
-        TRAINER_PATH
-    )
 
     # ========================================================
-    # FACE DETECTOR
+    # LOAD FACE DETECTOR
     # ========================================================
 
-    face_detector = cv2.CascadeClassifier(
-        cv2.data.haarcascades +
-        "haarcascade_frontalface_default.xml"
-    )
+    face_detector = load_face_detector()
 
-    if face_detector.empty():
-
-        raise Exception(
-            "Haar Cascade could not be loaded."
-        )
 
     # ========================================================
     # CAMERA
     # ========================================================
+    #
+    # IMPORTANT:
+    # This OpenCV camera works on a local computer.
+    #
+    # It does NOT access a user's browser/mobile camera
+    # when this function runs on Render.
+    #
+    # Browser camera should use browser_face.js + Flask API.
+    #
+    # ========================================================
 
     camera = cv2.VideoCapture(0)
+
 
     if not camera.isOpened():
 
         raise Exception(
-            "Camera not found."
+            "Camera not found. "
+            "OpenCV camera can only be used on the local "
+            "computer where the application is running."
         )
+
 
     camera.set(
         cv2.CAP_PROP_FRAME_WIDTH,
@@ -424,13 +635,16 @@ def recognize_face(session_id):
         480
     )
 
+
     font = cv2.FONT_HERSHEY_SIMPLEX
 
+
     # ========================================================
-    # STUDENTS MARKED DURING THIS CAMERA SESSION
+    # STUDENTS MARKED DURING CAMERA SESSION
     # ========================================================
 
     marked_students = set()
+
 
     # ========================================================
     # CONFIRMATION TRACKING
@@ -442,6 +656,7 @@ def recognize_face(session_id):
 
     candidate_last_time = 0
 
+
     # ========================================================
     # CAMERA LOOP
     # ========================================================
@@ -452,9 +667,11 @@ def recognize_face(session_id):
 
             success, frame = camera.read()
 
+
             if not success:
 
                 break
+
 
             # =================================================
             # GRAYSCALE
@@ -464,6 +681,7 @@ def recognize_face(session_id):
                 frame,
                 cv2.COLOR_BGR2GRAY
             )
+
 
             # =================================================
             # FACE DETECTION
@@ -475,6 +693,7 @@ def recognize_face(session_id):
                 minNeighbors=7,
                 minSize=(120, 120)
             )
+
 
             # =================================================
             # HEADER
@@ -490,6 +709,7 @@ def recognize_face(session_id):
                 2
             )
 
+
             cv2.putText(
                 frame,
                 f"Teacher: {teacher_name}",
@@ -499,6 +719,7 @@ def recognize_face(session_id):
                 (255, 255, 0),
                 2
             )
+
 
             cv2.putText(
                 frame,
@@ -510,6 +731,7 @@ def recognize_face(session_id):
                 2
             )
 
+
             cv2.putText(
                 frame,
                 "Press Q to Exit",
@@ -519,6 +741,7 @@ def recognize_face(session_id):
                 (255, 255, 255),
                 2
             )
+
 
             # =================================================
             # NO FACE
@@ -540,6 +763,7 @@ def recognize_face(session_id):
                     2
                 )
 
+
             # =================================================
             # MULTIPLE FACES
             # =================================================
@@ -549,6 +773,7 @@ def recognize_face(session_id):
                 candidate_student = None
 
                 candidate_count = 0
+
 
                 for (
                     x,
@@ -575,6 +800,7 @@ def recognize_face(session_id):
                         2
                     )
 
+
                 cv2.putText(
                     frame,
                     "ONLY ONE PERSON AT A TIME",
@@ -584,6 +810,7 @@ def recognize_face(session_id):
                     (0, 0, 255),
                     2
                 )
+
 
             # =================================================
             # EXACTLY ONE FACE
@@ -598,6 +825,7 @@ def recognize_face(session_id):
                     h
                 ) = faces[0]
 
+
                 # =============================================
                 # FACE IMAGE
                 # =============================================
@@ -607,10 +835,22 @@ def recognize_face(session_id):
                     x:x + w
                 ]
 
+
                 face_image = cv2.resize(
                     face_image,
-                    (200, 200)
+                    (200, 200),
+                    interpolation=cv2.INTER_AREA
                 )
+
+
+                # =============================================
+                # SAME PREPROCESSING AS TRAINING
+                # =============================================
+
+                face_image = cv2.equalizeHist(
+                    face_image
+                )
+
 
                 # =============================================
                 # PREDICT
@@ -622,8 +862,9 @@ def recognize_face(session_id):
                     )
                 )
 
+
                 # =============================================
-                # STRICT MATCH
+                # MATCH
                 # =============================================
 
                 if distance <= MAX_DISTANCE:
@@ -631,6 +872,7 @@ def recognize_face(session_id):
                     student = get_student(
                         label
                     )
+
 
                     # =========================================
                     # STUDENT FOUND
@@ -646,18 +888,21 @@ def recognize_face(session_id):
 
                         department = student[3]
 
+
                         # =====================================
                         # CONFIRMATION
                         # =====================================
 
                         current_time = time.time()
 
+
                         if (
                             candidate_student
                             == db_id
                             and
                             (
-                                current_time -
+                                current_time
+                                -
                                 candidate_last_time
                             )
                             <= CONFIRMATION_TIMEOUT
@@ -671,9 +916,11 @@ def recognize_face(session_id):
 
                             candidate_count = 1
 
+
                         candidate_last_time = (
                             current_time
                         )
+
 
                         # =====================================
                         # STATUS
@@ -690,6 +937,7 @@ def recognize_face(session_id):
                                 f"{candidate_count}/"
                                 f"{REQUIRED_CONFIRMATIONS}"
                             )
+
 
                         # =====================================
                         # MARK ATTENDANCE
@@ -712,6 +960,7 @@ def recognize_face(session_id):
                                 )
                             )
 
+
                             if saved:
 
                                 status = "Present"
@@ -724,9 +973,11 @@ def recognize_face(session_id):
 
                                 candidate_count = 0
 
+
                             else:
 
                                 status = result
+
 
                                 if (
                                     result
@@ -737,6 +988,7 @@ def recognize_face(session_id):
                                     marked_students.add(
                                         db_id
                                     )
+
 
                         # =====================================
                         # COLOR
@@ -766,6 +1018,7 @@ def recognize_face(session_id):
                                 255
                             )
 
+
                         # =====================================
                         # FACE BOX
                         # =====================================
@@ -778,19 +1031,21 @@ def recognize_face(session_id):
                             2
                         )
 
+
                         # =====================================
                         # NAME
                         # =====================================
 
                         cv2.putText(
                             frame,
-                            name,
+                            str(name),
                             (x, y - 60),
                             font,
                             0.7,
                             color,
                             2
                         )
+
 
                         # =====================================
                         # STUDENT ID
@@ -806,19 +1061,21 @@ def recognize_face(session_id):
                             2
                         )
 
+
                         # =====================================
                         # DEPARTMENT
                         # =====================================
 
                         cv2.putText(
                             frame,
-                            department or "",
+                            str(department or ""),
                             (x, y - 10),
                             font,
                             0.5,
                             color,
                             2
                         )
+
 
                         # =====================================
                         # STATUS
@@ -834,6 +1091,7 @@ def recognize_face(session_id):
                             2
                         )
 
+
                         # =====================================
                         # DISTANCE
                         # =====================================
@@ -848,8 +1106,9 @@ def recognize_face(session_id):
                             1
                         )
 
+
                     # =========================================
-                    # LABEL DOES NOT EXIST IN DATABASE
+                    # LABEL NOT IN DATABASE
                     # =========================================
 
                     else:
@@ -864,6 +1123,7 @@ def recognize_face(session_id):
                             255
                         )
 
+
                         cv2.rectangle(
                             frame,
                             (x, y),
@@ -871,6 +1131,7 @@ def recognize_face(session_id):
                             color,
                             2
                         )
+
 
                         cv2.putText(
                             frame,
@@ -881,6 +1142,7 @@ def recognize_face(session_id):
                             color,
                             2
                         )
+
 
                 # =============================================
                 # DISTANCE TOO HIGH
@@ -898,6 +1160,7 @@ def recognize_face(session_id):
                         255
                     )
 
+
                     cv2.rectangle(
                         frame,
                         (x, y),
@@ -905,6 +1168,7 @@ def recognize_face(session_id):
                         color,
                         2
                     )
+
 
                     cv2.putText(
                         frame,
@@ -916,6 +1180,7 @@ def recognize_face(session_id):
                         2
                     )
 
+
                     cv2.putText(
                         frame,
                         f"Distance: {distance:.1f}",
@@ -926,6 +1191,7 @@ def recognize_face(session_id):
                         1
                     )
 
+
             # =================================================
             # SHOW CAMERA
             # =================================================
@@ -935,15 +1201,22 @@ def recognize_face(session_id):
                 frame
             )
 
+
             # =================================================
             # KEY
             # =================================================
 
             key = cv2.waitKey(1) & 0xFF
 
-            if key == ord("q") or key == 27:
+
+            if (
+                key == ord("q")
+                or
+                key == 27
+            ):
 
                 break
+
 
     finally:
 
