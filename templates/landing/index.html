@@ -151,7 +151,7 @@
                 <li class="nav-item">
                     <a
                         class="nav-link"
-                        href="#feedback"
+                        href="{{ url_for('home.feedback_page') }}"
                     >
                         <i class="bi bi-chat-square-heart"></i>
                         Feedback
@@ -1740,9 +1740,7 @@
                     </li>
 
                     <li>
-                        <a href="#feedback">
-                            Feedback
-                        </a>
+                        <a href="{{ url_for('home.feedback_page') }}">Feedback</a>
                     </li>
 
                 </ul>
