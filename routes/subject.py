@@ -5,7 +5,8 @@ from flask import (
     redirect,
     url_for,
     request,
-    flash
+    flash,
+    jsonify
 )
 
 from extensions import mysql
@@ -13,7 +14,16 @@ import uuid
 
 
 # ============================================================
-# BLUEPRINT
+# DEBUG - CONFIRM WHICH FILE IS RUNNING
+# ============================================================
+
+print("==========================================")
+print("SUBJECT ROUTE LOADED FROM:", __file__)
+print("==========================================")
+
+
+# ============================================================
+# SUBJECT BLUEPRINT
 # ============================================================
 
 subjects = Blueprint(
@@ -32,24 +42,29 @@ def admin_required():
 
 
 # ============================================================
-# GENERATE UNIQUE SUBJECT ID
+# SAFE ADMIN REDIRECT
+# ============================================================
+
+def admin_login_redirect():
+    return redirect(url_for("auth.login"))
+
+
+# ============================================================
+# SELF-GENERATE SUBJECT ID
 # ============================================================
 
 def generate_subject_id(cursor):
     """
-    Generates a unique positive integer ID.
+    Generate a unique positive integer ID.
 
-    Current database:
-        subjects.id INT NOT NULL PRIMARY KEY
-
-    AUTO_INCREMENT is not available, so ID is generated manually.
+    Database AUTO_INCREMENT आवश्यक पर्दैन।
+    Python ले UUID बाट unique integer ID generate गर्छ।
     """
 
     while True:
+        subject_id = uuid.uuid4().int % 2147483647
 
-        new_id = uuid.uuid4().int % 2147483647
-
-        if new_id <= 0:
+        if subject_id <= 0:
             continue
 
         cursor.execute(
@@ -59,11 +74,87 @@ def generate_subject_id(cursor):
             WHERE id = %s
             LIMIT 1
             """,
-            (new_id,)
+            (subject_id,)
         )
 
-        if not cursor.fetchone():
-            return new_id
+        existing_id = cursor.fetchone()
+
+        if not existing_id:
+            return subject_id
+
+
+# ============================================================
+# PARSE SEMESTER
+# ============================================================
+
+def parse_semester(value):
+    """
+    Convert semester values such as:
+        1
+        "1"
+        "1st"
+        "1st Semester"
+        "Semester 1"
+
+    into integer 1-8.
+    """
+
+    if value is None:
+        raise ValueError("Semester is required.")
+
+    value = str(value).strip().lower()
+
+    if not value:
+        raise ValueError("Semester is required.")
+
+    # Direct number
+    try:
+        number = int(value)
+
+        if 1 <= number <= 8:
+            return number
+
+    except (TypeError, ValueError):
+        pass
+
+    semester_map = {
+        "1st": 1,
+        "1st semester": 1,
+        "semester 1": 1,
+
+        "2nd": 2,
+        "2nd semester": 2,
+        "semester 2": 2,
+
+        "3rd": 3,
+        "3rd semester": 3,
+        "semester 3": 3,
+
+        "4th": 4,
+        "4th semester": 4,
+        "semester 4": 4,
+
+        "5th": 5,
+        "5th semester": 5,
+        "semester 5": 5,
+
+        "6th": 6,
+        "6th semester": 6,
+        "semester 6": 6,
+
+        "7th": 7,
+        "7th semester": 7,
+        "semester 7": 7,
+
+        "8th": 8,
+        "8th semester": 8,
+        "semester 8": 8,
+    }
+
+    if value in semester_map:
+        return semester_map[value]
+
+    raise ValueError("Semester must be between 1 and 8.")
 
 
 # ============================================================
@@ -74,12 +165,15 @@ def generate_subject_id(cursor):
 def index():
 
     if not admin_required():
-        return redirect(url_for("auth.login"))
+        flash(
+            "Please login as administrator.",
+            "warning"
+        )
+        return admin_login_redirect()
 
     cursor = mysql.connection.cursor()
 
     try:
-
         cursor.execute(
             """
             SELECT
@@ -89,17 +183,17 @@ def index():
                 s.semester,
                 s.department,
                 s.teacher_id,
-                t.full_name,
-                s.theory_full_marks,
-                s.practical_full_marks,
-                s.full_marks,
-                s.pass_marks
+                COALESCE(
+                    t.full_name,
+                    'Not Assigned'
+                ) AS teacher_name
             FROM subjects s
-
             LEFT JOIN teachers t
                 ON s.teacher_id = t.id
-
-            ORDER BY s.id DESC
+            ORDER BY
+                s.semester ASC,
+                s.department ASC,
+                s.subject_code ASC
             """
         )
 
@@ -112,7 +206,10 @@ def index():
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "SUBJECT LIST ERROR:",
@@ -130,7 +227,10 @@ def index():
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
@@ -144,7 +244,11 @@ def index():
 def add_subject():
 
     if not admin_required():
-        return redirect(url_for("auth.login"))
+        flash(
+            "Please login as administrator.",
+            "warning"
+        )
+        return admin_login_redirect()
 
     cursor = mysql.connection.cursor()
 
@@ -160,7 +264,8 @@ def add_subject():
                 id,
                 full_name
             FROM teachers
-            ORDER BY full_name
+            ORDER BY
+                full_name ASC
             """
         )
 
@@ -172,6 +277,11 @@ def add_subject():
 
         if request.method == "POST":
 
+            print("==========================================")
+            print("### NEW ADD SUBJECT POST ROUTE EXECUTED ###")
+            print("FORM DATA:", request.form.to_dict())
+            print("==========================================")
+
             subject_code = request.form.get(
                 "subject_code",
                 ""
@@ -182,7 +292,7 @@ def add_subject():
                 ""
             ).strip()
 
-            semester = request.form.get(
+            semester_raw = request.form.get(
                 "semester",
                 ""
             ).strip()
@@ -192,28 +302,13 @@ def add_subject():
                 ""
             ).strip()
 
-            teacher_id = request.form.get(
+            teacher_id_raw = request.form.get(
                 "teacher_id",
                 ""
             ).strip()
 
-            theory_full_marks = request.form.get(
-                "theory_full_marks",
-                ""
-            ).strip()
-
-            practical_full_marks = request.form.get(
-                "practical_full_marks",
-                ""
-            ).strip()
-
-            pass_marks = request.form.get(
-                "pass_marks",
-                ""
-            ).strip()
-
             # ------------------------------------------------
-            # REQUIRED VALIDATION
+            # SUBJECT CODE
             # ------------------------------------------------
 
             if not subject_code:
@@ -224,8 +319,14 @@ def add_subject():
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
+
+            # ------------------------------------------------
+            # SUBJECT NAME
+            # ------------------------------------------------
 
             if not subject_name:
 
@@ -235,119 +336,115 @@ def add_subject():
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
-                )
-
-            if not theory_full_marks:
-
-                flash(
-                    "Theory Full Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("subjects.add_subject")
-                )
-
-            if not practical_full_marks:
-
-                flash(
-                    "Practical Full Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("subjects.add_subject")
-                )
-
-            if not pass_marks:
-
-                flash(
-                    "Pass Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
             # ------------------------------------------------
-            # NUMBER VALIDATION
+            # SEMESTER
             # ------------------------------------------------
 
             try:
 
-                theory = float(
-                    theory_full_marks
+                semester = parse_semester(
+                    semester_raw
                 )
 
-                practical = float(
-                    practical_full_marks
-                )
-
-                pass_mark = float(
-                    pass_marks
-                )
-
-            except (ValueError, TypeError):
+            except ValueError as e:
 
                 flash(
-                    "Full marks and pass marks must be valid numbers.",
+                    str(e),
                     "danger"
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
             # ------------------------------------------------
-            # MARK VALIDATION
+            # DEPARTMENT
             # ------------------------------------------------
 
-            if theory <= 0:
+            if not department:
 
                 flash(
-                    "Theory Full Marks must be greater than 0.",
+                    "Department is required.",
                     "danger"
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
-            if practical < 0:
+            # ------------------------------------------------
+            # TEACHER
+            # ------------------------------------------------
+
+            if not teacher_id_raw:
 
                 flash(
-                    "Practical Full Marks cannot be negative.",
+                    "Please select a teacher.",
                     "danger"
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
-            full_marks = theory + practical
+            try:
 
-            if full_marks <= 0:
+                teacher_id = int(
+                    teacher_id_raw
+                )
+
+            except (TypeError, ValueError):
 
                 flash(
-                    "Total Full Marks must be greater than 0.",
+                    "Invalid teacher selected.",
                     "danger"
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
-            if pass_mark < 0 or pass_mark > full_marks:
+            # ------------------------------------------------
+            # CHECK TEACHER
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT
+                    id
+                FROM teachers
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (teacher_id,)
+            )
+
+            teacher = cursor.fetchone()
+
+            if not teacher:
 
                 flash(
-                    "Pass Marks must be between 0 and Total Full Marks.",
+                    "Selected teacher was not found.",
                     "danger"
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
             # ------------------------------------------------
@@ -356,15 +453,22 @@ def add_subject():
 
             cursor.execute(
                 """
-                SELECT id
+                SELECT
+                    id
                 FROM subjects
-                WHERE subject_code = %s
+                WHERE LOWER(
+                    TRIM(subject_code)
+                ) = LOWER(
+                    TRIM(%s)
+                )
                 LIMIT 1
                 """,
                 (subject_code,)
             )
 
-            if cursor.fetchone():
+            existing_subject = cursor.fetchone()
+
+            if existing_subject:
 
                 flash(
                     "Subject Code already exists!",
@@ -372,68 +476,26 @@ def add_subject():
                 )
 
                 return redirect(
-                    url_for("subjects.add_subject")
+                    url_for(
+                        "subjects.add_subject"
+                    )
                 )
 
             # ------------------------------------------------
-            # VALIDATE TEACHER
-            # ------------------------------------------------
-
-            teacher_value = None
-
-            if teacher_id:
-
-                try:
-
-                    teacher_value = int(
-                        teacher_id
-                    )
-
-                except (ValueError, TypeError):
-
-                    flash(
-                        "Invalid teacher selected.",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for("subjects.add_subject")
-                    )
-
-                cursor.execute(
-                    """
-                    SELECT id
-                    FROM teachers
-                    WHERE id = %s
-                    LIMIT 1
-                    """,
-                    (teacher_value,)
-                )
-
-                if not cursor.fetchone():
-
-                    flash(
-                        "Selected teacher does not exist.",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for("subjects.add_subject")
-                    )
-
-            # ------------------------------------------------
-            # GENERATE MANUAL ID
+            # GENERATE SUBJECT ID
             # ------------------------------------------------
 
             subject_id = generate_subject_id(
                 cursor
             )
 
+            print("==========================================")
+            print("### GENERATED SUBJECT ID ###")
+            print("SUBJECT ID:", subject_id)
+            print("==========================================")
+
             # ------------------------------------------------
             # INSERT SUBJECT
-            #
-            # IMPORTANT:
-            # Each database column appears ONLY ONCE.
             # ------------------------------------------------
 
             cursor.execute(
@@ -445,51 +507,14 @@ def add_subject():
                     subject_name,
                     semester,
                     department,
-                    teacher_id,
-
-                    theory_internal_full_marks,
-                    theory_external_full_marks,
-
-                    practical_internal_full_marks,
-                    practical_external_full_marks,
-
-                    theory_full_marks,
-                    practical_full_marks,
-
-                    full_marks,
-                    pass_marks,
-
-                    internal_theory_full_marks,
-                    internal_practical_full_marks,
-
-                    external_theory_full_marks,
-                    external_practical_full_marks
+                    teacher_id
                 )
-
                 VALUES
                 (
                     %s,
                     %s,
                     %s,
                     %s,
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-
                     %s,
                     %s
                 )
@@ -500,35 +525,16 @@ def add_subject():
                     subject_name,
                     semester,
                     department,
-                    teacher_value,
-
-                    # Theory internal/external
-                    theory,
-                    theory,
-
-                    # Practical internal/external
-                    practical,
-                    practical,
-
-                    # Main full marks
-                    theory,
-                    practical,
-
-                    # Total/pass
-                    full_marks,
-                    pass_mark,
-
-                    # Internal marks
-                    theory,
-                    practical,
-
-                    # External marks
-                    theory,
-                    practical
+                    teacher_id
                 )
             )
 
             mysql.connection.commit()
+
+            print(
+                "SUBJECT INSERT SUCCESS:",
+                subject_id
+            )
 
             flash(
                 "Subject added successfully!",
@@ -536,11 +542,13 @@ def add_subject():
             )
 
             return redirect(
-                url_for("subjects.index")
+                url_for(
+                    "subjects.index"
+                )
             )
 
         # ----------------------------------------------------
-        # GET
+        # GET PAGE
         # ----------------------------------------------------
 
         return render_template(
@@ -550,7 +558,10 @@ def add_subject():
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "ADD SUBJECT ERROR:",
@@ -563,12 +574,17 @@ def add_subject():
         )
 
         return redirect(
-            url_for("subjects.index")
+            url_for(
+                "subjects.index"
+            )
         )
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
@@ -582,7 +598,11 @@ def add_subject():
 def edit_subject(id):
 
     if not admin_required():
-        return redirect(url_for("auth.login"))
+        flash(
+            "Please login as administrator.",
+            "warning"
+        )
+        return admin_login_redirect()
 
     cursor = mysql.connection.cursor()
 
@@ -598,416 +618,12 @@ def edit_subject(id):
                 id,
                 full_name
             FROM teachers
-            ORDER BY full_name
+            ORDER BY
+                full_name ASC
             """
         )
 
         teachers = cursor.fetchall()
-
-        # ----------------------------------------------------
-        # POST
-        # ----------------------------------------------------
-
-        if request.method == "POST":
-
-            subject_code = request.form.get(
-                "subject_code",
-                ""
-            ).strip()
-
-            subject_name = request.form.get(
-                "subject_name",
-                ""
-            ).strip()
-
-            semester = request.form.get(
-                "semester",
-                ""
-            ).strip()
-
-            department = request.form.get(
-                "department",
-                ""
-            ).strip()
-
-            teacher_id = request.form.get(
-                "teacher_id",
-                ""
-            ).strip()
-
-            theory_full_marks = request.form.get(
-                "theory_full_marks",
-                ""
-            ).strip()
-
-            practical_full_marks = request.form.get(
-                "practical_full_marks",
-                ""
-            ).strip()
-
-            pass_marks = request.form.get(
-                "pass_marks",
-                ""
-            ).strip()
-
-            # ------------------------------------------------
-            # REQUIRED VALIDATION
-            # ------------------------------------------------
-
-            if not subject_code:
-
-                flash(
-                    "Subject Code is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if not subject_name:
-
-                flash(
-                    "Subject Name is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if not theory_full_marks:
-
-                flash(
-                    "Theory Full Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if not practical_full_marks:
-
-                flash(
-                    "Practical Full Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if not pass_marks:
-
-                flash(
-                    "Pass Marks is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            # ------------------------------------------------
-            # NUMBER VALIDATION
-            # ------------------------------------------------
-
-            try:
-
-                theory = float(
-                    theory_full_marks
-                )
-
-                practical = float(
-                    practical_full_marks
-                )
-
-                pass_mark = float(
-                    pass_marks
-                )
-
-            except (ValueError, TypeError):
-
-                flash(
-                    "Full marks and pass marks must be valid numbers.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            # ------------------------------------------------
-            # MARK VALIDATION
-            # ------------------------------------------------
-
-            if theory <= 0:
-
-                flash(
-                    "Theory Full Marks must be greater than 0.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if practical < 0:
-
-                flash(
-                    "Practical Full Marks cannot be negative.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            full_marks = theory + practical
-
-            if full_marks <= 0:
-
-                flash(
-                    "Total Full Marks must be greater than 0.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            if pass_mark < 0 or pass_mark > full_marks:
-
-                flash(
-                    "Pass Marks must be between 0 and Total Full Marks.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            # ------------------------------------------------
-            # CHECK DUPLICATE SUBJECT CODE
-            # ------------------------------------------------
-
-            cursor.execute(
-                """
-                SELECT id
-                FROM subjects
-                WHERE subject_code = %s
-                  AND id != %s
-                LIMIT 1
-                """,
-                (
-                    subject_code,
-                    id
-                )
-            )
-
-            if cursor.fetchone():
-
-                flash(
-                    "Subject Code already exists!",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "subjects.edit_subject",
-                        id=id
-                    )
-                )
-
-            # ------------------------------------------------
-            # VALIDATE TEACHER
-            # ------------------------------------------------
-
-            teacher_value = None
-
-            if teacher_id:
-
-                try:
-
-                    teacher_value = int(
-                        teacher_id
-                    )
-
-                except (ValueError, TypeError):
-
-                    flash(
-                        "Invalid teacher selected.",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for(
-                            "subjects.edit_subject",
-                            id=id
-                        )
-                    )
-
-                cursor.execute(
-                    """
-                    SELECT id
-                    FROM teachers
-                    WHERE id = %s
-                    LIMIT 1
-                    """,
-                    (teacher_value,)
-                )
-
-                if not cursor.fetchone():
-
-                    flash(
-                        "Selected teacher does not exist.",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for(
-                            "subjects.edit_subject",
-                            id=id
-                        )
-                    )
-
-            # ------------------------------------------------
-            # CHECK SUBJECT EXISTS
-            # ------------------------------------------------
-
-            cursor.execute(
-                """
-                SELECT id
-                FROM subjects
-                WHERE id = %s
-                LIMIT 1
-                """,
-                (id,)
-            )
-
-            if not cursor.fetchone():
-
-                flash(
-                    "Subject not found.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("subjects.index")
-                )
-
-            # ------------------------------------------------
-            # UPDATE SUBJECT
-            # ------------------------------------------------
-
-            cursor.execute(
-                """
-                UPDATE subjects
-
-                SET
-                    subject_code = %s,
-                    subject_name = %s,
-                    semester = %s,
-                    department = %s,
-                    teacher_id = %s,
-
-                    theory_internal_full_marks = %s,
-                    theory_external_full_marks = %s,
-
-                    practical_internal_full_marks = %s,
-                    practical_external_full_marks = %s,
-
-                    theory_full_marks = %s,
-                    practical_full_marks = %s,
-
-                    full_marks = %s,
-                    pass_marks = %s,
-
-                    internal_theory_full_marks = %s,
-                    internal_practical_full_marks = %s,
-
-                    external_theory_full_marks = %s,
-                    external_practical_full_marks = %s
-
-                WHERE id = %s
-                """,
-                (
-                    subject_code,
-                    subject_name,
-                    semester,
-                    department,
-                    teacher_value,
-
-                    # Theory internal/external
-                    theory,
-                    theory,
-
-                    # Practical internal/external
-                    practical,
-                    practical,
-
-                    # Main full marks
-                    theory,
-                    practical,
-
-                    # Total/pass
-                    full_marks,
-                    pass_mark,
-
-                    # Internal
-                    theory,
-                    practical,
-
-                    # External
-                    theory,
-                    practical,
-
-                    # Subject ID
-                    id
-                )
-            )
-
-            mysql.connection.commit()
-
-            flash(
-                "Subject updated successfully!",
-                "success"
-            )
-
-            return redirect(
-                url_for("subjects.index")
-            )
 
         # ----------------------------------------------------
         # GET SUBJECT
@@ -1021,30 +637,9 @@ def edit_subject(id):
                 subject_name,
                 semester,
                 department,
-                teacher_id,
-
-                theory_internal_full_marks,
-                theory_external_full_marks,
-
-                practical_internal_full_marks,
-                practical_external_full_marks,
-
-                theory_full_marks,
-                practical_full_marks,
-
-                full_marks,
-                pass_marks,
-
-                internal_theory_full_marks,
-                internal_practical_full_marks,
-
-                external_theory_full_marks,
-                external_practical_full_marks
-
+                teacher_id
             FROM subjects
-
             WHERE id = %s
-
             LIMIT 1
             """,
             (id,)
@@ -1060,8 +655,253 @@ def edit_subject(id):
             )
 
             return redirect(
-                url_for("subjects.index")
+                url_for(
+                    "subjects.index"
+                )
             )
+
+        # ----------------------------------------------------
+        # POST
+        # ----------------------------------------------------
+
+        if request.method == "POST":
+
+            subject_code = request.form.get(
+                "subject_code",
+                ""
+            ).strip()
+
+            subject_name = request.form.get(
+                "subject_name",
+                ""
+            ).strip()
+
+            semester_raw = request.form.get(
+                "semester",
+                ""
+            ).strip()
+
+            department = request.form.get(
+                "department",
+                ""
+            ).strip()
+
+            teacher_id_raw = request.form.get(
+                "teacher_id",
+                ""
+            ).strip()
+
+            # ------------------------------------------------
+            # VALIDATION
+            # ------------------------------------------------
+
+            if not subject_code:
+
+                flash(
+                    "Subject Code is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not subject_name:
+
+                flash(
+                    "Subject Name is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            try:
+
+                semester = parse_semester(
+                    semester_raw
+                )
+
+            except ValueError as e:
+
+                flash(
+                    str(e),
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not department:
+
+                flash(
+                    "Department is required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            if not teacher_id_raw:
+
+                flash(
+                    "Please select a teacher.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            try:
+
+                teacher_id = int(
+                    teacher_id_raw
+                )
+
+            except (TypeError, ValueError):
+
+                flash(
+                    "Invalid teacher selected.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            # ------------------------------------------------
+            # CHECK TEACHER
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT
+                    id
+                FROM teachers
+                WHERE id = %s
+                LIMIT 1
+                """,
+                (teacher_id,)
+            )
+
+            teacher = cursor.fetchone()
+
+            if not teacher:
+
+                flash(
+                    "Selected teacher was not found.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            # ------------------------------------------------
+            # CHECK DUPLICATE CODE
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT
+                    id
+                FROM subjects
+                WHERE LOWER(
+                    TRIM(subject_code)
+                ) = LOWER(
+                    TRIM(%s)
+                )
+                AND id != %s
+                LIMIT 1
+                """,
+                (
+                    subject_code,
+                    id
+                )
+            )
+
+            duplicate_subject = cursor.fetchone()
+
+            if duplicate_subject:
+
+                flash(
+                    "Subject Code already exists!",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "subjects.edit_subject",
+                        id=id
+                    )
+                )
+
+            # ------------------------------------------------
+            # UPDATE
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                UPDATE subjects
+                SET
+                    subject_code = %s,
+                    subject_name = %s,
+                    semester = %s,
+                    department = %s,
+                    teacher_id = %s
+                WHERE id = %s
+                """,
+                (
+                    subject_code,
+                    subject_name,
+                    semester,
+                    department,
+                    teacher_id,
+                    id
+                )
+            )
+
+            mysql.connection.commit()
+
+            flash(
+                "Subject updated successfully!",
+                "success"
+            )
+
+            return redirect(
+                url_for(
+                    "subjects.index"
+                )
+            )
+
+        # ----------------------------------------------------
+        # GET PAGE
+        # ----------------------------------------------------
 
         return render_template(
             "admin/edit_subject.html",
@@ -1071,7 +911,10 @@ def edit_subject(id):
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "EDIT SUBJECT ERROR:",
@@ -1084,12 +927,17 @@ def edit_subject(id):
         )
 
         return redirect(
-            url_for("subjects.index")
+            url_for(
+                "subjects.index"
+            )
         )
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
@@ -1103,7 +951,11 @@ def edit_subject(id):
 def delete_subject(id):
 
     if not admin_required():
-        return redirect(url_for("auth.login"))
+        flash(
+            "Please login as administrator.",
+            "warning"
+        )
+        return admin_login_redirect()
 
     cursor = mysql.connection.cursor()
 
@@ -1115,7 +967,8 @@ def delete_subject(id):
 
         cursor.execute(
             """
-            SELECT id
+            SELECT
+                id
             FROM subjects
             WHERE id = %s
             LIMIT 1
@@ -1123,7 +976,9 @@ def delete_subject(id):
             (id,)
         )
 
-        if not cursor.fetchone():
+        subject = cursor.fetchone()
+
+        if not subject:
 
             flash(
                 "Subject not found.",
@@ -1131,7 +986,50 @@ def delete_subject(id):
             )
 
             return redirect(
-                url_for("subjects.index")
+                url_for(
+                    "subjects.index"
+                )
+            )
+
+        # ----------------------------------------------------
+        # CHECK ATTENDANCE SESSIONS
+        # ----------------------------------------------------
+
+        try:
+
+            cursor.execute(
+                """
+                SELECT
+                    id
+                FROM attendance_sessions
+                WHERE subject_id = %s
+                LIMIT 1
+                """,
+                (id,)
+            )
+
+            attendance_session = cursor.fetchone()
+
+        except Exception:
+
+            attendance_session = None
+
+            try:
+                mysql.connection.rollback()
+            except Exception:
+                pass
+
+        if attendance_session:
+
+            flash(
+                "This subject cannot be deleted because attendance sessions already exist for it.",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "subjects.index"
+                )
             )
 
         # ----------------------------------------------------
@@ -1148,18 +1046,32 @@ def delete_subject(id):
 
         mysql.connection.commit()
 
-        flash(
-            "Subject deleted successfully!",
-            "success"
-        )
+        if cursor.rowcount > 0:
+
+            flash(
+                "Subject deleted successfully!",
+                "success"
+            )
+
+        else:
+
+            flash(
+                "Subject not found.",
+                "warning"
+            )
 
         return redirect(
-            url_for("subjects.index")
+            url_for(
+                "subjects.index"
+            )
         )
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "DELETE SUBJECT ERROR:",
@@ -1172,9 +1084,157 @@ def delete_subject(id):
         )
 
         return redirect(
-            url_for("subjects.index")
+            url_for(
+                "subjects.index"
+            )
         )
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+# ============================================================
+# SUBJECTS API
+# ============================================================
+
+@subjects.route("/api")
+def subjects_api():
+
+    if not admin_required():
+
+        return jsonify({
+            "success": False,
+            "message": "Unauthorized"
+        }), 401
+
+    semester_raw = request.args.get(
+        "semester",
+        ""
+    ).strip()
+
+    department = request.args.get(
+        "department",
+        ""
+    ).strip()
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        query = """
+            SELECT
+                s.id,
+                s.subject_code,
+                s.subject_name,
+                s.semester,
+                s.department,
+                s.teacher_id,
+                COALESCE(
+                    t.full_name,
+                    'Not Assigned'
+                ) AS teacher_name
+            FROM subjects s
+            LEFT JOIN teachers t
+                ON s.teacher_id = t.id
+            WHERE 1 = 1
+        """
+
+        params = []
+
+        # ----------------------------------------------------
+        # SEMESTER FILTER
+        # ----------------------------------------------------
+
+        if semester_raw:
+
+            semester = parse_semester(
+                semester_raw
+            )
+
+            query += """
+                AND s.semester = %s
+            """
+
+            params.append(
+                semester
+            )
+
+        # ----------------------------------------------------
+        # DEPARTMENT FILTER
+        # ----------------------------------------------------
+
+        if department:
+
+            query += """
+                AND LOWER(
+                    TRIM(s.department)
+                ) = LOWER(
+                    TRIM(%s)
+                )
+            """
+
+            params.append(
+                department
+            )
+
+        # ----------------------------------------------------
+        # ORDER
+        # ----------------------------------------------------
+
+        query += """
+            ORDER BY
+                s.subject_name ASC
+        """
+
+        cursor.execute(
+            query,
+            tuple(params)
+        )
+
+        rows = cursor.fetchall()
+
+        data = []
+
+        for row in rows:
+
+            data.append({
+                "id": row[0],
+                "subject_code": row[1],
+                "subject_name": row[2],
+                "semester": row[3],
+                "department": row[4],
+                "teacher_id": row[5],
+                "teacher_name": (
+                    row[6]
+                    if row[6]
+                    else "Not Assigned"
+                )
+            })
+
+        return jsonify({
+            "success": True,
+            "subjects": data
+        })
+
+    except Exception as e:
+
+        print(
+            "SUBJECT API ERROR:",
+            repr(e)
+        )
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+    finally:
+
+        try:
+            cursor.close()
+        except Exception:
+            pass

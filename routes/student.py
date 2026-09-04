@@ -12,14 +12,15 @@ from flask import (
 from extensions import mysql
 from utils.generate_qr import generate_qr
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
 
 import os
 import uuid
 
 
-# =========================================================
+# ============================================================
 # BLUEPRINT
-# =========================================================
+# ============================================================
 
 students = Blueprint(
     "students",
@@ -28,9 +29,9 @@ students = Blueprint(
 )
 
 
-# =========================================================
-# UPLOAD FOLDER
-# =========================================================
+# ============================================================
+# STUDENT PHOTO UPLOAD FOLDER
+# ============================================================
 
 UPLOAD_FOLDER = os.path.join(
     "static",
@@ -38,27 +39,42 @@ UPLOAD_FOLDER = os.path.join(
     "students"
 )
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(
+    UPLOAD_FOLDER,
+    exist_ok=True
+)
 
 
-# =========================================================
-# HELPER: GENERATE UNIQUE INTEGER ID
-# =========================================================
+# ============================================================
+# ALLOWED PHOTO EXTENSIONS
+# ============================================================
+
+ALLOWED_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp"
+}
+
+
+# ============================================================
+# ADMIN CHECK
+# ============================================================
+
+def admin_required():
+    return "admin_id" in session
+
+
+# ============================================================
+# GENERATE UNIQUE STUDENT DATABASE ID
+# ============================================================
 
 def generate_student_db_id(cursor):
-    """
-    Generates a unique positive integer ID for students.id.
-
-    This is used because the TiDB/MySQL table currently has:
-        id INT NOT NULL PRIMARY KEY
-
-    but id is NOT AUTO_INCREMENT.
-    """
 
     while True:
+
         new_id = uuid.uuid4().int % 2147483647
 
-        # Avoid 0
         if new_id <= 0:
             continue
 
@@ -66,7 +82,7 @@ def generate_student_db_id(cursor):
             """
             SELECT id
             FROM students
-            WHERE id=%s
+            WHERE id = %s
             LIMIT 1
             """,
             (new_id,)
@@ -76,36 +92,32 @@ def generate_student_db_id(cursor):
             return new_id
 
 
-# =========================================================
-# HELPER: ALLOWED PHOTO
-# =========================================================
-
-ALLOWED_EXTENSIONS = {
-    ".jpg",
-    ".jpeg",
-    ".png"
-}
-
+# ============================================================
+# SAVE STUDENT PHOTO
+# ============================================================
 
 def save_student_photo(photo):
-    """
-    Saves student photo and returns filename.
-    Returns None if no photo was uploaded.
-    """
 
     if not photo or not photo.filename:
         return None
 
-    filename = secure_filename(photo.filename)
+    filename = secure_filename(
+        photo.filename
+    )
 
-    ext = os.path.splitext(filename)[1].lower()
+    ext = os.path.splitext(
+        filename
+    )[1].lower()
 
     if ext not in ALLOWED_EXTENSIONS:
+
         raise ValueError(
-            "Only JPG, JPEG and PNG files are allowed."
+            "Only JPG, JPEG, PNG and WEBP files are allowed."
         )
 
-    new_filename = uuid.uuid4().hex + ext
+    new_filename = (
+        uuid.uuid4().hex + ext
+    )
 
     file_path = os.path.join(
         UPLOAD_FOLDER,
@@ -117,35 +129,40 @@ def save_student_photo(photo):
     return new_filename
 
 
-# =========================================================
-# HELPER: DELETE PHOTO FILE
-# =========================================================
+# ============================================================
+# DELETE PHOTO FILE
+# ============================================================
 
 def delete_photo_file(photo_name):
+
     if not photo_name:
         return
 
-    photo_path = os.path.join(
+    file_path = os.path.join(
         UPLOAD_FOLDER,
         photo_name
     )
 
     try:
-        if os.path.exists(photo_path):
-            os.remove(photo_path)
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
     except OSError:
         pass
 
 
-# =========================================================
+# ============================================================
 # STUDENT LIST
-# =========================================================
+# ============================================================
 
 @students.route("/")
 def index():
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     cursor = mysql.connection.cursor()
 
@@ -157,8 +174,11 @@ def index():
                 id,
                 student_id,
                 full_name,
+                email,
+                phone,
                 department,
                 semester,
+                section,
                 photo
             FROM students
             ORDER BY id DESC
@@ -177,6 +197,7 @@ def index():
         student_data = []
 
     finally:
+
         cursor.close()
 
     return render_template(
@@ -185,15 +206,20 @@ def index():
     )
 
 
-# =========================================================
+# ============================================================
 # ADD STUDENT
-# =========================================================
+# ============================================================
 
-@students.route("/add", methods=["GET", "POST"])
+@students.route(
+    "/add",
+    methods=["GET", "POST"]
+)
 def add_student():
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     if request.method == "POST":
 
@@ -207,6 +233,16 @@ def add_student():
             ""
         ).strip()
 
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        phone = request.form.get(
+            "phone",
+            ""
+        ).strip()
+
         department = request.form.get(
             "department",
             ""
@@ -217,74 +253,98 @@ def add_student():
             ""
         ).strip()
 
-        photo_name = None
-        photo_saved = False
+        section = request.form.get(
+            "section",
+            ""
+        ).strip()
 
-        # ---------------------------------------------
-        # BASIC VALIDATION
-        # ---------------------------------------------
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        email = email if email else None
+        phone = phone if phone else None
+        section = section if section else None
+
+        # ----------------------------------------------------
+        # VALIDATION
+        # ----------------------------------------------------
 
         if not student_id:
+
             flash(
                 "Student ID is required.",
                 "danger"
             )
 
             return redirect(
-                url_for("students.add_student")
+                url_for(
+                    "students.add_student"
+                )
             )
 
         if not full_name:
+
             flash(
                 "Full name is required.",
                 "danger"
             )
 
             return redirect(
-                url_for("students.add_student")
+                url_for(
+                    "students.add_student"
+                )
             )
 
         if not department:
+
             flash(
                 "Department is required.",
                 "danger"
             )
 
             return redirect(
-                url_for("students.add_student")
+                url_for(
+                    "students.add_student"
+                )
             )
 
         if not semester:
+
             flash(
                 "Semester is required.",
                 "danger"
             )
 
             return redirect(
-                url_for("students.add_student")
+                url_for(
+                    "students.add_student"
+                )
             )
 
         cursor = mysql.connection.cursor()
 
+        photo_name = None
+        photo_saved = False
+
         try:
 
-            # -----------------------------------------
-            # CHECK DUPLICATE STUDENT ID
-            # -----------------------------------------
+            # ------------------------------------------------
+            # DUPLICATE STUDENT ID
+            # ------------------------------------------------
 
             cursor.execute(
                 """
                 SELECT id
                 FROM students
-                WHERE student_id=%s
+                WHERE student_id = %s
                 LIMIT 1
                 """,
                 (student_id,)
             )
 
-            existing_student = cursor.fetchone()
-
-            if existing_student:
+            if cursor.fetchone():
 
                 flash(
                     "Student ID already exists!",
@@ -292,17 +352,14 @@ def add_student():
                 )
 
                 return redirect(
-                    url_for("students.add_student")
+                    url_for(
+                        "students.add_student"
+                    )
                 )
 
-            # -----------------------------------------
-            # CHECK DUPLICATE EMAIL IF FORM HAS EMAIL
-            # -----------------------------------------
-
-            email = request.form.get(
-                "email",
-                ""
-            ).strip()
+            # ------------------------------------------------
+            # DUPLICATE EMAIL
+            # ------------------------------------------------
 
             if email:
 
@@ -310,74 +367,16 @@ def add_student():
                     """
                     SELECT id
                     FROM students
-                    WHERE email=%s
+                    WHERE email = %s
                     LIMIT 1
                     """,
                     (email,)
                 )
 
-                existing_email = cursor.fetchone()
-
-                if existing_email:
+                if cursor.fetchone():
 
                     flash(
                         "Email already exists!",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for("students.add_student")
-                    )
-
-            else:
-                email = None
-
-            # -----------------------------------------
-            # OTHER OPTIONAL FIELDS
-            # -----------------------------------------
-
-            phone = request.form.get(
-                "phone",
-                ""
-            ).strip()
-
-            phone = phone if phone else None
-
-            section = request.form.get(
-                "section",
-                ""
-            ).strip()
-
-            section = section if section else None
-
-            password = request.form.get(
-                "password",
-                ""
-            )
-
-            if not password:
-                password = ""
-
-            # -----------------------------------------
-            # SAVE PHOTO
-            # -----------------------------------------
-
-            photo = request.files.get("photo")
-
-            if photo and photo.filename:
-
-                try:
-
-                    photo_name = save_student_photo(
-                        photo
-                    )
-
-                    photo_saved = True
-
-                except ValueError as e:
-
-                    flash(
-                        str(e),
                         "danger"
                     )
 
@@ -387,17 +386,37 @@ def add_student():
                         )
                     )
 
-            # -----------------------------------------
-            # GENERATE DATABASE PRIMARY KEY
-            # -----------------------------------------
+            # ------------------------------------------------
+            # PHOTO
+            # ------------------------------------------------
+
+            photo = request.files.get(
+                "photo"
+            )
+
+            if photo and photo.filename:
+
+                photo_name = save_student_photo(
+                    photo
+                )
+
+                photo_saved = True
+
+            # ------------------------------------------------
+            # GENERATE DB ID
+            # ------------------------------------------------
 
             db_id = generate_student_db_id(
                 cursor
             )
 
-            # -----------------------------------------
+            # ------------------------------------------------
             # INSERT STUDENT
-            # -----------------------------------------
+            #
+            # NO MARKS
+            # NO FULL MARKS
+            # NO SUBJECT
+            # ------------------------------------------------
 
             cursor.execute(
                 """
@@ -450,26 +469,22 @@ def add_student():
             )
 
             return redirect(
-                url_for("students.index")
+                url_for(
+                    "students.index"
+                )
             )
 
         except Exception as e:
-
-            # -----------------------------------------
-            # ROLLBACK DATABASE
-            # -----------------------------------------
 
             try:
                 mysql.connection.rollback()
             except Exception:
                 pass
 
-            # -----------------------------------------
-            # REMOVE PHOTO IF DATABASE INSERT FAILED
-            # -----------------------------------------
-
             if photo_saved and photo_name:
-                delete_photo_file(photo_name)
+                delete_photo_file(
+                    photo_name
+                )
 
             flash(
                 f"Error adding student: {e}",
@@ -477,10 +492,13 @@ def add_student():
             )
 
             return redirect(
-                url_for("students.add_student")
+                url_for(
+                    "students.add_student"
+                )
             )
 
         finally:
+
             cursor.close()
 
     return render_template(
@@ -488,9 +506,9 @@ def add_student():
     )
 
 
-# =========================================================
+# ============================================================
 # EDIT STUDENT
-# =========================================================
+# ============================================================
 
 @students.route(
     "/edit/<int:id>",
@@ -498,321 +516,12 @@ def add_student():
 )
 def edit_student(id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     cursor = mysql.connection.cursor()
-
-    # =====================================================
-    # UPDATE
-    # =====================================================
-
-    if request.method == "POST":
-
-        student_id = request.form.get(
-            "student_id",
-            ""
-        ).strip()
-
-        full_name = request.form.get(
-            "full_name",
-            ""
-        ).strip()
-
-        department = request.form.get(
-            "department",
-            ""
-        ).strip()
-
-        semester = request.form.get(
-            "semester",
-            ""
-        ).strip()
-
-        email = request.form.get(
-            "email",
-            ""
-        ).strip()
-
-        email = email if email else None
-
-        phone = request.form.get(
-            "phone",
-            ""
-        ).strip()
-
-        phone = phone if phone else None
-
-        section = request.form.get(
-            "section",
-            ""
-        ).strip()
-
-        section = section if section else None
-
-        old_photo = None
-        new_photo_name = None
-        new_photo_saved = False
-
-        try:
-
-            # -----------------------------------------
-            # GET CURRENT STUDENT
-            # -----------------------------------------
-
-            cursor.execute(
-                """
-                SELECT
-                    id,
-                    student_id,
-                    full_name,
-                    email,
-                    phone,
-                    department,
-                    semester,
-                    section,
-                    password,
-                    photo
-                FROM students
-                WHERE id=%s
-                LIMIT 1
-                """,
-                (id,)
-            )
-
-            current_student = cursor.fetchone()
-
-            if not current_student:
-
-                flash(
-                    "Student not found!",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("students.index")
-                )
-
-            old_photo = current_student[9]
-
-            # -----------------------------------------
-            # VALIDATION
-            # -----------------------------------------
-
-            if not student_id:
-                flash(
-                    "Student ID is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "students.edit_student",
-                        id=id
-                    )
-                )
-
-            if not full_name:
-                flash(
-                    "Full name is required.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "students.edit_student",
-                        id=id
-                    )
-                )
-
-            # -----------------------------------------
-            # CHECK DUPLICATE STUDENT ID
-            # EXCLUDING CURRENT STUDENT
-            # -----------------------------------------
-
-            cursor.execute(
-                """
-                SELECT id
-                FROM students
-                WHERE student_id=%s
-                AND id<>%s
-                LIMIT 1
-                """,
-                (
-                    student_id,
-                    id
-                )
-            )
-
-            duplicate_student_id = cursor.fetchone()
-
-            if duplicate_student_id:
-
-                flash(
-                    "Student ID already exists!",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "students.edit_student",
-                        id=id
-                    )
-                )
-
-            # -----------------------------------------
-            # CHECK DUPLICATE EMAIL
-            # -----------------------------------------
-
-            if email:
-
-                cursor.execute(
-                    """
-                    SELECT id
-                    FROM students
-                    WHERE email=%s
-                    AND id<>%s
-                    LIMIT 1
-                    """,
-                    (
-                        email,
-                        id
-                    )
-                )
-
-                duplicate_email = cursor.fetchone()
-
-                if duplicate_email:
-
-                    flash(
-                        "Email already exists!",
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for(
-                            "students.edit_student",
-                            id=id
-                        )
-                    )
-
-            # -----------------------------------------
-            # PHOTO
-            # -----------------------------------------
-
-            photo_name = old_photo
-
-            photo = request.files.get("photo")
-
-            if photo and photo.filename:
-
-                try:
-
-                    new_photo_name = save_student_photo(
-                        photo
-                    )
-
-                    new_photo_saved = True
-
-                    photo_name = new_photo_name
-
-                except ValueError as e:
-
-                    flash(
-                        str(e),
-                        "danger"
-                    )
-
-                    return redirect(
-                        url_for(
-                            "students.edit_student",
-                            id=id
-                        )
-                    )
-
-            # -----------------------------------------
-            # UPDATE
-            # -----------------------------------------
-
-            cursor.execute(
-                """
-                UPDATE students
-                SET
-                    student_id=%s,
-                    full_name=%s,
-                    email=%s,
-                    phone=%s,
-                    department=%s,
-                    semester=%s,
-                    section=%s,
-                    photo=%s
-                WHERE id=%s
-                """,
-                (
-                    student_id,
-                    full_name,
-                    email,
-                    phone,
-                    department,
-                    semester,
-                    section,
-                    photo_name,
-                    id
-                )
-            )
-
-            mysql.connection.commit()
-
-            # -----------------------------------------
-            # DELETE OLD PHOTO AFTER SUCCESSFUL COMMIT
-            # -----------------------------------------
-
-            if (
-                new_photo_saved
-                and old_photo
-                and old_photo != photo_name
-            ):
-                delete_photo_file(old_photo)
-
-            flash(
-                "Student updated successfully!",
-                "success"
-            )
-
-            return redirect(
-                url_for("students.index")
-            )
-
-        except Exception as e:
-
-            try:
-                mysql.connection.rollback()
-            except Exception:
-                pass
-
-            if new_photo_saved and new_photo_name:
-                delete_photo_file(
-                    new_photo_name
-                )
-
-            flash(
-                f"Error updating student: {e}",
-                "danger"
-            )
-
-            return redirect(
-                url_for(
-                    "students.edit_student",
-                    id=id
-                )
-            )
-
-        finally:
-            cursor.close()
-
-    # =====================================================
-    # GET
-    # =====================================================
 
     try:
 
@@ -830,7 +539,7 @@ def edit_student(id):
                 password,
                 photo
             FROM students
-            WHERE id=%s
+            WHERE id = %s
             LIMIT 1
             """,
             (id,)
@@ -838,66 +547,7 @@ def edit_student(id):
 
         student = cursor.fetchone()
 
-    except Exception as e:
-
-        flash(
-            f"Error loading student: {e}",
-            "danger"
-        )
-
-        student = None
-
-    finally:
-        cursor.close()
-
-    if not student:
-
-        flash(
-            "Student not found!",
-            "danger"
-        )
-
-        return redirect(
-            url_for("students.index")
-        )
-
-    return render_template(
-        "admin/edit_student.html",
-        student=student
-    )
-
-
-# =========================================================
-# DELETE STUDENT
-# =========================================================
-
-@students.route("/delete/<int:id>")
-def delete_student(id):
-
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
-
-    cursor = mysql.connection.cursor()
-
-    try:
-
-        # ---------------------------------------------
-        # GET PHOTO
-        # ---------------------------------------------
-
-        cursor.execute(
-            """
-            SELECT photo
-            FROM students
-            WHERE id=%s
-            LIMIT 1
-            """,
-            (id,)
-        )
-
-        data = cursor.fetchone()
-
-        if not data:
+        if not student:
 
             flash(
                 "Student not found!",
@@ -908,28 +558,275 @@ def delete_student(id):
                 url_for("students.index")
             )
 
-        old_photo = data[0]
+        if request.method == "POST":
 
-        # ---------------------------------------------
-        # DELETE DATABASE RECORD
-        # ---------------------------------------------
+            student_id = request.form.get(
+                "student_id",
+                ""
+            ).strip()
+
+            full_name = request.form.get(
+                "full_name",
+                ""
+            ).strip()
+
+            email = request.form.get(
+                "email",
+                ""
+            ).strip()
+
+            phone = request.form.get(
+                "phone",
+                ""
+            ).strip()
+
+            department = request.form.get(
+                "department",
+                ""
+            ).strip()
+
+            semester = request.form.get(
+                "semester",
+                ""
+            ).strip()
+
+            section = request.form.get(
+                "section",
+                ""
+            ).strip()
+
+            email = email if email else None
+            phone = phone if phone else None
+            section = section if section else None
+
+            if not student_id or not full_name:
+
+                flash(
+                    "Student ID and Full Name are required.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "students.edit_student",
+                        id=id
+                    )
+                )
+
+            # ------------------------------------------------
+            # DUPLICATE STUDENT ID
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                SELECT id
+                FROM students
+                WHERE student_id = %s
+                  AND id <> %s
+                LIMIT 1
+                """,
+                (
+                    student_id,
+                    id
+                )
+            )
+
+            if cursor.fetchone():
+
+                flash(
+                    "Student ID already exists!",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "students.edit_student",
+                        id=id
+                    )
+                )
+
+            # ------------------------------------------------
+            # DUPLICATE EMAIL
+            # ------------------------------------------------
+
+            if email:
+
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM students
+                    WHERE email = %s
+                      AND id <> %s
+                    LIMIT 1
+                    """,
+                    (
+                        email,
+                        id
+                    )
+                )
+
+                if cursor.fetchone():
+
+                    flash(
+                        "Email already exists!",
+                        "danger"
+                    )
+
+                    return redirect(
+                        url_for(
+                            "students.edit_student",
+                            id=id
+                        )
+                    )
+
+            old_photo = student[9]
+
+            photo_name = old_photo
+            new_photo = None
+
+            photo = request.files.get(
+                "photo"
+            )
+
+            if photo and photo.filename:
+
+                new_photo = save_student_photo(
+                    photo
+                )
+
+                photo_name = new_photo
+
+            # ------------------------------------------------
+            # UPDATE
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
+                UPDATE students
+                SET
+                    student_id = %s,
+                    full_name = %s,
+                    email = %s,
+                    phone = %s,
+                    department = %s,
+                    semester = %s,
+                    section = %s,
+                    photo = %s
+                WHERE id = %s
+                """,
+                (
+                    student_id,
+                    full_name,
+                    email,
+                    phone,
+                    department,
+                    semester,
+                    section,
+                    photo_name,
+                    id
+                )
+            )
+
+            mysql.connection.commit()
+
+            if new_photo and old_photo:
+                delete_photo_file(
+                    old_photo
+                )
+
+            flash(
+                "Student updated successfully!",
+                "success"
+            )
+
+            return redirect(
+                url_for("students.index")
+            )
+
+        return render_template(
+            "admin/edit_student.html",
+            student=student
+        )
+
+    except Exception as e:
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        flash(
+            f"Error updating student: {e}",
+            "danger"
+        )
+
+        return redirect(
+            url_for("students.index")
+        )
+
+    finally:
+
+        cursor.close()
+
+
+# ============================================================
+# DELETE STUDENT
+# ============================================================
+
+@students.route(
+    "/delete/<int:id>",
+    methods=["POST", "GET"]
+)
+def delete_student(id):
+
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT photo
+            FROM students
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (id,)
+        )
+
+        student = cursor.fetchone()
+
+        if not student:
+
+            flash(
+                "Student not found!",
+                "danger"
+            )
+
+            return redirect(
+                url_for("students.index")
+            )
+
+        old_photo = student[0]
 
         cursor.execute(
             """
             DELETE FROM students
-            WHERE id=%s
+            WHERE id = %s
             """,
             (id,)
         )
 
         mysql.connection.commit()
 
-        # ---------------------------------------------
-        # DELETE PHOTO AFTER DATABASE SUCCESS
-        # ---------------------------------------------
-
         if old_photo:
-            delete_photo_file(old_photo)
+            delete_photo_file(
+                old_photo
+            )
 
         flash(
             "Student deleted successfully!",
@@ -949,6 +846,7 @@ def delete_student(id):
         )
 
     finally:
+
         cursor.close()
 
     return redirect(
@@ -956,17 +854,123 @@ def delete_student(id):
     )
 
 
-# =========================================================
+# ============================================================
+# RESET STUDENT PASSWORD
+# ============================================================
+
+@students.route(
+    "/reset-password/<int:id>",
+    methods=["POST"]
+)
+def reset_student_password(id):
+
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
+
+    # --------------------------------------------------------
+    # DEFAULT TEMPORARY PASSWORD
+    # --------------------------------------------------------
+    # The student should change this after logging in.
+    temporary_password = "student123"
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        # ----------------------------------------------------
+        # CHECK STUDENT
+        # ----------------------------------------------------
+        cursor.execute(
+            """
+            SELECT
+                id,
+                student_id,
+                full_name
+            FROM students
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (id,)
+        )
+
+        student = cursor.fetchone()
+
+        if not student:
+
+            flash(
+                "Student not found!",
+                "danger"
+            )
+
+            return redirect(
+                url_for("students.index")
+            )
+
+        # ----------------------------------------------------
+        # HASH TEMPORARY PASSWORD
+        # ----------------------------------------------------
+        password_hash = generate_password_hash(
+            temporary_password
+        )
+
+        # ----------------------------------------------------
+        # UPDATE PASSWORD
+        # ----------------------------------------------------
+        cursor.execute(
+            """
+            UPDATE students
+            SET password = %s
+            WHERE id = %s
+            """,
+            (
+                password_hash,
+                id
+            )
+        )
+
+        mysql.connection.commit()
+
+        flash(
+            f"Password reset successfully for {student[2]}. Temporary password: {temporary_password}",
+            "success"
+        )
+
+    except Exception as e:
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        flash(
+            f"Unable to reset student password: {e}",
+            "danger"
+        )
+
+    finally:
+
+        cursor.close()
+
+    return redirect(
+        url_for("students.index")
+    )
+
+
+# ============================================================
 # REGISTER FACE
-# =========================================================
+# ============================================================
 
 @students.route(
     "/register-face/<int:student_id>"
 )
 def register_face(student_id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     return redirect(
         url_for(
@@ -976,17 +980,19 @@ def register_face(student_id):
     )
 
 
-# =========================================================
-# GENERATE QR CODE
-# =========================================================
+# ============================================================
+# GENERATE QR
+# ============================================================
 
 @students.route(
     "/generate-qr/<int:id>"
 )
 def generate_student_qr(id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     cursor = mysql.connection.cursor()
 
@@ -996,7 +1002,7 @@ def generate_student_qr(id):
             """
             SELECT student_id
             FROM students
-            WHERE id=%s
+            WHERE id = %s
             LIMIT 1
             """,
             (id,)
@@ -1005,6 +1011,7 @@ def generate_student_qr(id):
         student = cursor.fetchone()
 
     finally:
+
         cursor.close()
 
     if not student:
@@ -1018,14 +1025,16 @@ def generate_student_qr(id):
             url_for("students.index")
         )
 
-    student_id = student[0]
+    student_code = student[0]
 
     try:
 
-        generate_qr(student_id)
+        generate_qr(
+            student_code
+        )
 
         flash(
-            f"QR Code generated successfully for {student_id}.",
+            f"QR Code generated successfully for {student_code}.",
             "success"
         )
 
@@ -1041,24 +1050,28 @@ def generate_student_qr(id):
     )
 
 
-# =========================================================
-# VIEW QR CODE
-# =========================================================
+# ============================================================
+# VIEW QR
+# ============================================================
 
 @students.route(
     "/view-qr/<student_id>"
 )
 def view_qr(student_id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     qr_folder = os.path.join(
         "static",
         "qr_codes"
     )
 
-    qr_file = f"{student_id}.png"
+    qr_file = (
+        f"{student_id}.png"
+    )
 
     qr_path = os.path.join(
         qr_folder,
@@ -1082,9 +1095,9 @@ def view_qr(student_id):
     )
 
 
-# =========================================================
-# CHANGE STUDENT PHOTO
-# =========================================================
+# ============================================================
+# CHANGE PHOTO
+# ============================================================
 
 @students.route(
     "/change-photo/<int:id>",
@@ -1092,8 +1105,10 @@ def view_qr(student_id):
 )
 def change_photo(id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     cursor = mysql.connection.cursor()
 
@@ -1103,7 +1118,7 @@ def change_photo(id):
             """
             SELECT photo
             FROM students
-            WHERE id=%s
+            WHERE id = %s
             LIMIT 1
             """,
             (id,)
@@ -1124,13 +1139,11 @@ def change_photo(id):
 
         old_photo = student[0]
 
-        # ---------------------------------------------
-        # POST
-        # ---------------------------------------------
-
         if request.method == "POST":
 
-            photo = request.files.get("photo")
+            photo = request.files.get(
+                "photo"
+            )
 
             if not photo or not photo.filename:
 
@@ -1146,33 +1159,17 @@ def change_photo(id):
                     )
                 )
 
-            try:
-
-                new_photo = save_student_photo(
-                    photo
-                )
-
-            except ValueError as e:
-
-                flash(
-                    str(e),
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "students.change_photo",
-                        id=id
-                    )
-                )
+            new_photo = save_student_photo(
+                photo
+            )
 
             try:
 
                 cursor.execute(
                     """
                     UPDATE students
-                    SET photo=%s
-                    WHERE id=%s
+                    SET photo = %s
+                    WHERE id = %s
                     """,
                     (
                         new_photo,
@@ -1189,13 +1186,16 @@ def change_photo(id):
                 except Exception:
                     pass
 
-                delete_photo_file(new_photo)
+                delete_photo_file(
+                    new_photo
+                )
 
                 raise
 
-            # Delete old photo only after successful DB update
             if old_photo:
-                delete_photo_file(old_photo)
+                delete_photo_file(
+                    old_photo
+                )
 
             flash(
                 "Profile photo updated successfully.",
@@ -1205,10 +1205,6 @@ def change_photo(id):
             return redirect(
                 url_for("students.index")
             )
-
-        # ---------------------------------------------
-        # GET
-        # ---------------------------------------------
 
         return render_template(
             "admin/change_photo.html",
@@ -1228,20 +1224,23 @@ def change_photo(id):
         )
 
     finally:
+
         cursor.close()
 
 
-# =========================================================
-# REMOVE STUDENT PHOTO
-# =========================================================
+# ============================================================
+# REMOVE PHOTO
+# ============================================================
 
 @students.route(
     "/remove-photo/<int:id>"
 )
 def remove_photo(id):
 
-    if "admin_id" not in session:
-        return redirect(url_for("auth.login"))
+    if not admin_required():
+        return redirect(
+            url_for("auth.login")
+        )
 
     cursor = mysql.connection.cursor()
 
@@ -1251,7 +1250,7 @@ def remove_photo(id):
             """
             SELECT photo
             FROM students
-            WHERE id=%s
+            WHERE id = %s
             LIMIT 1
             """,
             (id,)
@@ -1277,15 +1276,17 @@ def remove_photo(id):
             cursor.execute(
                 """
                 UPDATE students
-                SET photo=NULL
-                WHERE id=%s
+                SET photo = NULL
+                WHERE id = %s
                 """,
                 (id,)
             )
 
             mysql.connection.commit()
 
-            delete_photo_file(old_photo)
+            delete_photo_file(
+                old_photo
+            )
 
             flash(
                 "Profile photo removed successfully.",
@@ -1312,6 +1313,7 @@ def remove_photo(id):
         )
 
     finally:
+
         cursor.close()
 
     return redirect(

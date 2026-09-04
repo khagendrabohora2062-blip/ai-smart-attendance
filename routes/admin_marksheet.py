@@ -1,4 +1,3 @@
-
 from flask import (
     Blueprint,
     render_template,
@@ -6,9 +5,20 @@ from flask import (
     url_for,
     flash,
     session,
-    current_app,
-    request
+    request,
+    send_from_directory
 )
+
+from extensions import mysql
+from werkzeug.utils import secure_filename
+
+import os
+import uuid
+
+
+# ============================================================
+# BLUEPRINT
+# ============================================================
 
 admin_marksheet = Blueprint(
     "admin_marksheet",
@@ -18,34 +28,40 @@ admin_marksheet = Blueprint(
 
 
 # ============================================================
-# MYSQL CONNECTION
+# MARKSHEET UPLOAD FOLDER
 # ============================================================
 
-def get_mysql():
-    mysql = current_app.extensions.get("mysql")
+MARKSHEET_UPLOAD_FOLDER = os.path.join(
+    "static",
+    "uploads",
+    "marksheets"
+)
 
-    if mysql is not None:
-        return mysql
-
-    try:
-        from app import mysql as app_mysql
-
-        if app_mysql is not None:
-            return app_mysql
-
-    except Exception as e:
-        print("ADMIN MARKSHEET MYSQL ERROR:", repr(e))
-
-    raise RuntimeError(
-        "MySQL connection is not initialized."
-    )
+os.makedirs(
+    MARKSHEET_UPLOAD_FOLDER,
+    exist_ok=True
+)
 
 
 # ============================================================
-# ADMIN LOGIN CHECK
+# ALLOWED FILE EXTENSIONS
+# ============================================================
+
+ALLOWED_MARKSHEET_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".pdf"
+}
+
+
+# ============================================================
+# ADMIN CHECK
 # ============================================================
 
 def admin_required():
+
     return bool(
         session.get("admin_id")
         or session.get("admin_logged_in")
@@ -54,38 +70,105 @@ def admin_required():
 
 
 # ============================================================
-# GRADE CALCULATION
+# SAVE MARKSHEET FILE
 # ============================================================
 
-def calculate_grade(total_marks, full_marks):
+def save_marksheet_file(file):
 
-    if full_marks <= 0:
-        return "F", 0.00
+    if not file or not file.filename:
+        raise ValueError(
+            "Please select a marksheet file."
+        )
 
-    percentage = (
-        float(total_marks) / float(full_marks)
-    ) * 100
+    original_name = secure_filename(
+        file.filename
+    )
 
-    if percentage >= 90:
-        return "A+", 4.00
+    extension = os.path.splitext(
+        original_name
+    )[1].lower()
 
-    elif percentage >= 80:
-        return "A", 3.60
+    if extension not in ALLOWED_MARKSHEET_EXTENSIONS:
+        raise ValueError(
+            "Only JPG, JPEG, PNG, WEBP and PDF files are allowed."
+        )
 
-    elif percentage >= 70:
-        return "B+", 3.20
+    new_filename = (
+        uuid.uuid4().hex
+        + extension
+    )
 
-    elif percentage >= 60:
-        return "B", 2.80
+    file_path = os.path.join(
+        MARKSHEET_UPLOAD_FOLDER,
+        new_filename
+    )
 
-    elif percentage >= 50:
-        return "C+", 2.40
+    file.save(file_path)
 
-    elif percentage >= 40:
-        return "C", 2.00
+    return new_filename
 
-    else:
-        return "F", 0.00
+
+# ============================================================
+# DELETE MARKSHEET FILE
+# ============================================================
+
+def delete_marksheet_file(filename):
+
+    if not filename:
+        return
+
+    file_path = os.path.join(
+        MARKSHEET_UPLOAD_FOLDER,
+        filename
+    )
+
+    try:
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    except OSError as e:
+
+        print(
+            "MARKSHEET FILE DELETE ERROR:",
+            repr(e)
+        )
+
+
+# ============================================================
+# GENERATE INTEGER ID
+# ============================================================
+
+def generate_marksheet_id(cursor):
+
+    """
+    Generates a unique integer ID.
+
+    This works even if marksheets.id
+    is NOT AUTO_INCREMENT.
+    """
+
+    while True:
+
+        new_id = uuid.uuid4().int % 2147483647
+
+        if new_id <= 0:
+            continue
+
+        cursor.execute(
+            """
+            SELECT id
+            FROM marksheets
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (new_id,)
+        )
+
+        existing = cursor.fetchone()
+
+        if not existing:
+            return new_id
 
 
 # ============================================================
@@ -96,81 +179,59 @@ def calculate_grade(total_marks, full_marks):
 def index():
 
     if not admin_required():
+
         flash(
             "Please login as administrator.",
             "warning"
         )
 
         return redirect(
-            url_for("admin_auth.login")
+            url_for("auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
-        cursor.execute("""
+        # ----------------------------------------------------
+        # IMPORTANT
+        #
+        # NO subject_id
+        # NO theory marks
+        # NO practical marks
+        # NO full marks
+        # NO pass marks
+        # NO grade
+        # NO created_at
+        # NO updated_at
+        #
+        # Only new marksheets table fields are used.
+        # ----------------------------------------------------
+
+        cursor.execute(
+            """
             SELECT
                 m.id,
+                m.student_id,
                 s.student_id,
                 s.full_name,
                 s.department,
                 s.semester,
-
-                sub.subject_code,
-                sub.subject_name,
-                sub.theory_full_marks,
-                sub.practical_full_marks,
-                sub.full_marks,
-                sub.pass_marks,
-
-                m.theory_marks,
-                m.practical_marks,
-                m.total_marks,
-                m.grade,
-                m.grade_point,
-                m.remarks,
-                m.created_at,
-                m.updated_at
-
+                m.marksheet_file,
+                m.created_at
             FROM marksheets m
 
             INNER JOIN students s
                 ON s.id = m.student_id
 
-            INNER JOIN subjects sub
-                ON sub.id = m.subject_id
-
             ORDER BY
-                s.full_name ASC,
-                sub.subject_name ASC
-        """)
+                s.semester ASC,
+                s.department ASC,
+                s.full_name ASC
+            """
+        )
 
-        raw_marksheets = cursor.fetchall()
-
-        marksheets = []
-
-        for mark in raw_marksheets:
-
-            mark = list(mark)
-
-            # SUBJECT FULL MARKS
-            mark[7] = float(mark[7] or 0)
-            mark[8] = float(mark[8] or 0)
-            mark[9] = float(mark[9] or 0)
-            mark[10] = float(mark[10] or 0)
-
-            # STUDENT MARKS
-            mark[11] = float(mark[11] or 0)
-            mark[12] = float(mark[12] or 0)
-            mark[13] = float(mark[13] or 0)
-
-            # GRADE POINT
-            if mark[15] is not None:
-                mark[15] = float(mark[15])
-
-            marksheets.append(tuple(mark))
+        marksheets = cursor.fetchall()
 
         return render_template(
             "admin/marksheets/index.html",
@@ -180,9 +241,14 @@ def index():
     except Exception as e:
 
         print(
-            "ADMIN MARKSHEET INDEX ERROR:",
+            "MARKSHEET LIST ERROR:",
             repr(e)
         )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         flash(
             f"Unable to load marksheets: {str(e)}",
@@ -194,11 +260,12 @@ def index():
         )
 
     finally:
+
         cursor.close()
 
 
 # ============================================================
-# ADD MARKS
+# ADD / UPLOAD MARKSHEET
 # ============================================================
 
 @admin_marksheet.route(
@@ -215,11 +282,12 @@ def add():
         )
 
         return redirect(
-            url_for("admin_auth.login")
+            url_for("auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
+
+    uploaded_file_name = None
 
     try:
 
@@ -229,51 +297,34 @@ def add():
 
         if request.method == "POST":
 
-            student_id = request.form.get(
+            student_db_id = request.form.get(
                 "student_id",
                 ""
             ).strip()
 
-            subject_id = request.form.get(
-                "subject_id",
-                ""
-            ).strip()
-
-            theory_marks = request.form.get(
-                "theory_marks",
-                "0"
-            ).strip()
-
-            practical_marks = request.form.get(
-                "practical_marks",
-                "0"
-            ).strip()
-
-            remarks = request.form.get(
-                "remarks",
-                ""
-            ).strip()
-
             # ------------------------------------------------
-            # REQUIRED
+            # VALIDATE STUDENT
             # ------------------------------------------------
 
-            if not student_id or not subject_id:
+            if not student_db_id:
 
                 flash(
-                    "Student and subject are required.",
+                    "Please select a student.",
                     "danger"
                 )
 
                 return redirect(
-                    url_for("admin_marksheet.add")
+                    url_for(
+                        "admin_marksheet.add"
+                    )
                 )
 
             # ------------------------------------------------
             # CHECK STUDENT
             # ------------------------------------------------
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     id,
                     student_id,
@@ -283,7 +334,9 @@ def add():
                 FROM students
                 WHERE id = %s
                 LIMIT 1
-            """, (student_id,))
+                """,
+                (student_db_id,)
+            )
 
             student = cursor.fetchone()
 
@@ -295,349 +348,140 @@ def add():
                 )
 
                 return redirect(
-                    url_for("admin_marksheet.add")
+                    url_for(
+                        "admin_marksheet.add"
+                    )
                 )
 
             # ------------------------------------------------
-            # GET SUBJECT CONFIGURATION
+            # GET FILE
             # ------------------------------------------------
 
-            cursor.execute("""
+            marksheet_file = request.files.get(
+                "marksheet_file"
+            )
+
+            if (
+                not marksheet_file
+                or not marksheet_file.filename
+            ):
+
+                flash(
+                    "Please upload the marksheet.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "admin_marksheet.add"
+                    )
+                )
+
+            # ------------------------------------------------
+            # CHECK EXISTING MARKSHEET
+            #
+            # ONE MARKSHEET PER STUDENT
+            # ------------------------------------------------
+
+            cursor.execute(
+                """
                 SELECT
-                    id,
-                    subject_code,
-                    subject_name,
-                    theory_full_marks,
-                    practical_full_marks,
-                    full_marks,
-                    pass_marks
-                FROM subjects
-                WHERE id = %s
-                LIMIT 1
-            """, (subject_id,))
-
-            subject = cursor.fetchone()
-
-            if not subject:
-
-                flash(
-                    "Selected subject was not found.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # SUBJECT CONFIG
-            # ------------------------------------------------
-
-            theory_full = float(
-                subject[3] or 0
-            )
-
-            practical_full = float(
-                subject[4] or 0
-            )
-
-            total_full = (
-                theory_full +
-                practical_full
-            )
-
-            pass_mark = float(
-                subject[6] or 0
-            )
-
-            # ------------------------------------------------
-            # VALIDATE CONFIGURATION
-            # ------------------------------------------------
-
-            if theory_full < 0:
-
-                flash(
-                    "Theory full marks cannot be negative.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            if practical_full < 0:
-
-                flash(
-                    "Practical full marks cannot be negative.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            if total_full <= 0:
-
-                flash(
-                    "Subject total full marks must be greater than 0.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            if pass_mark < 0 or pass_mark > total_full:
-
-                flash(
-                    f"Pass marks must be between 0 and {total_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # MARK CONVERSION
-            # ------------------------------------------------
-
-            try:
-
-                theory = float(
-                    theory_marks or 0
-                )
-
-                practical = float(
-                    practical_marks or 0
-                )
-
-            except ValueError:
-
-                flash(
-                    "Student marks must be valid numbers.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # THEORY VALIDATION
-            # ------------------------------------------------
-
-            if theory < 0:
-
-                flash(
-                    "Theory marks cannot be negative.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            if theory > theory_full:
-
-                flash(
-                    f"Theory marks cannot exceed {theory_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # PRACTICAL VALIDATION
-            # ------------------------------------------------
-
-            if practical < 0:
-
-                flash(
-                    "Practical marks cannot be negative.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            if practical > practical_full:
-
-                flash(
-                    f"Practical marks cannot exceed {practical_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # TOTAL
-            # ------------------------------------------------
-
-            total = theory + practical
-
-            if total > total_full:
-
-                flash(
-                    f"Total marks cannot exceed {total_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for("admin_marksheet.add")
-                )
-
-            # ------------------------------------------------
-            # GRADE
-            # ------------------------------------------------
-
-            grade, grade_point = calculate_grade(
-                total,
-                total_full
-            )
-
-            # ------------------------------------------------
-            # PASS / FAIL
-            # ------------------------------------------------
-
-            if total >= pass_mark:
-                result_status = "Pass"
-            else:
-                result_status = "Fail"
-
-            # ------------------------------------------------
-            # DUPLICATE CHECK
-            # ------------------------------------------------
-
-            cursor.execute("""
-                SELECT id
+                    id
                 FROM marksheets
                 WHERE student_id = %s
-                  AND subject_id = %s
                 LIMIT 1
-            """, (
-                student_id,
-                subject_id
-            ))
+                """,
+                (student_db_id,)
+            )
 
             existing = cursor.fetchone()
 
             if existing:
 
                 flash(
-                    "Marks for this student and subject already exist.",
+                    "A marksheet already exists for this student. "
+                    "Please use Edit/Replace.",
                     "warning"
                 )
 
                 return redirect(
-                    url_for("admin_marksheet.add")
+                    url_for(
+                        "admin_marksheet.add"
+                    )
                 )
 
-            # =================================================
-            # IMPORTANT:
-            # marksheets.id HAS NO AUTO_INCREMENT
-            #
-            # So manually generate next ID.
-            # =================================================
+            # ------------------------------------------------
+            # SAVE FILE
+            # ------------------------------------------------
 
-            cursor.execute("""
-                SELECT COALESCE(MAX(id), 0) + 1
-                FROM marksheets
-            """)
+            uploaded_file_name = save_marksheet_file(
+                marksheet_file
+            )
 
-            next_id_result = cursor.fetchone()
+            # ------------------------------------------------
+            # GENERATE ID
+            # ------------------------------------------------
 
-            next_id = int(
-                next_id_result[0]
+            new_marksheet_id = generate_marksheet_id(
+                cursor
             )
 
             # ------------------------------------------------
             # INSERT
+            #
+            # IMPORTANT:
+            #
+            # ONLY:
+            # id
+            # student_id
+            # marksheet_file
+            #
+            # NOTHING ELSE
             # ------------------------------------------------
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO marksheets
                 (
                     id,
                     student_id,
-                    subject_id,
-
-                    internal_theory_marks,
-                    internal_practical_marks,
-                    external_theory_marks,
-                    external_practical_marks,
-
-                    theory_marks,
-                    practical_marks,
-                    total_marks,
-                    grade,
-                    grade_point,
-                    remarks
+                    marksheet_file
                 )
                 VALUES
                 (
                     %s,
                     %s,
-                    %s,
-
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
                     %s
                 )
-            """, (
-
-                next_id,
-
-                student_id,
-                subject_id,
-
-                # Existing internal/external columns
-                # are kept at 0 because this form uses
-                # combined theory/practical marks.
-
-                0,
-                0,
-                0,
-                0,
-
-                theory,
-                practical,
-                total,
-                grade,
-                grade_point,
-
-                remarks if remarks else result_status
-            ))
+                """,
+                (
+                    new_marksheet_id,
+                    student_db_id,
+                    uploaded_file_name
+                )
+            )
 
             mysql.connection.commit()
 
+            uploaded_file_name = None
+
             flash(
-                "Student marks added successfully.",
+                "Marksheet uploaded successfully!",
                 "success"
             )
 
             return redirect(
-                url_for("admin_marksheet.index")
+                url_for(
+                    "admin_marksheet.index"
+                )
             )
 
         # ====================================================
-        # GET - STUDENTS
+        # GET STUDENTS
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 student_id,
@@ -649,64 +493,203 @@ def add():
                 semester ASC,
                 department ASC,
                 full_name ASC
-        """)
+            """
+        )
 
         students = cursor.fetchall()
 
-        # ====================================================
-        # GET - SUBJECTS
-        # ====================================================
-
-        cursor.execute("""
-            SELECT
-                id,
-                subject_code,
-                subject_name,
-                semester,
-                department,
-                theory_full_marks,
-                practical_full_marks,
-                full_marks,
-                pass_marks
-            FROM subjects
-            ORDER BY
-                semester ASC,
-                department ASC,
-                subject_name ASC
-        """)
-
-        subjects = cursor.fetchall()
-
         return render_template(
             "admin/marksheets/add.html",
-            students=students,
-            subjects=subjects
+            students=students
         )
 
-    except Exception as e:
+    except ValueError as e:
 
-        mysql.connection.rollback()
+        if uploaded_file_name:
 
-        print(
-            "ADMIN MARKSHEET ADD ERROR:",
-            repr(e)
-        )
+            delete_marksheet_file(
+                uploaded_file_name
+            )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         flash(
-            f"Unable to add marks: {str(e)}",
+            str(e),
             "danger"
         )
 
         return redirect(
-            url_for("admin_marksheet.index")
+            url_for(
+                "admin_marksheet.add"
+            )
+        )
+
+    except Exception as e:
+
+        if uploaded_file_name:
+
+            delete_marksheet_file(
+                uploaded_file_name
+            )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        print(
+            "MARKSHEET UPLOAD ERROR:",
+            repr(e)
+        )
+
+        flash(
+            f"Unable to upload marksheet: {str(e)}",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.add"
+            )
         )
 
     finally:
+
         cursor.close()
 
 
 # ============================================================
-# EDIT MARKS
+# VIEW MARKSHEET
+# ============================================================
+
+@admin_marksheet.route(
+    "/view/<int:marksheet_id>"
+)
+def view(marksheet_id):
+
+    if not admin_required():
+
+        flash(
+            "Please login as administrator.",
+            "warning"
+        )
+
+        return redirect(
+            url_for("auth.login")
+        )
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                marksheet_file
+            FROM marksheets
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (marksheet_id,)
+        )
+
+        data = cursor.fetchone()
+
+    except Exception as e:
+
+        print(
+            "VIEW MARKSHEET ERROR:",
+            repr(e)
+        )
+
+        flash(
+            f"Unable to open marksheet: {str(e)}",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.index"
+            )
+        )
+
+    finally:
+
+        cursor.close()
+
+    # --------------------------------------------------------
+    # CHECK DATABASE RECORD
+    # --------------------------------------------------------
+
+    if not data:
+
+        flash(
+            "Marksheet not found.",
+            "warning"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.index"
+            )
+        )
+
+    filename = data[0]
+
+    # --------------------------------------------------------
+    # CHECK FILE NAME
+    # --------------------------------------------------------
+
+    if not filename:
+
+        flash(
+            "Marksheet file is missing.",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.index"
+            )
+        )
+
+    # --------------------------------------------------------
+    # CHECK FILE EXISTS
+    # --------------------------------------------------------
+
+    file_path = os.path.join(
+        MARKSHEET_UPLOAD_FOLDER,
+        filename
+    )
+
+    if not os.path.exists(file_path):
+
+        flash(
+            "Marksheet file was not found on the server.",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.index"
+            )
+        )
+
+    # --------------------------------------------------------
+    # SEND FILE
+    # --------------------------------------------------------
+
+    return send_from_directory(
+        MARKSHEET_UPLOAD_FOLDER,
+        filename
+    )
+
+
+# ============================================================
+# EDIT / REPLACE MARKSHEET
 # ============================================================
 
 @admin_marksheet.route(
@@ -723,11 +706,13 @@ def edit(marksheet_id):
         )
 
         return redirect(
-            url_for("admin_auth.login")
+            url_for("auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
+
+    old_file = None
+    new_file = None
 
     try:
 
@@ -735,118 +720,62 @@ def edit(marksheet_id):
         # GET CURRENT MARKSHEET
         # ====================================================
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
-
                 m.id,
                 m.student_id,
-                m.subject_id,
-
+                m.marksheet_file,
                 s.student_id,
                 s.full_name,
                 s.department,
-                s.semester,
-
-                sub.subject_code,
-                sub.subject_name,
-                sub.theory_full_marks,
-                sub.practical_full_marks,
-                sub.full_marks,
-                sub.pass_marks,
-
-                m.theory_marks,
-                m.practical_marks,
-                m.total_marks,
-                m.grade,
-                m.grade_point,
-                m.remarks
-
+                s.semester
             FROM marksheets m
 
             INNER JOIN students s
                 ON s.id = m.student_id
 
-            INNER JOIN subjects sub
-                ON sub.id = m.subject_id
-
             WHERE m.id = %s
 
             LIMIT 1
-        """, (marksheet_id,))
+            """,
+            (marksheet_id,)
+        )
 
         marksheet = cursor.fetchone()
 
         if not marksheet:
 
             flash(
-                "Marksheet record not found.",
+                "Marksheet not found.",
                 "warning"
             )
 
             return redirect(
-                url_for("admin_marksheet.index")
+                url_for(
+                    "admin_marksheet.index"
+                )
             )
 
+        old_file = marksheet[2]
+
         # ====================================================
-        # POST
+        # POST - REPLACE FILE
         # ====================================================
 
         if request.method == "POST":
 
-            theory_marks = request.form.get(
-                "theory_marks",
-                "0"
-            ).strip()
-
-            practical_marks = request.form.get(
-                "practical_marks",
-                "0"
-            ).strip()
-
-            remarks = request.form.get(
-                "remarks",
-                ""
-            ).strip()
-
-            # ------------------------------------------------
-            # SUBJECT CONFIG
-            # ------------------------------------------------
-
-            theory_full = float(
-                marksheet[9] or 0
+            marksheet_file = request.files.get(
+                "marksheet_file"
             )
 
-            practical_full = float(
-                marksheet[10] or 0
-            )
-
-            total_full = (
-                theory_full +
-                practical_full
-            )
-
-            pass_mark = float(
-                marksheet[12] or 0
-            )
-
-            # ------------------------------------------------
-            # CONVERT
-            # ------------------------------------------------
-
-            try:
-
-                theory = float(
-                    theory_marks or 0
-                )
-
-                practical = float(
-                    practical_marks or 0
-                )
-
-            except ValueError:
+            if (
+                not marksheet_file
+                or not marksheet_file.filename
+            ):
 
                 flash(
-                    "Marks must be valid numbers.",
+                    "Please select a new marksheet file.",
                     "danger"
                 )
 
@@ -858,121 +787,63 @@ def edit(marksheet_id):
                 )
 
             # ------------------------------------------------
-            # THEORY
+            # SAVE NEW FILE
             # ------------------------------------------------
 
-            if theory < 0 or theory > theory_full:
-
-                flash(
-                    f"Theory marks must be between 0 and {theory_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "admin_marksheet.edit",
-                        marksheet_id=marksheet_id
-                    )
-                )
-
-            # ------------------------------------------------
-            # PRACTICAL
-            # ------------------------------------------------
-
-            if practical < 0 or practical > practical_full:
-
-                flash(
-                    f"Practical marks must be between 0 and {practical_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "admin_marksheet.edit",
-                        marksheet_id=marksheet_id
-                    )
-                )
-
-            # ------------------------------------------------
-            # TOTAL
-            # ------------------------------------------------
-
-            total = theory + practical
-
-            if total > total_full:
-
-                flash(
-                    f"Total marks cannot exceed {total_full:g}.",
-                    "danger"
-                )
-
-                return redirect(
-                    url_for(
-                        "admin_marksheet.edit",
-                        marksheet_id=marksheet_id
-                    )
-                )
-
-            # ------------------------------------------------
-            # GRADE
-            # ------------------------------------------------
-
-            grade, grade_point = calculate_grade(
-                total,
-                total_full
+            new_file = save_marksheet_file(
+                marksheet_file
             )
 
             # ------------------------------------------------
-            # PASS / FAIL
+            # UPDATE DATABASE
+            #
+            # Student remains same.
+            # Only file changes.
             # ------------------------------------------------
 
-            if total >= pass_mark:
-                result_status = "Pass"
-            else:
-                result_status = "Fail"
-
-            # ------------------------------------------------
-            # UPDATE
-            # ------------------------------------------------
-
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE marksheets
-
                 SET
-                    theory_marks = %s,
-                    practical_marks = %s,
-                    total_marks = %s,
-                    grade = %s,
-                    grade_point = %s,
-                    remarks = %s
-
+                    marksheet_file = %s
                 WHERE id = %s
-            """, (
-
-                theory,
-                practical,
-                total,
-                grade,
-                grade_point,
-
-                remarks if remarks else result_status,
-
-                marksheet_id
-            ))
+                """,
+                (
+                    new_file,
+                    marksheet_id
+                )
+            )
 
             mysql.connection.commit()
 
+            # ------------------------------------------------
+            # DELETE OLD FILE
+            # ------------------------------------------------
+
+            if (
+                old_file
+                and old_file != new_file
+            ):
+
+                delete_marksheet_file(
+                    old_file
+                )
+
+            new_file = None
+
             flash(
-                "Student marks updated successfully.",
+                "Marksheet replaced successfully!",
                 "success"
             )
 
             return redirect(
-                url_for("admin_marksheet.index")
+                url_for(
+                    "admin_marksheet.index"
+                )
             )
 
         # ====================================================
-        # GET PAGE
+        # GET EDIT PAGE
         # ====================================================
 
         return render_template(
@@ -980,35 +851,73 @@ def edit(marksheet_id):
             marksheet=marksheet
         )
 
-    except Exception as e:
+    except ValueError as e:
 
-        mysql.connection.rollback()
+        if new_file:
 
-        print(
-            "ADMIN MARKSHEET EDIT ERROR:",
-            repr(e)
-        )
+            delete_marksheet_file(
+                new_file
+            )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         flash(
-            f"Unable to edit marks: {str(e)}",
+            str(e),
             "danger"
         )
 
         return redirect(
-            url_for("admin_marksheet.index")
+            url_for(
+                "admin_marksheet.edit",
+                marksheet_id=marksheet_id
+            )
+        )
+
+    except Exception as e:
+
+        if new_file:
+
+            delete_marksheet_file(
+                new_file
+            )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        print(
+            "EDIT MARKSHEET ERROR:",
+            repr(e)
+        )
+
+        flash(
+            f"Unable to replace marksheet: {str(e)}",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "admin_marksheet.edit",
+                marksheet_id=marksheet_id
+            )
         )
 
     finally:
+
         cursor.close()
 
 
 # ============================================================
-# DELETE MARKS
+# DELETE MARKSHEET
 # ============================================================
 
 @admin_marksheet.route(
     "/delete/<int:marksheet_id>",
-    methods=["POST"]
+    methods=["POST", "GET"]
 )
 def delete(marksheet_id):
 
@@ -1020,57 +929,97 @@ def delete(marksheet_id):
         )
 
         return redirect(
-            url_for("admin_auth.login")
+            url_for("auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
-        cursor.execute("""
-            DELETE FROM marksheets
+        # ====================================================
+        # GET FILE
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                marksheet_file
+            FROM marksheets
             WHERE id = %s
-        """, (marksheet_id,))
+            LIMIT 1
+            """,
+            (marksheet_id,)
+        )
 
-        mysql.connection.commit()
+        data = cursor.fetchone()
 
-        if cursor.rowcount > 0:
-
-            flash(
-                "Marks deleted successfully.",
-                "success"
-            )
-
-        else:
+        if not data:
 
             flash(
-                "Marksheet record was not found.",
+                "Marksheet not found.",
                 "warning"
             )
 
-        return redirect(
-            url_for("admin_marksheet.index")
+            return redirect(
+                url_for(
+                    "admin_marksheet.index"
+                )
+            )
+
+        filename = data[0]
+
+        # ====================================================
+        # DELETE DATABASE RECORD
+        # ====================================================
+
+        cursor.execute(
+            """
+            DELETE FROM marksheets
+            WHERE id = %s
+            """,
+            (marksheet_id,)
+        )
+
+        mysql.connection.commit()
+
+        # ====================================================
+        # DELETE PHYSICAL FILE
+        # ====================================================
+
+        if filename:
+
+            delete_marksheet_file(
+                filename
+            )
+
+        flash(
+            "Marksheet deleted successfully.",
+            "success"
         )
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
-            "ADMIN MARKSHEET DELETE ERROR:",
+            "DELETE MARKSHEET ERROR:",
             repr(e)
         )
 
         flash(
-            f"Unable to delete marks: {str(e)}",
+            f"Unable to delete marksheet: {str(e)}",
             "danger"
         )
 
-        return redirect(
-            url_for("admin_marksheet.index")
-        )
-
     finally:
+
         cursor.close()
 
+    return redirect(
+        url_for(
+            "admin_marksheet.index"
+        )
+    )

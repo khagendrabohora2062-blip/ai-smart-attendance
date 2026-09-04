@@ -32,24 +32,31 @@ student_auth = Blueprint(
 
 
 # =========================================================
-# SAFE NUMBER HELPER
+# SAFE FLOAT HELPER
 # =========================================================
 
 def safe_float(value, default=0.0):
-    """
-    Safely convert MySQL Decimal/int/float/string/None
-    into a real float.
-
-    This prevents errors such as:
-    'must be real number, not str'
-    """
 
     if value is None:
         return default
 
     try:
+
+        if isinstance(value, bytes):
+            value = value.decode(
+                "utf-8",
+                errors="ignore"
+            )
+
+        value = str(value).strip()
+
+        if value == "":
+            return default
+
         return float(value)
+
     except (TypeError, ValueError):
+
         return default
 
 
@@ -67,6 +74,7 @@ def get_current_student():
     cursor = mysql.connection.cursor()
 
     try:
+
         cursor.execute(
             """
             SELECT
@@ -86,15 +94,23 @@ def get_current_student():
             (student_db_id,)
         )
 
-        student = cursor.fetchone()
+        return cursor.fetchone()
 
-        return student
+    except Exception as e:
 
-    except Exception:
+        print(
+            "GET CURRENT STUDENT ERROR:",
+            repr(e)
+        )
+
         return None
 
     finally:
-        cursor.close()
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # =========================================================
@@ -112,8 +128,11 @@ def login():
     # -----------------------------------------------------
 
     if "student_db_id" in session:
+
         return redirect(
-            url_for("student_auth.dashboard")
+            url_for(
+                "student_auth.dashboard"
+            )
         )
 
     # -----------------------------------------------------
@@ -151,9 +170,9 @@ def login():
 
         try:
 
-            # -------------------------------------------------
+            # ---------------------------------------------
             # FIND STUDENT
-            # -------------------------------------------------
+            # ---------------------------------------------
 
             cursor.execute(
                 """
@@ -179,14 +198,15 @@ def login():
 
         except Exception as e:
 
-            mysql.connection.rollback()
+            try:
+                mysql.connection.rollback()
+            except Exception:
+                pass
 
             print(
                 "STUDENT LOGIN ERROR:",
                 repr(e)
             )
-
-            cursor.close()
 
             flash(
                 "Unable to process login. Please try again.",
@@ -317,6 +337,8 @@ def login():
 
         if stored_password == password:
 
+            cursor = None
+
             try:
 
                 new_hash = generate_password_hash(
@@ -339,16 +361,26 @@ def login():
 
                 mysql.connection.commit()
 
-                cursor.close()
-
             except Exception as e:
 
-                mysql.connection.rollback()
+                try:
+                    mysql.connection.rollback()
+                except Exception:
+                    pass
 
                 print(
                     "PASSWORD HASH UPGRADE ERROR:",
                     repr(e)
                 )
+
+            finally:
+
+                if cursor:
+
+                    try:
+                        cursor.close()
+                    except Exception:
+                        pass
 
         # -------------------------------------------------
         # LOGIN SUCCESS
@@ -383,10 +415,6 @@ def login():
     methods=["GET", "POST"]
 )
 def profile():
-
-    # -----------------------------------------------------
-    # LOGIN CHECK
-    # -----------------------------------------------------
 
     if "student_db_id" not in session:
 
@@ -633,7 +661,10 @@ def profile():
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT PROFILE ERROR:",
@@ -653,7 +684,10 @@ def profile():
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # =========================================================
@@ -664,10 +698,6 @@ def profile():
     "/dashboard"
 )
 def dashboard():
-
-    # -----------------------------------------------------
-    # LOGIN CHECK
-    # -----------------------------------------------------
 
     if "student_db_id" not in session:
 
@@ -804,7 +834,7 @@ def dashboard():
 
         else:
 
-            attendance_percentage = 0
+            attendance_percentage = 0.0
 
         # =================================================
         # TODAY ATTENDANCE
@@ -829,7 +859,6 @@ def dashboard():
                 ON ats.subject_id = s.id
 
             WHERE a.student_id = %s
-
             AND a.attendance_date = CURDATE()
 
             ORDER BY
@@ -888,20 +917,26 @@ def dashboard():
 
                 COUNT(a.id) AS total_classes,
 
-                SUM(
-                    CASE
-                        WHEN a.status = 'Present'
-                        THEN 1
-                        ELSE 0
-                    END
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN a.status = 'Present'
+                            THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
                 ) AS present_count,
 
-                SUM(
-                    CASE
-                        WHEN a.status = 'Absent'
-                        THEN 1
-                        ELSE 0
-                    END
+                COALESCE(
+                    SUM(
+                        CASE
+                            WHEN a.status = 'Absent'
+                            THEN 1
+                            ELSE 0
+                        END
+                    ),
+                    0
                 ) AS absent_count
 
             FROM subjects s
@@ -933,14 +968,15 @@ def dashboard():
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT DASHBOARD ERROR:",
             repr(e)
         )
-
-        cursor.close()
 
         flash(
             "Unable to load dashboard.",
@@ -992,7 +1028,7 @@ def dashboard():
 
         else:
 
-            percentage = 0
+            percentage = 0.0
 
         subject_attendance.append({
 
@@ -1049,6 +1085,7 @@ def dashboard():
 def subjects():
 
     if "student_db_id" not in session:
+
         return redirect(
             url_for(
                 "student_auth.login"
@@ -1098,89 +1135,183 @@ def subjects():
 
         semester = student[6]
 
+        department = (
+            str(student[5]).strip()
+            if student[5] is not None
+            else ""
+        )
+
         # =================================================
         # SUBJECTS
+        #
+        # IMPORTANT:
+        # Do not select:
+        # theory_full_marks
+        # practical_full_marks
+        # full_marks
+        # pass_marks
+        #
+        # because those columns are not available in the
+        # current subjects table.
         # =================================================
 
-        cursor.execute(
-            """
-            SELECT
-                s.id,
-                s.subject_code,
-                s.subject_name,
-                s.semester,
+        if department:
 
-                COALESCE(
-                    t.full_name,
-                    'Not Assigned'
-                ) AS teacher_name,
+            cursor.execute(
+                """
+                SELECT
+                    s.id,
+                    s.subject_code,
+                    s.subject_name,
+                    s.semester,
 
-                COUNT(a.id) AS total_classes,
+                    COALESCE(
+                        t.full_name,
+                        'Not Assigned'
+                    ) AS teacher_name,
 
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN a.status = 'Present'
-                            THEN 1
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS present_count,
+                    COUNT(a.id) AS total_classes,
 
-                COALESCE(
-                    SUM(
-                        CASE
-                            WHEN a.status = 'Absent'
-                            THEN 1
-                            ELSE 0
-                        END
-                    ),
-                    0
-                ) AS absent_count
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN a.status = 'Present'
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS present_count,
 
-            FROM subjects s
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN a.status = 'Absent'
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS absent_count
 
-            LEFT JOIN teachers t
-                ON s.teacher_id = t.id
+                FROM subjects s
 
-            LEFT JOIN attendance_sessions ats
-                ON ats.subject_id = s.id
+                LEFT JOIN teachers t
+                    ON s.teacher_id = t.id
 
-            LEFT JOIN attendance a
-                ON a.session_id = ats.id
-                AND a.student_id = %s
+                LEFT JOIN attendance_sessions ats
+                    ON ats.subject_id = s.id
 
-            WHERE s.semester = %s
+                LEFT JOIN attendance a
+                    ON a.session_id = ats.id
+                    AND a.student_id = %s
 
-            GROUP BY
-                s.id,
-                s.subject_code,
-                s.subject_name,
-                s.semester,
-                t.full_name
+                WHERE s.semester = %s
+                AND (
+                    s.department = %s
+                    OR s.department IS NULL
+                    OR TRIM(s.department) = ''
+                )
 
-            ORDER BY
-                s.subject_code
-            """,
-            (
-                student_db_id,
-                semester
+                GROUP BY
+                    s.id,
+                    s.subject_code,
+                    s.subject_name,
+                    s.semester,
+                    t.full_name
+
+                ORDER BY
+                    s.subject_code
+                """,
+                (
+                    student_db_id,
+                    semester,
+                    department
+                )
             )
-        )
+
+        else:
+
+            cursor.execute(
+                """
+                SELECT
+                    s.id,
+                    s.subject_code,
+                    s.subject_name,
+                    s.semester,
+
+                    COALESCE(
+                        t.full_name,
+                        'Not Assigned'
+                    ) AS teacher_name,
+
+                    COUNT(a.id) AS total_classes,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN a.status = 'Present'
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS present_count,
+
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN a.status = 'Absent'
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS absent_count
+
+                FROM subjects s
+
+                LEFT JOIN teachers t
+                    ON s.teacher_id = t.id
+
+                LEFT JOIN attendance_sessions ats
+                    ON ats.subject_id = s.id
+
+                LEFT JOIN attendance a
+                    ON a.session_id = ats.id
+                    AND a.student_id = %s
+
+                WHERE s.semester = %s
+
+                GROUP BY
+                    s.id,
+                    s.subject_code,
+                    s.subject_name,
+                    s.semester,
+                    t.full_name
+
+                ORDER BY
+                    s.subject_code
+                """,
+                (
+                    student_db_id,
+                    semester
+                )
+            )
 
         subject_rows = cursor.fetchall()
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT SUBJECT ERROR:",
             repr(e)
         )
-
-        cursor.close()
 
         flash(
             "Unable to load subjects.",
@@ -1238,7 +1369,7 @@ def subjects():
 
         else:
 
-            percentage = 0
+            percentage = 0.0
 
         subject_list.append({
 
@@ -1262,9 +1393,15 @@ def subjects():
 
         })
 
+    # =====================================================
+    # RENDER
+    # =====================================================
+
     return render_template(
         "student/subjects.html",
+
         student=student,
+
         subjects=subject_list
     )
 
@@ -1279,6 +1416,7 @@ def subjects():
 def attendance():
 
     if "student_db_id" not in session:
+
         return redirect(
             url_for(
                 "student_auth.login"
@@ -1362,14 +1500,15 @@ def attendance():
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT ATTENDANCE ERROR:",
             repr(e)
         )
-
-        cursor.close()
 
         flash(
             "Unable to load attendance.",
@@ -1427,7 +1566,7 @@ def attendance():
 
     else:
 
-        attendance_percentage = 0
+        attendance_percentage = 0.0
 
     return render_template(
         "student/attendance.html",
@@ -1471,339 +1610,25 @@ def report():
 
 
 # =========================================================
+# =========================================================
 # STUDENT MARKSHEET
 # =========================================================
+
 @student_auth.route("/marksheet")
 def marksheet():
 
-    # -----------------------------------------------------
-    # LOGIN CHECK
-    # -----------------------------------------------------
     if "student_db_id" not in session:
-        return redirect(
-            url_for("student_auth.login")
-        )
-
-    student_db_id = session["student_db_id"]
-
-    cursor = mysql.connection.cursor()
-
-    try:
-
-        # =================================================
-        # GET STUDENT INFORMATION
-        # =================================================
-        cursor.execute(
-            """
-            SELECT
-                id,
-                student_id,
-                full_name,
-                email,
-                phone,
-                department,
-                semester,
-                section,
-                photo
-            FROM students
-            WHERE id = %s
-            LIMIT 1
-            """,
-            (student_db_id,)
-        )
-
-        student = cursor.fetchone()
-
-        if not student:
-            session.clear()
-
-            return redirect(
-                url_for("student_auth.login")
-            )
-
-        # =================================================
-        # GET MARKSHEET
-        # =================================================
-        cursor.execute(
-            """
-            SELECT
-                m.id,
-                s.subject_code,
-                s.subject_name,
-                s.theory_full_marks,
-                s.practical_full_marks,
-                s.full_marks,
-                s.pass_marks,
-                m.theory_marks,
-                m.practical_marks,
-                m.total_marks,
-                m.grade,
-                m.grade_point,
-                m.remarks,
-                m.created_at,
-                m.updated_at
-            FROM marksheets m
-            INNER JOIN subjects s
-                ON s.id = m.subject_id
-            WHERE m.student_id = %s
-            ORDER BY s.subject_code ASC
-            """,
-            (student_db_id,)
-        )
-
-        raw_marksheets = cursor.fetchall()
-
-        # =================================================
-        # SAFE NUMBER CONVERTER
-        # =================================================
-        def to_number(value, default=0.0):
-
-            if value is None:
-                return default
-
-            try:
-                # bytes -> string
-                if isinstance(value, bytes):
-                    value = value.decode("utf-8", errors="ignore")
-
-                value = str(value).strip()
-
-                if value == "":
-                    return default
-
-                return float(value)
-
-            except (ValueError, TypeError):
-                return default
-
-        # =================================================
-        # PROCESS MARKSHEET
-        # =================================================
-        marksheets = []
-
-        total_full_marks = 0.0
-        total_obtained_marks = 0.0
-
-        total_grade_points = 0.0
-        grade_point_count = 0
-
-        passed_subjects = 0
-        failed_subjects = 0
-
-        for original_row in raw_marksheets:
-
-            row = list(original_row)
-
-            # -------------------------------------------------
-            # FULL MARKS
-            # -------------------------------------------------
-            theory_full_marks = to_number(row[3])
-            practical_full_marks = to_number(row[4])
-            full_marks = to_number(row[5])
-            pass_marks = to_number(row[6])
-
-            # -------------------------------------------------
-            # OBTAINED MARKS
-            # -------------------------------------------------
-            theory_marks = to_number(row[7])
-            practical_marks = to_number(row[8])
-            total_marks = to_number(row[9])
-
-            # -------------------------------------------------
-            # GRADE
-            # -------------------------------------------------
-            grade = (
-                str(row[10]).strip()
-                if row[10] is not None
-                else ""
-            )
-
-            # -------------------------------------------------
-            # GRADE POINT
-            # -------------------------------------------------
-            grade_point = None
-
-            if row[11] is not None:
-
-                try:
-
-                    if isinstance(row[11], bytes):
-                        gp_value = row[11].decode(
-                            "utf-8",
-                            errors="ignore"
-                        )
-                    else:
-                        gp_value = str(row[11]).strip()
-
-                    if gp_value != "":
-                        grade_point = float(gp_value)
-
-                except (ValueError, TypeError):
-                    grade_point = None
-
-            # -------------------------------------------------
-            # REMARKS
-            # -------------------------------------------------
-            remarks = (
-                str(row[12]).strip()
-                if row[12] is not None
-                else ""
-            )
-
-            # -------------------------------------------------
-            # REBUILD ROW
-            # -------------------------------------------------
-            processed_row = (
-                row[0],                  # id
-                row[1],                  # subject code
-                row[2],                  # subject name
-                theory_full_marks,       # theory full
-                practical_full_marks,    # practical full
-                full_marks,              # full marks
-                pass_marks,              # pass marks
-                theory_marks,            # theory obtained
-                practical_marks,         # practical obtained
-                total_marks,             # total obtained
-                grade,                   # grade
-                grade_point,             # grade point
-                remarks,                 # remarks
-                row[13],                 # created_at
-                row[14]                  # updated_at
-            )
-
-            marksheets.append(processed_row)
-
-            # -------------------------------------------------
-            # TOTALS
-            # -------------------------------------------------
-            total_full_marks += full_marks
-            total_obtained_marks += total_marks
-
-            # -------------------------------------------------
-            # PASS / FAIL
-            # -------------------------------------------------
-            if total_marks >= pass_marks:
-                passed_subjects += 1
-            else:
-                failed_subjects += 1
-
-            # -------------------------------------------------
-            # GPA
-            # -------------------------------------------------
-            if grade_point is not None:
-
-                total_grade_points += grade_point
-                grade_point_count += 1
-
-        # =================================================
-        # OVERALL PERCENTAGE
-        # =================================================
-        if total_full_marks > 0:
-
-            overall_percentage = round(
-                (
-                    total_obtained_marks /
-                    total_full_marks
-                ) * 100,
-                2
-            )
-
-        else:
-
-            overall_percentage = 0.0
-
-        # =================================================
-        # AVERAGE GPA
-        # =================================================
-        if grade_point_count > 0:
-
-            average_gpa = round(
-                total_grade_points /
-                grade_point_count,
-                2
-            )
-
-        else:
-
-            average_gpa = 0.0
-
-        # =================================================
-        # TOTAL SUBJECTS
-        # =================================================
-        total_marksheets = len(marksheets)
-
-        # =================================================
-        # CLOSE CURSOR
-        # =================================================
-        cursor.close()
-
-        # =================================================
-        # RENDER
-        # =================================================
-        return render_template(
-            "student/marksheet.html",
-
-            student=student,
-
-            marksheets=marksheets,
-
-            total_subjects=total_marksheets,
-
-            passed_subjects=passed_subjects,
-
-            failed_subjects=failed_subjects,
-
-            total_full_marks=total_full_marks,
-
-            total_obtained_marks=total_obtained_marks,
-
-            overall_percentage=overall_percentage,
-
-            average_gpa=average_gpa
-        )
-
-    except Exception as e:
-
-        # -------------------------------------------------
-        # DATABASE ROLLBACK
-        # -------------------------------------------------
-        try:
-            mysql.connection.rollback()
-        except Exception:
-            pass
-
-        # -------------------------------------------------
-        # CLOSE CURSOR
-        # -------------------------------------------------
-        try:
-            cursor.close()
-        except Exception:
-            pass
-
-        # -------------------------------------------------
-        # PRINT REAL ERROR IN TERMINAL
-        # -------------------------------------------------
-        print("\n========================================")
-        print("STUDENT MARKSHEET ERROR")
-        print("========================================")
-        print("ERROR TYPE :", type(e).__name__)
-        print("ERROR      :", str(e))
-        print("========================================\n")
-
-        # -------------------------------------------------
-        # USER MESSAGE
-        # -------------------------------------------------
-        flash(
-            "Unable to load marksheet. Please try again.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("student_auth.dashboard")
-        )
+        return redirect(url_for("student_auth.login"))
+
+    # The new marksheets table is file-only:
+    # id, student_id, marksheet_file, created_at, updated_at.
+    # Subject-wise marks, grades, theory/practical marks, etc.
+    # are no longer handled by this route.
+    return redirect(url_for("student_result.index"))
 
 
 # =========================================================
+
 # STUDENT CHANGE PASSWORD
 # =========================================================
 
@@ -1812,10 +1637,6 @@ def marksheet():
     methods=["GET", "POST"]
 )
 def change_password():
-
-    # =====================================================
-    # LOGIN CHECK
-    # =====================================================
 
     if "student_db_id" not in session:
 
@@ -1944,7 +1765,7 @@ def change_password():
                 )
 
             # =================================================
-            # GET CURRENT PASSWORD
+            # CURRENT PASSWORD
             # =================================================
 
             cursor.execute(
@@ -1976,10 +1797,6 @@ def change_password():
 
             password_valid = False
 
-            # -------------------------------------------------
-            # HASHED PASSWORD
-            # -------------------------------------------------
-
             if stored_password:
 
                 try:
@@ -1993,10 +1810,7 @@ def change_password():
 
                     password_valid = False
 
-                # -------------------------------------------------
-                # OLD PLAINTEXT SUPPORT
-                # -------------------------------------------------
-
+                # Old plaintext support
                 if not password_valid:
 
                     password_valid = (
@@ -2064,15 +1878,22 @@ def change_password():
 
         return render_template(
             "student/change_password.html",
+
             student=student,
+
             student_id=student_id,
+
             student_name=student_name,
+
             student_photo=student_photo
         )
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT CHANGE PASSWORD ERROR:",
@@ -2153,11 +1974,6 @@ def logout():
 
     # -----------------------------------------------------
     # NO FLASH MESSAGE
-    # -----------------------------------------------------
-    # Do NOT use flash() here.
-    #
-    # Therefore student login page will NOT show:
-    # "You have been logged out successfully."
     # -----------------------------------------------------
 
     return redirect(

@@ -515,10 +515,7 @@ Syllabus Management
                                     <!-- VIEW -->
 
                                     <a
-                                        href="{{ url_for(
-                                            'admin_syllabus.file',
-                                            filename=syllabus[8]
-                                        ) }}"
+                                        href="{{ url_for('admin_syllabus.file', filename=syllabus[8]) }}"
                                         target="_blank"
                                         class="btn btn-sm btn-outline-primary"
                                         title="View PDF"
@@ -532,11 +529,7 @@ Syllabus Management
                                     <!-- DOWNLOAD -->
 
                                     <a
-                                        href="{{ url_for(
-                                            'admin_syllabus.file',
-                                            filename=syllabus[8]
-                                        ) }}"
-                                        download
+                                        href="{{ url_for('admin_syllabus.download', filename=syllabus[8]) }}"
                                         class="btn btn-sm btn-outline-success"
                                         title="Download PDF"
                                     >

@@ -8,138 +8,97 @@
 
 <div class="container-fluid py-4 routine-form-page">
 
-    <!-- =========================================================
-         HEADER
-    ========================================================== -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <!-- HEADER -->
+    <div class="routine-page-header mb-4">
         <div class="d-flex align-items-center gap-3">
-
             <a href="{{ url_for('routine.index') }}"
-               class="btn btn-light border routine-back-btn"
-               title="Back to routines">
+               class="routine-back-btn"
+               title="Back to routines"
+               aria-label="Back to routines">
                 <i class="bi bi-arrow-left"></i>
             </a>
 
             <div class="routine-title-icon">
-                <i class="bi bi-calendar-plus"></i>
+                <i class="bi bi-calendar2-plus"></i>
             </div>
 
-            <div>
-                <h3 class="mb-0 fw-bold">{{ form_title }}</h3>
-                <p class="text-muted mb-0">
-                    Create and manage class routine
+            <div class="min-w-0">
+                <div class="routine-breadcrumb">
+                    <span>Routine Management</span>
+                    <i class="bi bi-chevron-right"></i>
+                    <span>{{ 'Edit Routine' if routine_data else 'Add Routine' }}</span>
+                </div>
+                <h3 class="routine-page-title mb-1">{{ form_title }}</h3>
+                <p class="routine-page-subtitle mb-0">
+                    Create and manage your class schedule with ease.
                 </p>
             </div>
-
         </div>
     </div>
 
-
-    <!-- =========================================================
-         FLASH MESSAGES
-    ========================================================== -->
+    <!-- FLASH MESSAGES -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-
-                <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm"
+                <div class="alert alert-{{ category }} alert-dismissible fade show routine-alert shadow-sm"
                      role="alert">
-
-                    <i class="
-                        {% if category == 'success' %}
-                            bi bi-check-circle-fill
-                        {% elif category == 'danger' %}
-                            bi bi-exclamation-triangle-fill
-                        {% elif category == 'warning' %}
-                            bi bi-exclamation-circle-fill
-                        {% else %}
-                            bi bi-info-circle-fill
-                        {% endif %}
-                        me-2
-                    "></i>
-
-                    {{ message }}
-
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="
+                            {% if category == 'success' %}bi bi-check-circle-fill
+                            {% elif category == 'danger' %}bi bi-exclamation-triangle-fill
+                            {% elif category == 'warning' %}bi bi-exclamation-circle-fill
+                            {% else %}bi bi-info-circle-fill{% endif %}
+                        "></i>
+                        <span>{{ message }}</span>
+                    </div>
                     <button type="button"
                             class="btn-close"
                             data-bs-dismiss="alert"
-                            aria-label="Close">
-                    </button>
-
+                            aria-label="Close"></button>
                 </div>
-
             {% endfor %}
         {% endif %}
     {% endwith %}
 
+    <!-- MAIN CARD -->
+    <div class="routine-main-card">
 
-    <!-- =========================================================
-         MAIN CARD
-    ========================================================== -->
-    <div class="card border-0 shadow-sm rounded-4 routine-main-card">
+        <form method="POST"
+              action="{{ form_action }}"
+              id="routineForm"
+              enctype="multipart/form-data"
+              novalidate>
 
-        <div class="card-body p-4 p-lg-5">
-
-            <form method="POST"
-                  action="{{ form_action }}"
-                  id="routineForm"
-                  novalidate>
-
-                <!-- =================================================
-                     CLASS INFORMATION
-                ================================================== -->
-                <div class="routine-section">
-
-                    <div class="routine-section-title">
-
-                        <div class="routine-section-icon blue">
-                            <i class="bi bi-mortarboard-fill"></i>
-                        </div>
-
-                        <div>
-                            <h5 class="fw-bold mb-0">
-                                Class Information
-                            </h5>
-
-                            <small class="text-muted">
-                                Select semester, department and section
-                            </small>
-                        </div>
-
+            <!-- CLASS INFORMATION -->
+            <section class="routine-section">
+                <div class="routine-section-heading">
+                    <div class="routine-section-icon blue">
+                        <i class="bi bi-mortarboard-fill"></i>
                     </div>
+                    <div>
+                        <h5>Class Information</h5>
+                        <p>Select the class, department and section.</p>
+                    </div>
+                </div>
 
-
-                    <div class="row g-3 mt-1">
-
-                        <!-- SEMESTER -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="semester"
-                                   class="form-label fw-semibold">
-
-                                Semester
-                                <span class="text-danger">*</span>
-
-                            </label>
-
+                <div class="row g-3">
+                    <!-- SEMESTER -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="semester" class="routine-label">
+                            Semester <span>*</span>
+                        </label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-layers"></i>
                             <select name="semester"
                                     id="semester"
-                                    class="form-select"
+                                    class="form-select routine-input has-icon"
                                     required>
-
-                                <option value="">
-                                    Select Semester
-                                </option>
-
+                                <option value="">Select Semester</option>
                                 {% for sem in range(1, 9) %}
-
                                     <option value="{{ sem }}"
-                                        {% if routine_data and
-                                           routine_data[1]|string|trim|lower ==
-                                           sem|string|lower %}
+                                        {% if routine_data and routine_data[1]|string|trim|lower == sem|string|lower %}
                                             selected
                                         {% endif %}>
-
                                         {% if sem == 1 %}
                                             Semester 1 (1st)
                                         {% elif sem == 2 %}
@@ -149,807 +108,507 @@
                                         {% else %}
                                             Semester {{ sem }} ({{ sem }}th)
                                         {% endif %}
-
                                     </option>
-
                                 {% endfor %}
-
                             </select>
-
-                            <div class="invalid-feedback">
-                                Please select a semester.
-                            </div>
-
                         </div>
+                        <div class="invalid-feedback">Please select a semester.</div>
+                    </div>
 
-
-                        <!-- DEPARTMENT -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="department"
-                                   class="form-label fw-semibold">
-
-                                Department
-                                <span class="text-danger">*</span>
-
-                            </label>
-
-                            {% set current_department =
-                                routine_data[2]
-                                if routine_data
-                                else ''
-                            %}
-
+                    <!-- DEPARTMENT -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="department" class="routine-label">
+                            Department <span>*</span>
+                        </label>
+                        {% set current_department = routine_data[2] if routine_data else '' %}
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-building"></i>
                             <select name="department"
                                     id="department"
-                                    class="form-select"
+                                    class="form-select routine-input has-icon"
                                     required>
-
-                                <option value="">
-                                    Select Department
-                                </option>
-
+                                <option value="">Select Department</option>
                                 {% for department in departments %}
-
                                     <option value="{{ department[0] }}"
-                                        {% if current_department|string|trim|lower ==
-                                           department[0]|string|trim|lower %}
+                                        {% if current_department|string|trim|lower == department[0]|string|trim|lower %}
                                             selected
                                         {% endif %}>
-
                                         {{ department[0] }}
-
                                     </option>
-
                                 {% endfor %}
-
                             </select>
-
-                            <small class="text-muted">
-                                Departments are loaded from the Subjects database.
-                            </small>
-
-                            <div class="invalid-feedback">
-                                Please select a department.
-                            </div>
-
                         </div>
+                        <small class="routine-help">
+                            <i class="bi bi-database me-1"></i>
+                            Loaded from Subjects database.
+                        </small>
+                        <div class="invalid-feedback">Please select a department.</div>
+                    </div>
 
-
-                        <!-- SECTION -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="section"
-                                   class="form-label fw-semibold">
-
-                                Section / Batch
-
-                            </label>
-
+                    <!-- SECTION -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="section" class="routine-label">
+                            Section / Batch
+                        </label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-people"></i>
                             <input type="text"
                                    name="section"
                                    id="section"
-                                   class="form-control"
+                                   class="form-control routine-input has-icon"
                                    maxlength="50"
                                    placeholder="e.g. A"
                                    value="{% if routine_data %}{{ routine_data[3] or '' }}{% endif %}">
-
                         </div>
-
                     </div>
+                </div>
+            </section>
 
+            <div class="routine-divider"></div>
+
+            <!-- SCHEDULE -->
+            <section class="routine-section">
+                <div class="routine-section-heading">
+                    <div class="routine-section-icon green">
+                        <i class="bi bi-clock-fill"></i>
+                    </div>
+                    <div>
+                        <h5>Schedule</h5>
+                        <p>Set the day and class duration.</p>
+                    </div>
                 </div>
 
-
-                <hr class="my-4">
-
-
-                <!-- =================================================
-                     SCHEDULE
-                ================================================== -->
-                <div class="routine-section">
-
-                    <div class="routine-section-title">
-
-                        <div class="routine-section-icon green">
-                            <i class="bi bi-clock-fill"></i>
-                        </div>
-
-                        <div>
-                            <h5 class="fw-bold mb-0">
-                                Schedule
-                            </h5>
-
-                            <small class="text-muted">
-                                Set the day and class time
-                            </small>
-                        </div>
-
-                    </div>
-
-
-                    <div class="row g-3 mt-1">
-
-                        <!-- DAY -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="day"
-                                   class="form-label fw-semibold">
-
-                                Day
-                                <span class="text-danger">*</span>
-
-                            </label>
-
+                <div class="row g-3">
+                    <!-- DAY -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="day" class="routine-label">
+                            Day <span>*</span>
+                        </label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-calendar3"></i>
                             <select name="day"
                                     id="day"
-                                    class="form-select"
+                                    class="form-select routine-input has-icon"
                                     required>
-
-                                <option value="">
-                                    Select Day
-                                </option>
-
-                                {% for day in [
-                                    'Sunday',
-                                    'Monday',
-                                    'Tuesday',
-                                    'Wednesday',
-                                    'Thursday',
-                                    'Friday',
-                                    'Saturday'
-                                ] %}
-
+                                <option value="">Select Day</option>
+                                {% for day in ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] %}
                                     <option value="{{ day }}"
-                                        {% if routine_data and
-                                           routine_data[4]|string|trim|lower ==
-                                           day|string|trim|lower %}
+                                        {% if routine_data and routine_data[4]|string|trim|lower == day|string|trim|lower %}
                                             selected
                                         {% endif %}>
-
                                         {{ day }}
-
                                     </option>
-
                                 {% endfor %}
-
                             </select>
-
-                            <div class="invalid-feedback">
-                                Please select a day.
-                            </div>
-
                         </div>
+                        <div class="invalid-feedback">Please select a day.</div>
+                    </div>
 
-
-                        <!-- START TIME -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="start_time"
-                                   class="form-label fw-semibold">
-
-                                Start Time
-                                <span class="text-danger">*</span>
-
-                            </label>
-
+                    <!-- START TIME -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="start_time" class="routine-label">
+                            Start Time <span>*</span>
+                        </label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-clock"></i>
                             <input type="time"
                                    name="start_time"
                                    id="start_time"
-                                   class="form-control"
+                                   class="form-control routine-input has-icon"
                                    required
                                    value="{% if routine_data %}{{ routine_data[5] }}{% endif %}">
-
-                            <div class="invalid-feedback">
-                                Please enter the start time.
-                            </div>
-
                         </div>
+                        <div class="invalid-feedback">Please enter the start time.</div>
+                    </div>
 
-
-                        <!-- END TIME -->
-                        <div class="col-lg-4 col-md-6">
-
-                            <label for="end_time"
-                                   class="form-label fw-semibold">
-
-                                End Time
-                                <span class="text-danger">*</span>
-
-                            </label>
-
+                    <!-- END TIME -->
+                    <div class="col-lg-4 col-md-6">
+                        <label for="end_time" class="routine-label">
+                            End Time <span>*</span>
+                        </label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-clock-history"></i>
                             <input type="time"
                                    name="end_time"
                                    id="end_time"
-                                   class="form-control"
+                                   class="form-control routine-input has-icon"
                                    required
                                    value="{% if routine_data %}{{ routine_data[6] }}{% endif %}">
-
-                            <div class="invalid-feedback">
-                                Please enter the end time.
-                            </div>
-
                         </div>
-
+                        <div class="invalid-feedback">Please enter the end time.</div>
                     </div>
-
-
-                    <!-- TIME PREVIEW -->
-                    <div id="timePreview"
-                         class="routine-time-preview d-none mt-3">
-
-                        <i class="bi bi-clock me-2"></i>
-
-                        <span id="timePreviewText"></span>
-
-                    </div>
-
                 </div>
 
-
-                <hr class="my-4">
-
-
-                <!-- =================================================
-                     SUBJECT & TEACHER
-                ================================================== -->
-                <div class="routine-section">
-
-                    <div class="routine-section-title">
-
-                        <div class="routine-section-icon purple">
-                            <i class="bi bi-book-fill"></i>
-                        </div>
-
-                        <div>
-                            <h5 class="fw-bold mb-0">
-                                Subject & Teacher
-                            </h5>
-
-                            <small class="text-muted">
-                                Select a subject for the selected class
-                            </small>
-                        </div>
-
+                <div id="timePreview" class="routine-time-preview d-none">
+                    <div class="time-preview-icon">
+                        <i class="bi bi-clock-fill"></i>
                     </div>
+                    <div>
+                        <small>CLASS DURATION</small>
+                        <div id="timePreviewText"></div>
+                    </div>
+                </div>
+            </section>
 
+            <div class="routine-divider"></div>
 
-                    <div class="row g-3 mt-1">
+            <!-- SUBJECT & TEACHER -->
+            <section class="routine-section">
+                <div class="routine-section-heading">
+                    <div class="routine-section-icon purple">
+                        <i class="bi bi-book-fill"></i>
+                    </div>
+                    <div>
+                        <h5>Subject & Teacher</h5>
+                        <p>Choose a subject for the selected class.</p>
+                    </div>
+                </div>
 
-                        <!-- SUBJECT -->
-                        <div class="col-lg-8">
+                <div class="row g-3 align-items-stretch">
+                    <!-- SUBJECT -->
+                    <div class="col-lg-8">
+                        <label for="subject_id" class="routine-label">
+                            Subject <span>*</span>
+                        </label>
 
-                            <label for="subject_id"
-                                   class="form-label fw-semibold">
-
-                                Subject
-                                <span class="text-danger">*</span>
-
-                            </label>
-
-
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-book"></i>
                             <select name="subject_id"
                                     id="subject_id"
-                                    class="form-select"
+                                    class="form-select routine-input has-icon"
                                     required>
-
-                                <option value="">
-                                    Select Subject
-                                </option>
-
+                                <option value="">Select Subject</option>
 
                                 {% for subject in subjects %}
-
                                     <option value="{{ subject[0] }}"
                                             data-semester="{{ subject[3] or '' }}"
                                             data-department="{{ subject[4] or '' }}"
                                             data-teacher="{{ subject[6] or 'No teacher assigned' }}"
                                             data-teacher-id="{{ subject[5] or '' }}"
-
-                                        {% if routine_data and
-                                           routine_data[7]|string|trim ==
-                                           subject[0]|string|trim %}
+                                        {% if routine_data and routine_data[7]|string|trim == subject[0]|string|trim %}
                                             selected
                                         {% endif %}>
-
                                         {{ subject[1] }} - {{ subject[2] }}
-
-                                        {% if subject[3] %}
-                                            | Sem {{ subject[3] }}
-                                        {% endif %}
-
-                                        {% if subject[4] %}
-                                            | {{ subject[4] }}
-                                        {% endif %}
-
+                                        {% if subject[3] %}| Sem {{ subject[3] }}{% endif %}
+                                        {% if subject[4] %}| {{ subject[4] }}{% endif %}
                                     </option>
-
                                 {% endfor %}
-
                             </select>
-
-
-                            <small id="subjectHelp"
-                                   class="text-muted">
-
-                                Select semester and department to filter subjects.
-
-                            </small>
-
-
-                            <div class="invalid-feedback">
-                                Please select a subject.
-                            </div>
-
                         </div>
 
+                        <small id="subjectHelp" class="routine-help">
+                            <i class="bi bi-funnel me-1"></i>
+                            Select semester and department to filter subjects.
+                        </small>
 
-                        <!-- TEACHER -->
-                        <div class="col-lg-4">
+                        <div class="invalid-feedback">Please select a subject.</div>
+                    </div>
 
-                            <label class="form-label fw-semibold">
-                                Assigned Teacher
-                            </label>
+                    <!-- TEACHER -->
+                    <div class="col-lg-4">
+                        <label class="routine-label">Assigned Teacher</label>
 
-
-                            <div id="teacherDisplay"
-                                 class="teacher-display">
-
-                                <div class="teacher-placeholder">
-
-                                    <div class="teacher-icon">
-                                        <i class="bi bi-person"></i>
-                                    </div>
-
-                                    <span>
-                                        Select a subject
-                                    </span>
-
+                        <div id="teacherDisplay" class="teacher-display">
+                            <div class="teacher-placeholder">
+                                <div class="teacher-icon">
+                                    <i class="bi bi-person"></i>
                                 </div>
-
+                                <span>Select a subject</span>
                             </div>
-
-
-                            <input type="hidden"
-                                   name="teacher_id"
-                                   id="teacher_id"
-                                   value="{% if routine_data %}{{ routine_data[8] or '' }}{% endif %}">
-
                         </div>
 
+                        <input type="hidden"
+                               name="teacher_id"
+                               id="teacher_id"
+                               value="{% if routine_data %}{{ routine_data[8] or '' }}{% endif %}">
                     </div>
-
-
-                    <!-- SUBJECT STATUS -->
-                    <div id="subjectStatus"
-                         class="subject-status d-none mt-3">
-                    </div>
-
                 </div>
 
+                <div id="subjectStatus" class="subject-status d-none"></div>
+            </section>
 
-                <hr class="my-4">
+            <div class="routine-divider"></div>
 
-
-                <!-- =================================================
-                     CLASSROOM
-                ================================================== -->
-                <div class="routine-section">
-
-                    <div class="routine-section-title">
-
-                        <div class="routine-section-icon orange">
-                            <i class="bi bi-door-open-fill"></i>
-                        </div>
-
-                        <div>
-                            <h5 class="fw-bold mb-0">
-                                Classroom
-                            </h5>
-
-                            <small class="text-muted">
-                                Enter room or laboratory information
-                            </small>
-                        </div>
-
+            <!-- CLASSROOM -->
+            <section class="routine-section">
+                <div class="routine-section-heading">
+                    <div class="routine-section-icon orange">
+                        <i class="bi bi-door-open-fill"></i>
                     </div>
+                    <div>
+                        <h5>Classroom</h5>
+                        <p>Specify the room or laboratory.</p>
+                    </div>
+                </div>
 
-
-                    <div class="row g-3 mt-1">
-
-                        <div class="col-lg-6 col-md-8">
-
-                            <label for="room"
-                                   class="form-label fw-semibold">
-
-                                Room / Lab
-
-                            </label>
-
+                <div class="row g-3">
+                    <div class="col-lg-6 col-md-8">
+                        <label for="room" class="routine-label">Room / Lab</label>
+                        <div class="routine-input-wrap">
+                            <i class="bi bi-door-open"></i>
                             <input type="text"
                                    name="room"
                                    id="room"
-                                   class="form-control"
+                                   class="form-control routine-input has-icon"
                                    maxlength="100"
                                    placeholder="e.g. Room 204 / Lab 1"
                                    value="{% if routine_data %}{{ routine_data[9] or '' }}{% endif %}">
-
                         </div>
+                    </div>
+                </div>
+            </section>
 
+            <!-- ROUTINE PHOTO -->
+            <div class="routine-divider"></div>
+
+            <section class="routine-section">
+                <div class="routine-section-heading">
+                    <div class="routine-section-icon photo">
+                        <i class="bi bi-image-fill"></i>
+                    </div>
+                    <div>
+                        <h5>Routine Photo</h5>
+                        <p>Upload an optional image of the routine.</p>
+                    </div>
+                </div>
+
+                <div class="routine-photo-area">
+
+                    {% if routine_data and routine_data|length > 10 and routine_data[10] %}
+                        <div class="current-photo-box">
+                            <div class="current-photo-preview">
+                                <img src="{{ url_for('static', filename='uploads/routines/' ~ routine_data[10]) }}"
+                                     alt="Current routine photo"
+                                     id="currentRoutinePhoto">
+                            </div>
+                            <div class="current-photo-info">
+                                <span class="photo-badge">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Current Photo
+                                </span>
+                                <strong>{{ routine_data[10] }}</strong>
+                                <small>Upload a new image below to replace it.</small>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <label for="photo" class="photo-upload-box" id="photoUploadBox">
+                        <div class="photo-upload-icon">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                        <div class="photo-upload-content">
+                            <strong id="photoUploadTitle">
+                                {% if routine_data and routine_data|length > 10 and routine_data[10] %}
+                                    Change routine photo
+                                {% else %}
+                                    Choose routine photo
+                                {% endif %}
+                            </strong>
+                            <span id="photoUploadText">
+                                JPG, JPEG, PNG or WEBP
+                            </span>
+                        </div>
+                        <span class="photo-browse-btn">Browse</span>
+                        <input type="file"
+                               name="photo"
+                               id="photo"
+                               accept="image/jpeg,image/png,image/webp">
+                    </label>
+
+                    <div id="selectedPhotoInfo" class="selected-photo-info d-none">
+                        <div class="selected-photo-thumb">
+                            <img id="photoPreview" src="" alt="Selected photo preview">
+                        </div>
+                        <div class="selected-photo-meta">
+                            <strong id="selectedPhotoName"></strong>
+                            <small id="selectedPhotoSize"></small>
+                        </div>
+                        <button type="button" class="remove-photo-btn" id="removePhotoBtn">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
 
+                    <div class="photo-tip">
+                        <i class="bi bi-info-circle"></i>
+                        <span>For best results, use a clear landscape image of the class routine.</span>
+                    </div>
                 </div>
+            </section>
 
-
-                <!-- =================================================
-                     INFORMATION
-                ================================================== -->
-                <div class="alert alert-info border-0 rounded-3 mt-4 routine-info">
-
-                    <i class="bi bi-info-circle-fill me-2"></i>
-
-                    <strong>Automatic Teacher Assignment:</strong>
-
-                    Teacher is automatically assigned from the selected
-                    subject. You do not need to select the teacher manually.
-
+            <!-- INFORMATION -->
+            <div class="routine-info-box">
+                <div class="routine-info-icon">
+                    <i class="bi bi-lightbulb-fill"></i>
                 </div>
-
-
-                <!-- =================================================
-                     BUTTONS
-                ================================================== -->
-                <div class="d-flex flex-wrap justify-content-end gap-2 border-top pt-4 mt-4">
-
-                    <a href="{{ url_for('routine.index') }}"
-                       class="btn btn-light border px-4 routine-cancel-btn">
-
-                        <i class="bi bi-x-lg me-1"></i>
-
-                        Cancel
-
-                    </a>
-
-
-                    <button type="submit"
-                            class="btn btn-primary px-4 routine-submit-btn"
-                            id="submitBtn">
-
-                        {% if routine_data %}
-
-                            <i class="bi bi-check-circle me-1"></i>
-                            Update Routine
-
-                        {% else %}
-
-                            <i class="bi bi-plus-circle me-1"></i>
-                            Add Routine
-
-                        {% endif %}
-
-                    </button>
-
+                <div>
+                    <strong>Automatic Teacher Assignment</strong>
+                    <p class="mb-0">
+                        Teacher is automatically assigned from the selected subject.
+                        You don't need to select the teacher manually.
+                    </p>
                 </div>
+            </div>
 
-            </form>
+            <!-- ACTIONS -->
+            <div class="routine-actions">
+                <a href="{{ url_for('routine.index') }}"
+                   class="btn routine-cancel-btn">
+                    <i class="bi bi-x-lg"></i>
+                    Cancel
+                </a>
 
-        </div>
+                <button type="submit"
+                        class="btn routine-submit-btn"
+                        id="submitBtn">
+                    {% if routine_data %}
+                        <i class="bi bi-check2-circle"></i>
+                        Update Routine
+                    {% else %}
+                        <i class="bi bi-plus-circle"></i>
+                        Add Routine
+                    {% endif %}
+                </button>
+            </div>
 
+        </form>
     </div>
-
 </div>
 
-
-<!-- =========================================================
-     JAVASCRIPT
-========================================================== -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
     const semester = document.getElementById("semester");
     const department = document.getElementById("department");
     const subject = document.getElementById("subject_id");
+    const teacherDisplay = document.getElementById("teacherDisplay");
+    const teacherInput = document.getElementById("teacher_id");
+    const startTime = document.getElementById("start_time");
+    const endTime = document.getElementById("end_time");
+    const timePreview = document.getElementById("timePreview");
+    const timePreviewText = document.getElementById("timePreviewText");
+    const subjectStatus = document.getElementById("subjectStatus");
+    const subjectHelp = document.getElementById("subjectHelp");
+    const routineForm = document.getElementById("routineForm");
+    const submitBtn = document.getElementById("submitBtn");
 
-    const teacherDisplay =
-        document.getElementById("teacherDisplay");
+    const photo = document.getElementById("photo");
+    const photoUploadBox = document.getElementById("photoUploadBox");
+    const photoUploadTitle = document.getElementById("photoUploadTitle");
+    const photoUploadText = document.getElementById("photoUploadText");
+    const selectedPhotoInfo = document.getElementById("selectedPhotoInfo");
+    const photoPreview = document.getElementById("photoPreview");
+    const selectedPhotoName = document.getElementById("selectedPhotoName");
+    const selectedPhotoSize = document.getElementById("selectedPhotoSize");
+    const removePhotoBtn = document.getElementById("removePhotoBtn");
 
-    const teacherInput =
-        document.getElementById("teacher_id");
-
-    const startTime =
-        document.getElementById("start_time");
-
-    const endTime =
-        document.getElementById("end_time");
-
-    const timePreview =
-        document.getElementById("timePreview");
-
-    const timePreviewText =
-        document.getElementById("timePreviewText");
-
-    const subjectStatus =
-        document.getElementById("subjectStatus");
-
-    const subjectHelp =
-        document.getElementById("subjectHelp");
-
-    const routineForm =
-        document.getElementById("routineForm");
-
-    const submitBtn =
-        document.getElementById("submitBtn");
-
-
-    /* =========================================================
-       ORIGINAL SUBJECT
-    ========================================================== */
-
-    const originalSubjectId =
-        subject.value || "";
-
-
-    /* =========================================================
-       NORMALIZE SEMESTER
-    ========================================================== */
+    const originalSubjectId = subject.value || "";
 
     function normalizeSemester(value) {
-
-        let v = String(value || "")
-            .trim()
-            .toLowerCase();
-
-        if (!v) {
-            return "";
-        }
-
+        let v = String(value || "").trim().toLowerCase();
+        if (!v) return "";
         v = v.replace(/\s+/g, " ");
 
+        let match = v.match(/(?:semester|sem)\s*(1|2|3|4|5|6|7|8)/);
+        if (match) return match[1];
 
-        let match =
-            v.match(/(?:semester|sem)\s*(1|2|3|4|5|6|7|8)/);
+        match = v.match(/^(1|2|3|4|5|6|7|8)(?:st|nd|rd|th)?(?:\s*semester)?$/);
+        if (match) return match[1];
 
-        if (match) {
-            return match[1];
-        }
-
-
-        match =
-            v.match(
-                /^(1|2|3|4|5|6|7|8)(?:st|nd|rd|th)?(?:\s*semester)?$/
-            );
-
-        if (match) {
-            return match[1];
-        }
-
-
-        match =
-            v.match(/\b(1|2|3|4|5|6|7|8)\b/);
-
-        if (match) {
-            return match[1];
-        }
+        match = v.match(/\b(1|2|3|4|5|6|7|8)\b/);
+        if (match) return match[1];
 
         return v;
     }
 
-
-    /* =========================================================
-       NORMALIZE DEPARTMENT
-    ========================================================== */
-
     function normalizeDepartment(value) {
-
         return String(value || "")
             .trim()
             .replace(/\s+/g, " ")
             .toLowerCase();
-
     }
 
-
-    /* =========================================================
-       ESCAPE HTML
-    ========================================================== */
-
     function escapeHtml(value) {
-
         return String(value || "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-
     }
 
-
-    /* =========================================================
-       FORMAT TIME
-    ========================================================== */
-
     function formatTime(time) {
-
-        if (!time) {
-            return "";
-        }
-
+        if (!time) return "";
         const parts = String(time).split(":");
-
         let hour = parseInt(parts[0], 10);
-
         const minute = parts[1] || "00";
 
-        if (isNaN(hour)) {
-            return time;
-        }
+        if (isNaN(hour)) return time;
 
-        const period =
-            hour >= 12 ? "PM" : "AM";
-
-        hour =
-            hour % 12 || 12;
+        const period = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
 
         return `${hour}:${minute} ${period}`;
     }
 
-
-    /* =========================================================
-       FIND ORIGINAL SUBJECT
-    ========================================================== */
-
     function getOriginalSubjectOption() {
+        if (!originalSubjectId) return null;
 
-        if (!originalSubjectId) {
-            return null;
-        }
-
-        return Array.from(subject.options)
-            .find(function (option) {
-
-                return String(option.value) ===
-                       String(originalSubjectId);
-
-            }) || null;
-
+        return Array.from(subject.options).find(function (option) {
+            return String(option.value) === String(originalSubjectId);
+        }) || null;
     }
 
-
-    /* =========================================================
-       SUBJECT WARNING
-    ========================================================== */
-
     function showSubjectWarning(message) {
-
-        subjectStatus.className =
-            "subject-status mt-3 alert alert-warning border-0";
-
+        subjectStatus.className = "subject-status mt-3 status-warning";
         subjectStatus.innerHTML = `
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            ${escapeHtml(message)}
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span>${escapeHtml(message)}</span>
         `;
     }
 
-
     function hideSubjectStatus() {
-
-        subjectStatus.className =
-            "subject-status d-none mt-3";
-
+        subjectStatus.className = "subject-status d-none";
         subjectStatus.innerHTML = "";
-
     }
 
-
-    /* =========================================================
-       FILTER SUBJECTS
-    ========================================================== */
-
     function filterSubjects() {
-
-        const selectedSemester =
-            normalizeSemester(semester.value);
-
-        const selectedDepartment =
-            normalizeDepartment(department.value);
-
+        const selectedSemester = normalizeSemester(semester.value);
+        const selectedDepartment = normalizeDepartment(department.value);
 
         let visibleCount = 0;
 
+        Array.from(subject.options).forEach(function (option, index) {
+            if (index === 0) {
+                option.hidden = false;
+                return;
+            }
 
-        Array.from(subject.options)
-            .forEach(function (option, index) {
+            const optionSemester = normalizeSemester(option.dataset.semester);
+            const optionDepartment = normalizeDepartment(option.dataset.department);
 
-                /* Placeholder */
-                if (index === 0) {
+            if (!selectedSemester && !selectedDepartment) {
+                option.hidden = false;
+                visibleCount++;
+                return;
+            }
 
-                    option.hidden = false;
+            const semesterMatch =
+                !selectedSemester || optionSemester === selectedSemester;
 
-                    return;
-                }
+            const departmentMatch =
+                !selectedDepartment || optionDepartment === selectedDepartment;
 
+            const show = semesterMatch && departmentMatch;
 
-                const optionSemester =
-                    normalizeSemester(
-                        option.dataset.semester
-                    );
+            option.hidden = !show;
 
+            if (show) visibleCount++;
+        });
 
-                const optionDepartment =
-                    normalizeDepartment(
-                        option.dataset.department
-                    );
-
-
-                /* No filter selected */
-                if (
-                    !selectedSemester &&
-                    !selectedDepartment
-                ) {
-
-                    option.hidden = false;
-
-                    visibleCount++;
-
-                    return;
-                }
-
-
-                let semesterMatch = true;
-                let departmentMatch = true;
-
-
-                /* Semester matching */
-                if (selectedSemester) {
-
-                    semesterMatch =
-                        optionSemester ===
-                        selectedSemester;
-
-                }
-
-
-                /* Department matching */
-                if (selectedDepartment) {
-
-                    departmentMatch =
-                        optionDepartment ===
-                        selectedDepartment;
-
-                }
-
-
-                const show =
-                    semesterMatch &&
-                    departmentMatch;
-
-
-                option.hidden = !show;
-
-
-                if (show) {
-                    visibleCount++;
-                }
-
-            });
-
-
-        /* =====================================================
-           EDIT MODE FIX
-        ====================================================== */
-
-        const originalOption =
-            getOriginalSubjectOption();
+        const originalOption = getOriginalSubjectOption();
 
         if (originalOption) {
             originalOption.hidden = false;
         }
-
-
-        /* =====================================================
-           STATUS
-        ====================================================== */
 
         if (
             selectedSemester &&
@@ -957,326 +616,162 @@ document.addEventListener("DOMContentLoaded", function () {
             visibleCount === 0 &&
             !originalOption
         ) {
-
             showSubjectWarning(
-                "No subjects found for the selected semester and department. Please check the Subjects database."
+                "No subjects found for the selected semester and department."
             );
-
-            subjectHelp.textContent =
-                "No matching subject found.";
-
+            subjectHelp.innerHTML =
+                '<i class="bi bi-exclamation-circle me-1"></i>No matching subject found.';
         } else {
-
             hideSubjectStatus();
 
             if (visibleCount > 0) {
-
-                subjectHelp.textContent =
+                subjectHelp.innerHTML =
+                    '<i class="bi bi-check-circle me-1"></i>' +
                     visibleCount +
                     " subject(s) available for the selected class.";
-
-            } else if (
-                !selectedSemester ||
-                !selectedDepartment
-            ) {
-
-                subjectHelp.textContent =
-                    "Select semester and department to filter subjects.";
-
+            } else if (!selectedSemester || !selectedDepartment) {
+                subjectHelp.innerHTML =
+                    '<i class="bi bi-funnel me-1"></i>Select semester and department to filter subjects.';
             }
-
         }
 
+        const selectedOption = subject.options[subject.selectedIndex];
 
-        /* =====================================================
-           UPDATE TEACHER
-        ====================================================== */
-
-        const selectedOption =
-            subject.options[subject.selectedIndex];
-
-
-        if (
-            selectedOption &&
-            selectedOption.value
-        ) {
-
+        if (selectedOption && selectedOption.value) {
             updateTeacher();
-
         } else if (originalOption) {
-
-            subject.value =
-                originalSubjectId;
-
+            subject.value = originalSubjectId;
             updateTeacher();
-
         }
-
     }
 
-
-    /* =========================================================
-       UPDATE TEACHER
-    ========================================================== */
-
     function updateTeacher() {
+        const selected = subject.options[subject.selectedIndex];
 
-        const selected =
-            subject.options[subject.selectedIndex];
-
-
-        /* No subject */
-        if (
-            !selected ||
-            !selected.value
-        ) {
-
+        if (!selected || !selected.value) {
             teacherDisplay.innerHTML = `
                 <div class="teacher-placeholder">
-
                     <div class="teacher-icon">
                         <i class="bi bi-person"></i>
                     </div>
-
-                    <span>
-                        Select a subject
-                    </span>
-
+                    <span>Select a subject</span>
                 </div>
             `;
 
             if (!originalSubjectId) {
                 teacherInput.value = "";
             }
-
             return;
         }
 
-
         const teacher =
-            selected.dataset.teacher ||
-            "No teacher assigned";
-
+            selected.dataset.teacher || "No teacher assigned";
 
         const teacherId =
-            selected.dataset.teacherId ||
-            "";
+            selected.dataset.teacherId || "";
 
+        teacherInput.value = teacherId;
 
-        /* Set teacher ID */
-        teacherInput.value =
-            teacherId;
-
-
-        /* No teacher */
         if (!teacherId) {
-
             teacherDisplay.innerHTML = `
                 <div class="teacher-placeholder teacher-warning">
-
                     <div class="teacher-icon warning">
                         <i class="bi bi-person-exclamation"></i>
                     </div>
-
-                    <span>
-                        No teacher assigned
-                    </span>
-
+                    <span>No teacher assigned</span>
                 </div>
             `;
-
             return;
         }
 
-
-        /* Teacher found */
         teacherDisplay.innerHTML = `
             <div class="teacher-selected">
-
                 <div class="teacher-icon">
                     <i class="bi bi-person-fill"></i>
                 </div>
-
                 <div class="teacher-info">
-
-                    <span class="teacher-label">
-                        Assigned Teacher
-                    </span>
-
-                    <span class="teacher-name">
-                        ${escapeHtml(teacher)}
-                    </span>
-
+                    <span class="teacher-label">ASSIGNED TEACHER</span>
+                    <span class="teacher-name">${escapeHtml(teacher)}</span>
                 </div>
-
                 <i class="bi bi-check-circle-fill teacher-check"></i>
-
             </div>
         `;
-
     }
-
-
-    /* =========================================================
-       TIME PREVIEW
-    ========================================================== */
 
     function updateTimePreview() {
-
-        if (
-            !startTime.value ||
-            !endTime.value
-        ) {
-
+        if (!startTime.value || !endTime.value) {
             timePreview.classList.add("d-none");
-
-            timePreview.classList.remove(
-                "time-invalid"
-            );
-
+            timePreview.classList.remove("time-invalid");
             return;
         }
 
-
-        /* HH:MM string comparison is safe */
-        if (
-            startTime.value >=
-            endTime.value
-        ) {
-
-            timePreview.classList.remove(
-                "d-none"
-            );
-
-            timePreview.classList.add(
-                "time-invalid"
-            );
+        if (startTime.value >= endTime.value) {
+            timePreview.classList.remove("d-none");
+            timePreview.classList.add("time-invalid");
 
             timePreviewText.innerHTML = `
-                <strong>Invalid time:</strong>
-                End time must be later than start time.
+                <strong>Invalid time</strong>
+                <span>End time must be later than start time.</span>
             `;
-
             return;
         }
 
-
-        timePreview.classList.remove(
-            "d-none",
-            "time-invalid"
-        );
-
+        timePreview.classList.remove("d-none", "time-invalid");
 
         timePreviewText.innerHTML = `
-            Class time:
             <strong>
                 ${formatTime(startTime.value)}
-            </strong>
-            -
-            <strong>
+                <span class="time-arrow">→</span>
                 ${formatTime(endTime.value)}
             </strong>
+            <span>Class time</span>
         `;
-
     }
 
-
-    /* =========================================================
-       API FALLBACK
-    ========================================================== */
-
     async function loadSubjectsFromAPI() {
+        const selectedSemester = String(semester.value || "").trim();
+        const selectedDepartment = String(department.value || "").trim();
 
-        const selectedSemester =
-            String(semester.value || "").trim();
+        if (!selectedSemester || !selectedDepartment) return;
 
-        const selectedDepartment =
-            String(department.value || "").trim();
+        const matchingOptions = Array.from(subject.options).filter(function (option, index) {
+            if (index === 0) return false;
 
+            return (
+                normalizeSemester(option.dataset.semester) ===
+                normalizeSemester(selectedSemester)
+                &&
+                normalizeDepartment(option.dataset.department) ===
+                normalizeDepartment(selectedDepartment)
+            );
+        });
 
-        if (
-            !selectedSemester ||
-            !selectedDepartment
-        ) {
-            return;
-        }
+        if (matchingOptions.length > 0) return;
 
-
-        /* Check existing matching subjects */
-        const matchingOptions =
-            Array.from(subject.options)
-                .filter(function (option, index) {
-
-                    if (index === 0) {
-                        return false;
-                    }
-
-                    const sem =
-                        normalizeSemester(
-                            option.dataset.semester
-                        );
-
-                    const dept =
-                        normalizeDepartment(
-                            option.dataset.department
-                        );
-
-                    return (
-                        sem ===
-                        normalizeSemester(selectedSemester)
-                        &&
-                        dept ===
-                        normalizeDepartment(selectedDepartment)
-                    );
-
-                });
-
-
-        /* Already available */
-        if (matchingOptions.length > 0) {
-            return;
-        }
-
-
-        /* API fallback */
         try {
+            const apiUrl = "{{ url_for('routine.subjects_api') }}";
 
-            const apiUrl =
-                "{{ url_for('routine.subjects_api') }}";
+            const params = new URLSearchParams({
+                semester: selectedSemester,
+                department: selectedDepartment
+            });
 
-
-            const params =
-                new URLSearchParams({
-                    semester: selectedSemester,
-                    department: selectedDepartment
-                });
-
-
-            const response =
-                await fetch(
-                    apiUrl + "?" + params.toString(),
-                    {
-                        headers: {
-                            "X-Requested-With":
-                                "XMLHttpRequest"
-                        }
+            const response = await fetch(
+                apiUrl + "?" + params.toString(),
+                {
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
                     }
-                );
-
+                }
+            );
 
             if (!response.ok) {
-
                 throw new Error(
-                    "Subject API returned HTTP " +
-                    response.status
+                    "Subject API returned HTTP " + response.status
                 );
-
             }
 
-
-            const result =
-                await response.json();
-
+            const result = await response.json();
 
             if (
                 !result ||
@@ -1286,822 +781,1085 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-
             result.subjects.forEach(function (item) {
+                const itemId = String(item.id || "");
 
-                const itemId =
-                    String(item.id || "");
+                if (!itemId) return;
 
+                const alreadyExists = Array.from(subject.options)
+                    .some(function (option) {
+                        return String(option.value) === itemId;
+                    });
 
-                if (!itemId) {
-                    return;
-                }
+                if (alreadyExists) return;
 
+                const option = document.createElement("option");
 
-                /* Prevent duplicate option */
-                const alreadyExists =
-                    Array.from(subject.options)
-                        .some(function (option) {
-
-                            return String(option.value) ===
-                                   itemId;
-
-                        });
-
-
-                if (alreadyExists) {
-                    return;
-                }
-
-
-                const option =
-                    document.createElement("option");
-
-
-                option.value =
-                    item.id;
-
-
+                option.value = item.id;
                 option.textContent =
                     `${item.subject_code || ""} - ` +
                     `${item.subject_name || ""}` +
                     `${item.semester ? " | Sem " + item.semester : ""}` +
                     `${item.department ? " | " + item.department : ""}`;
 
-
-                option.dataset.semester =
-                    item.semester || "";
-
-
-                option.dataset.department =
-                    item.department || "";
-
-
+                option.dataset.semester = item.semester || "";
+                option.dataset.department = item.department || "";
                 option.dataset.teacher =
-                    item.teacher_name ||
-                    "No teacher assigned";
-
-
-                option.dataset.teacherId =
-                    item.teacher_id || "";
-
+                    item.teacher_name || "No teacher assigned";
+                option.dataset.teacherId = item.teacher_id || "";
 
                 subject.appendChild(option);
-
             });
 
-
-            /* Filter newly loaded subjects */
             filterSubjects();
-
 
         } catch (error) {
-
-            console.error(
-                "Subject API error:",
-                error
-            );
-
+            console.error("Subject API error:", error);
         }
-
     }
 
+    function handlePhoto(file) {
+        if (!file) return;
 
-    /* =========================================================
-       EVENTS
-    ========================================================== */
+        const allowed = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
 
-    semester.addEventListener(
-        "change",
-        async function () {
-
-            filterSubjects();
-
-            await loadSubjectsFromAPI();
-
+        if (!allowed.includes(file.type)) {
+            alert("Please choose a JPG, JPEG, PNG or WEBP image.");
+            photo.value = "";
+            return;
         }
-    );
 
-
-    department.addEventListener(
-        "change",
-        async function () {
-
-            filterSubjects();
-
-            await loadSubjectsFromAPI();
-
+        if (file.size > 8 * 1024 * 1024) {
+            alert("Image size should be less than 8 MB.");
+            photo.value = "";
+            return;
         }
-    );
 
+        selectedPhotoName.textContent = file.name;
+        selectedPhotoSize.textContent = formatFileSize(file.size);
 
-    subject.addEventListener(
-        "change",
-        function () {
+        const reader = new FileReader();
 
-            updateTeacher();
+        reader.onload = function (event) {
+            photoPreview.src = event.target.result;
+            selectedPhotoInfo.classList.remove("d-none");
+            photoUploadBox.classList.add("has-file");
+            photoUploadTitle.textContent = "Photo selected";
+            photoUploadText.textContent = "Click Browse to choose another";
+        };
 
-            hideSubjectStatus();
+        reader.readAsDataURL(file);
+    }
 
+    function formatFileSize(bytes) {
+        if (!bytes) return "0 KB";
+
+        const units = ["B", "KB", "MB", "GB"];
+        const index = Math.floor(Math.log(bytes) / Math.log(1024));
+
+        return (
+            (bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)
+            + " "
+            + units[index]
+        );
+    }
+
+    function removePhoto() {
+        photo.value = "";
+        selectedPhotoInfo.classList.add("d-none");
+        photoUploadBox.classList.remove("has-file");
+
+        const hasCurrentPhoto =
+            document.getElementById("currentRoutinePhoto");
+
+        if (hasCurrentPhoto) {
+            photoUploadTitle.textContent = "Change routine photo";
+        } else {
+            photoUploadTitle.textContent = "Choose routine photo";
         }
-    );
 
+        photoUploadText.textContent = "JPG, JPEG, PNG or WEBP";
+        photoPreview.src = "";
+        selectedPhotoName.textContent = "";
+        selectedPhotoSize.textContent = "";
+    }
 
-    startTime.addEventListener(
-        "change",
-        updateTimePreview
-    );
+    semester.addEventListener("change", async function () {
+        filterSubjects();
+        await loadSubjectsFromAPI();
+    });
 
+    department.addEventListener("change", async function () {
+        filterSubjects();
+        await loadSubjectsFromAPI();
+    });
 
-    endTime.addEventListener(
-        "change",
-        updateTimePreview
-    );
+    subject.addEventListener("change", function () {
+        updateTeacher();
+        hideSubjectStatus();
+    });
 
+    startTime.addEventListener("change", updateTimePreview);
+    endTime.addEventListener("change", updateTimePreview);
+    startTime.addEventListener("input", updateTimePreview);
+    endTime.addEventListener("input", updateTimePreview);
 
-    startTime.addEventListener(
-        "input",
-        updateTimePreview
-    );
+    photo.addEventListener("change", function () {
+        handlePhoto(this.files[0]);
+    });
 
+    ["dragenter", "dragover"].forEach(function (eventName) {
+        photoUploadBox.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            photoUploadBox.classList.add("dragging");
+        });
+    });
 
-    endTime.addEventListener(
-        "input",
-        updateTimePreview
-    );
+    ["dragleave", "drop"].forEach(function (eventName) {
+        photoUploadBox.addEventListener(eventName, function (event) {
+            event.preventDefault();
+            photoUploadBox.classList.remove("dragging");
+        });
+    });
 
+    photoUploadBox.addEventListener("drop", function (event) {
+        const files = event.dataTransfer.files;
 
-    /* =========================================================
-       FORM VALIDATION
-    ========================================================== */
-
-    routineForm.addEventListener(
-        "submit",
-        function (event) {
-
-            let valid = true;
-
-
-            /* Native validation */
-            if (!routineForm.checkValidity()) {
-                valid = false;
+        if (files && files.length) {
+            try {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(files[0]);
+                photo.files = dataTransfer.files;
+            } catch (error) {
+                console.warn("Could not assign dropped file:", error);
             }
 
-
-            /* Time validation */
-            if (
-                startTime.value &&
-                endTime.value &&
-                startTime.value >= endTime.value
-            ) {
-
-                valid = false;
-
-                endTime.classList.add(
-                    "is-invalid"
-                );
-
-                timePreview.classList.remove(
-                    "d-none"
-                );
-
-                timePreview.classList.add(
-                    "time-invalid"
-                );
-
-                timePreviewText.innerHTML = `
-                    <strong>Invalid time:</strong>
-                    End time must be later than start time.
-                `;
-
-            } else {
-
-                endTime.classList.remove(
-                    "is-invalid"
-                );
-
-            }
-
-
-            /* Subject validation */
-            if (!subject.value) {
-
-                valid = false;
-
-                subject.classList.add(
-                    "is-invalid"
-                );
-
-            } else {
-
-                subject.classList.remove(
-                    "is-invalid"
-                );
-
-            }
-
-
-            /* Teacher validation */
-            if (
-                subject.value &&
-                !teacherInput.value
-            ) {
-
-                valid = false;
-
-                subjectStatus.className =
-                    "subject-status mt-3 alert alert-danger border-0";
-
-                subjectStatus.innerHTML = `
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    The selected subject does not have a teacher assigned.
-                `;
-
-            }
-
-
-            /* Stop submit if invalid */
-            if (!valid) {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-            }
-
-
-            routineForm.classList.add(
-                "was-validated"
-            );
-
-
-            /* Prevent double submit */
-            if (
-                valid &&
-                submitBtn
-            ) {
-
-                submitBtn.disabled = true;
-
-
-                const isEdit =
-                    Boolean(originalSubjectId);
-
-
-                submitBtn.innerHTML =
-                    isEdit
-                    ? `
-                        <span class="spinner-border spinner-border-sm me-1"
-                              role="status"
-                              aria-hidden="true">
-                        </span>
-                        Updating...
-                      `
-                    : `
-                        <span class="spinner-border spinner-border-sm me-1"
-                              role="status"
-                              aria-hidden="true">
-                        </span>
-                        Saving...
-                      `;
-
-            }
-
+            handlePhoto(files[0]);
         }
-    );
+    });
 
+    removePhotoBtn.addEventListener("click", function () {
+        removePhoto();
+    });
 
-    /* =========================================================
-       INITIAL LOAD
-    ========================================================== */
+    routineForm.addEventListener("submit", function (event) {
+        let valid = routineForm.checkValidity();
+
+        if (
+            startTime.value &&
+            endTime.value &&
+            startTime.value >= endTime.value
+        ) {
+            valid = false;
+            endTime.classList.add("is-invalid");
+
+            timePreview.classList.remove("d-none");
+            timePreview.classList.add("time-invalid");
+
+            timePreviewText.innerHTML = `
+                <strong>Invalid time</strong>
+                <span>End time must be later than start time.</span>
+            `;
+        } else {
+            endTime.classList.remove("is-invalid");
+        }
+
+        if (!subject.value) {
+            valid = false;
+            subject.classList.add("is-invalid");
+        } else {
+            subject.classList.remove("is-invalid");
+        }
+
+        if (subject.value && !teacherInput.value) {
+            valid = false;
+
+            subjectStatus.className = "subject-status mt-3 status-danger";
+            subjectStatus.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>The selected subject does not have a teacher assigned.</span>
+            `;
+        }
+
+        if (!valid) {
+            event.preventDefault();
+            event.stopPropagation();
+            routineForm.classList.add("was-validated");
+            return;
+        }
+
+        routineForm.classList.add("was-validated");
+
+        if (submitBtn) {
+            submitBtn.disabled = true;
+
+            const isEdit = Boolean(originalSubjectId);
+
+            submitBtn.innerHTML = isEdit
+                ? `
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Updating...
+                  `
+                : `
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Saving...
+                  `;
+        }
+    });
 
     updateTeacher();
-
     filterSubjects();
-
     updateTimePreview();
 
-
-    /* Browser/Jinja selected values restore भएपछि */
-    setTimeout(
-        function () {
-
-            filterSubjects();
-
-            updateTeacher();
-
-            updateTimePreview();
-
-        },
-        100
-    );
-
+    setTimeout(function () {
+        filterSubjects();
+        updateTeacher();
+        updateTimePreview();
+    }, 100);
 });
 </script>
 
-
-<!-- =========================================================
-     STYLE
-========================================================== -->
 <style>
+/* ============================================================
+   ROUTINE FORM - MODERN UI
+   ============================================================ */
 
-    /* =========================================================
-       PAGE
-    ========================================================== */
+.routine-form-page {
+    min-height: 100%;
+    --routine-primary: #2563eb;
+    --routine-green: #16a34a;
+    --routine-purple: #7c3aed;
+    --routine-orange: #ea8b00;
+    --routine-text: #172033;
+    --routine-muted: #718096;
+    --routine-border: #e5e7eb;
+    --routine-soft: #f8fafc;
+}
 
+/* HEADER */
+.routine-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.routine-page-header > div {
+    min-width: 0;
+}
+
+.routine-back-btn {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 18px;
+    transition: all .2s ease;
+}
+
+.routine-back-btn:hover {
+    color: var(--routine-primary);
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    transform: translateX(-2px);
+}
+
+.routine-title-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    color: var(--routine-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.routine-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 3px;
+}
+
+.routine-breadcrumb i {
+    font-size: 9px;
+}
+
+.routine-page-title {
+    color: var(--routine-text);
+    font-size: 25px;
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+.routine-page-subtitle {
+    color: var(--routine-muted);
+    font-size: 13px;
+}
+
+/* ALERT */
+.routine-alert {
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 15px;
+}
+
+/* MAIN CARD */
+.routine-main-card {
+    background: #fff;
+    border: 1px solid #e9edf3;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(15, 23, 42, .06);
+    overflow: hidden;
+}
+
+.routine-main-card form {
+    padding: 30px;
+}
+
+/* SECTION */
+.routine-section {
+    width: 100%;
+}
+
+.routine-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 19px;
+}
+
+.routine-section-heading h5 {
+    color: var(--routine-text);
+    font-size: 16px;
+    font-weight: 750;
+    margin: 0 0 3px;
+}
+
+.routine-section-heading p {
+    color: #94a3b8;
+    font-size: 12px;
+    margin: 0;
+}
+
+.routine-section-icon {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+}
+
+.routine-section-icon.blue {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.routine-section-icon.green {
+    color: #16a34a;
+    background: #f0fdf4;
+}
+
+.routine-section-icon.purple {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+.routine-section-icon.orange {
+    color: #d97706;
+    background: #fffbeb;
+}
+
+.routine-section-icon.photo {
+    color: #db2777;
+    background: #fdf2f8;
+}
+
+/* DIVIDER */
+.routine-divider {
+    height: 1px;
+    background: #edf0f4;
+    margin: 27px 0;
+}
+
+/* LABELS */
+.routine-label {
+    display: block;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.routine-label span {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+/* INPUTS */
+.routine-input-wrap {
+    position: relative;
+}
+
+.routine-input-wrap > i {
+    position: absolute;
+    z-index: 3;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.routine-input.has-icon {
+    padding-left: 39px;
+}
+
+.routine-input,
+.routine-input-wrap .form-select,
+.routine-input-wrap .form-control {
+    min-height: 44px;
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    background-color: #fff;
+    color: #334155;
+    font-size: 13px;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.routine-input:hover {
+    border-color: #cbd5e1;
+}
+
+.routine-input:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .09);
+}
+
+.routine-help {
+    display: block;
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 7px;
+}
+
+/* TIME PREVIEW */
+.routine-time-preview {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-top: 15px;
+    padding: 10px 13px;
+    border: 1px solid #dcfce7;
+    border-radius: 11px;
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.time-preview-icon {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 13px;
+}
+
+#timePreviewText {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#timePreviewText strong {
+    font-size: 13px;
+}
+
+#timePreviewText > span {
+    color: #4d7c5d;
+    font-size: 11px;
+}
+
+.time-arrow {
+    color: #16a34a;
+    padding: 0 4px;
+}
+
+.routine-time-preview.time-invalid {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.routine-time-preview.time-invalid .time-preview-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.routine-time-preview.time-invalid #timePreviewText span {
+    color: #b91c1c;
+}
+
+/* TEACHER */
+.teacher-display {
+    min-height: 44px;
+    height: 44px;
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+}
+
+.teacher-placeholder,
+.teacher-selected {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.teacher-placeholder {
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.teacher-icon {
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    border-radius: 50%;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.teacher-icon.warning {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.teacher-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.teacher-label {
+    color: #94a3b8;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .06em;
+}
+
+.teacher-name {
+    max-width: 220px;
+    color: #1e293b;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.teacher-check {
+    margin-left: auto;
+    color: #16a34a;
+    font-size: 14px;
+}
+
+.subject-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.status-warning {
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+}
+
+.status-danger {
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+}
+
+/* PHOTO */
+.routine-photo-area {
+    max-width: 760px;
+}
+
+.current-photo-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 11px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.current-photo-preview {
+    width: 105px;
+    height: 68px;
+    flex: 0 0 105px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.current-photo-preview img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.current-photo-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.current-photo-info strong {
+    color: #334155;
+    font-size: 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.current-photo-info small {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.photo-badge {
+    align-self: flex-start;
+    color: #166534;
+    background: #dcfce7;
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.photo-upload-box {
+    min-height: 78px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #fafcff;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.photo-upload-box:hover,
+.photo-upload-box.dragging {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+.photo-upload-box.has-file {
+    border-color: #86efac;
+    background: #f0fdf4;
+}
+
+.photo-upload-box input[type="file"] {
+    display: none;
+}
+
+.photo-upload-icon {
+    width: 39px;
+    height: 39px;
+    flex: 0 0 39px;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.photo-upload-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.photo-upload-content strong {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.photo-upload-content span {
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+.photo-browse-btn {
+    margin-left: auto;
+    padding: 7px 12px;
+    color: #2563eb;
+    background: #fff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.selected-photo-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 9px;
+    padding: 8px 10px;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+}
+
+.selected-photo-thumb {
+    width: 46px;
+    height: 36px;
+    flex: 0 0 46px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #e2e8f0;
+}
+
+.selected-photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.selected-photo-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.selected-photo-meta strong {
+    color: #166534;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected-photo-meta small {
+    color: #4d7c5d;
+    font-size: 9px;
+}
+
+.remove-photo-btn {
+    margin-left: auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 7px;
+    background: #fee2e2;
+    color: #dc2626;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.photo-tip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 10px;
+}
+
+/* INFO */
+.routine-info-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 28px;
+    padding: 12px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 11px;
+    background: #f8fbff;
+}
+
+.routine-info-icon {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.routine-info-box strong {
+    color: #1e40af;
+    font-size: 11px;
+}
+
+.routine-info-box p {
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.5;
+    margin-top: 2px !important;
+}
+
+/* ACTIONS */
+.routine-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 9px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #edf0f4;
+}
+
+.routine-actions .btn {
+    min-height: 42px;
+    border-radius: 9px;
+    padding: 0 17px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+}
+
+.routine-cancel-btn {
+    color: #475569;
+    background: #fff;
+    border: 1px solid #dfe5ec;
+}
+
+.routine-cancel-btn:hover {
+    color: #334155;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.routine-submit-btn {
+    min-width: 145px;
+    color: #fff;
+    border: 0;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 5px 14px rgba(37, 99, 235, .20);
+}
+
+.routine-submit-btn:hover {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(37, 99, 235, .25);
+}
+
+.routine-submit-btn:disabled {
+    opacity: .75;
+    transform: none;
+}
+
+/* VALIDATION */
+.was-validated .routine-input:invalid,
+.routine-input.is-invalid {
+    border-color: #fca5a5;
+}
+
+.invalid-feedback {
+    font-size: 10px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
     .routine-form-page {
-        min-height: 100%;
+        padding-top: 18px !important;
     }
-
-
-    /* =========================================================
-       HEADER
-    ========================================================== */
-
-    .routine-back-btn {
-
-        width: 44px;
-        height: 44px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 10px;
-
-        transition:
-            transform .2s ease,
-            box-shadow .2s ease;
-    }
-
-
-    .routine-back-btn:hover {
-
-        transform: translateX(-2px);
-
-        box-shadow:
-            0 4px 12px rgba(0, 0, 0, .08);
-    }
-
-
-    .routine-title-icon {
-
-        width: 46px;
-        height: 46px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 12px;
-
-        background:
-            rgba(13, 110, 253, .10);
-
-        color: #0d6efd;
-
-        font-size: 22px;
-    }
-
-
-    /* =========================================================
-       MAIN CARD
-    ========================================================== */
 
     .routine-main-card {
-
-        overflow: hidden;
-
-        border:
-            1px solid rgba(0, 0, 0, .04) !important;
+        border-radius: 14px;
     }
 
-
-    /* =========================================================
-       SECTION
-    ========================================================== */
-
-    .routine-section {
-        width: 100%;
+    .routine-main-card form {
+        padding: 20px;
     }
 
-
-    .routine-section-title {
-
-        display: flex;
-        align-items: center;
-
-        gap: 12px;
-
-        margin-bottom: 4px;
+    .routine-page-title {
+        font-size: 21px;
     }
 
+    .routine-page-subtitle {
+        font-size: 11px;
+    }
 
-    .routine-section-icon {
+    .routine-title-icon {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+        font-size: 19px;
+    }
 
+    .routine-back-btn {
         width: 40px;
         height: 40px;
-
-        flex-shrink: 0;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 10px;
-
-        font-size: 18px;
+        flex-basis: 40px;
     }
 
-
-    .routine-section-icon.blue {
-
-        background:
-            rgba(13, 110, 253, .10);
-
-        color: #0d6efd;
+    .routine-section-heading {
+        margin-bottom: 15px;
     }
 
-
-    .routine-section-icon.green {
-
-        background:
-            rgba(25, 135, 84, .10);
-
-        color: #198754;
+    .routine-divider {
+        margin: 21px 0;
     }
 
-
-    .routine-section-icon.purple {
-
-        background:
-            rgba(111, 66, 193, .10);
-
-        color: #6f42c1;
+    .routine-photo-area {
+        max-width: 100%;
     }
 
-
-    .routine-section-icon.orange {
-
-        background:
-            rgba(255, 193, 7, .14);
-
-        color: #d39e00;
+    .routine-actions {
+        justify-content: stretch;
     }
 
+    .routine-actions .btn {
+        flex: 1;
+    }
+}
 
-    /* =========================================================
-       FORM
-    ========================================================== */
-
-    .form-label {
-        margin-bottom: 7px;
+@media (max-width: 520px) {
+    .routine-main-card form {
+        padding: 16px;
     }
 
-
-    .form-control,
-    .form-select {
-
-        min-height: 44px;
-
-        border-radius: 10px;
-
-        border-color: #dee2e6;
-
-        transition:
-            border-color .2s ease,
-            box-shadow .2s ease;
+    .routine-page-header > div {
+        gap: 9px !important;
     }
 
-
-    .form-control:focus,
-    .form-select:focus {
-
-        border-color: #86b7fe;
-
-        box-shadow:
-            0 0 0 .20rem
-            rgba(13, 110, 253, .10);
-    }
-
-
-    .form-control:hover,
-    .form-select:hover {
-
-        border-color: #b8c2cc;
-    }
-
-
-    /* =========================================================
-       TEACHER DISPLAY
-    ========================================================== */
-
-    .teacher-display {
-
-        min-height: 44px;
-
-        width: 100%;
-
-        border:
-            1px solid #dee2e6;
-
-        border-radius: 10px;
-
-        background: #f8f9fa;
-
-        display: flex;
-
-        align-items: center;
-
-        padding: 7px 10px;
-    }
-
-
-    .teacher-placeholder {
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 9px;
-
-        color: #6c757d;
-
-        font-size: 14px;
-    }
-
-
-    .teacher-selected {
-
-        width: 100%;
-
-        display: flex;
-
-        align-items: center;
-
-        gap: 10px;
-    }
-
-
-    .teacher-icon {
-
-        width: 30px;
-        height: 30px;
-
-        flex-shrink: 0;
-
-        display: flex;
-
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 50%;
-
-        background:
-            rgba(13, 110, 253, .10);
-
-        color: #0d6efd;
-    }
-
-
-    .teacher-icon.warning {
-
-        background:
-            rgba(255, 193, 7, .15);
-
-        color: #b58100;
-    }
-
-
-    .teacher-info {
-
-        display: flex;
-
-        flex-direction: column;
-
-        min-width: 0;
-    }
-
-
-    .teacher-label {
-
-        font-size: 10px;
-
-        color: #6c757d;
-
-        line-height: 1.2;
-    }
-
-
-    .teacher-name {
-
-        font-weight: 600;
-
-        font-size: 14px;
-
-        color: #212529;
-
-        white-space: nowrap;
-
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-    }
-
-
-    .teacher-check {
-
-        margin-left: auto;
-
-        color: #198754;
-
-        font-size: 16px;
-    }
-
-
-    /* =========================================================
-       TIME PREVIEW
-    ========================================================== */
-
-    .routine-time-preview {
-
-        padding: 10px 14px;
-
-        border-radius: 10px;
-
-        background:
-            rgba(25, 135, 84, .08);
-
-        color: #146c43;
-
-        font-size: 14px;
-
-        border:
-            1px solid
-            rgba(25, 135, 84, .12);
-    }
-
-
-    .routine-time-preview.time-invalid {
-
-        background:
-            rgba(220, 53, 69, .08);
-
-        color: #b02a37;
-
-        border-color:
-            rgba(220, 53, 69, .15);
-    }
-
-
-    /* =========================================================
-       SUBJECT STATUS
-    ========================================================== */
-
-    .subject-status {
-        font-size: 14px;
-    }
-
-
-    /* =========================================================
-       INFO
-    ========================================================== */
-
-    .routine-info {
-
-        background:
-            rgba(13, 110, 253, .07);
-
-        color: #084298;
-    }
-
-
-    /* =========================================================
-       BUTTONS
-    ========================================================== */
-
-    .btn {
-
-        border-radius: 10px;
-
-        min-height: 44px;
-    }
-
-
-    .routine-submit-btn {
-
-        min-width: 145px;
-
-        font-weight: 600;
-    }
-
-
-    .routine-cancel-btn {
-
-        min-width: 105px;
-
-        font-weight: 500;
-    }
-
-
-    /* =========================================================
-       PURPLE
-    ========================================================== */
-
-    .text-purple {
-        color: #6f42c1;
-    }
-
-
-    /* =========================================================
-       HIDDEN SUBJECT OPTIONS
-    ========================================================== */
-
-    select option[hidden] {
+    .routine-breadcrumb {
         display: none;
     }
 
-
-    /* =========================================================
-       RESPONSIVE
-    ========================================================== */
-
-    @media (max-width: 768px) {
-
-        .container-fluid {
-
-            padding-left: 14px !important;
-            padding-right: 14px !important;
-        }
-
-
-        .routine-main-card .card-body {
-
-            padding: 20px !important;
-        }
-
-
-        .routine-title-icon {
-
-            width: 42px;
-            height: 42px;
-
-            font-size: 19px;
-        }
-
-
-        .routine-section-icon {
-
-            width: 36px;
-            height: 36px;
-
-            font-size: 16px;
-        }
-
-
-        .routine-section-title h5 {
-            font-size: 16px;
-        }
-
-
-        .routine-section-title small {
-            font-size: 12px;
-        }
-
-
-        .routine-submit-btn,
-        .routine-cancel-btn {
-
-            flex: 1;
-
-            min-width: 120px;
-        }
-
+    .routine-page-title {
+        font-size: 19px;
     }
 
-
-    @media (max-width: 480px) {
-
-        .routine-form-page h3 {
-            font-size: 20px;
-        }
-
-
-        .routine-form-page
-        .d-flex.justify-content-end {
-
-            flex-direction: column;
-        }
-
-
-        .routine-submit-btn,
-        .routine-cancel-btn {
-
-            width: 100%;
-        }
-
+    .routine-page-subtitle {
+        font-size: 10px;
     }
 
+    .routine-section-heading h5 {
+        font-size: 14px;
+    }
+
+    .routine-section-heading p {
+        font-size: 10px;
+    }
+
+    .routine-section-icon {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        font-size: 15px;
+    }
+
+    .current-photo-box {
+        align-items: flex-start;
+    }
+
+    .current-photo-preview {
+        width: 85px;
+        height: 58px;
+        flex-basis: 85px;
+    }
+
+    .photo-upload-box {
+        min-height: 72px;
+        padding: 9px;
+    }
+
+    .photo-upload-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        font-size: 15px;
+    }
+
+    .photo-upload-content strong {
+        font-size: 11px;
+    }
+
+    .photo-upload-content span {
+        font-size: 9px;
+    }
+
+    .photo-browse-btn {
+        padding: 6px 9px;
+    }
+
+    .routine-actions {
+        flex-direction: column-reverse;
+    }
+
+    .routine-actions .btn {
+        width: 100%;
+    }
+
+    .routine-info-box {
+        padding: 10px;
+    }
+}
 </style>
 
 {% endblock %}

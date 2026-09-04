@@ -1,505 +1,214 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-Edit Marks - AI Smart Attendance System
+Replace Marksheet - AI Smart Attendance System
 {% endblock %}
 
 {% block content %}
 
 <div class="container-fluid py-4">
 
-    <!-- =====================================================
-         PAGE HEADER
-    ====================================================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
 
         <div>
             <h3 class="fw-bold mb-1">
                 <i class="bi bi-pencil-square me-2"></i>
-                Edit Student Marks
+                Replace Marksheet
             </h3>
 
             <p class="text-muted mb-0">
-                Update theory, practical marks and academic result
+                Upload a new marksheet for this student.
             </p>
         </div>
 
         <a
             href="{{ url_for('admin_marksheet.index') }}"
-            class="btn btn-outline-secondary"
+            class="btn btn-outline-primary"
         >
             <i class="bi bi-arrow-left me-1"></i>
-            Back to Marksheets
+            Back
         </a>
 
     </div>
 
 
-    <!-- =====================================================
-         MAIN CARD
-    ====================================================== -->
-
     <div class="row justify-content-center">
 
-        <div class="col-xl-9 col-lg-10">
+        <div class="col-xl-7 col-lg-8">
 
             <div class="card border-0 shadow-sm">
 
-                <!-- HEADER -->
+                <div class="card-body p-4">
 
-                <div class="card-header bg-white border-0 py-4">
+                    <!-- STUDENT -->
+                    <div class="student-info mb-4">
 
-                    <div class="d-flex align-items-center">
+                        <div class="avatar">
 
-                        <div class="marksheet-header-icon">
-                            <i class="bi bi-pencil-square"></i>
+                            {% if marksheet[6] %}
+
+                                <img
+                                    src="{{ url_for(
+                                        'static',
+                                        filename='uploads/students/' ~ marksheet[6]
+                                    ) }}"
+                                    alt="Student"
+                                >
+
+                            {% else %}
+
+                                <i class="bi bi-person-fill"></i>
+
+                            {% endif %}
+
                         </div>
 
-                        <div class="ms-3">
+                        <div>
 
                             <h5 class="fw-bold mb-1">
-                                Update Marksheet
+                                {{ marksheet[3] }}
                             </h5>
 
-                            <small class="text-muted">
-                                Edit marks for the selected student and subject
-                            </small>
+                            <div class="text-muted small">
+
+                                ID:
+                                <strong>
+                                    {{ marksheet[2] }}
+                                </strong>
+
+                                {% if marksheet[4] %}
+                                    &nbsp; | &nbsp;
+                                    {{ marksheet[4] }}
+                                {% endif %}
+
+                                {% if marksheet[5] %}
+                                    &nbsp; | &nbsp;
+                                    Semester {{ marksheet[5] }}
+                                {% endif %}
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                </div>
+
+                    <!-- CURRENT FILE -->
+                    {% if marksheet[7] %}
+
+                        <div class="alert alert-light border mb-4">
+
+                            <div class="d-flex align-items-center gap-3">
+
+                                <i class="bi bi-file-earmark-text-fill fs-3 text-primary"></i>
+
+                                <div>
+
+                                    <div class="small text-muted">
+                                        Current Marksheet
+                                    </div>
+
+                                    <div class="fw-semibold">
+                                        {{ marksheet[7] }}
+                                    </div>
+
+                                </div>
+
+                                <a
+                                    href="{{ url_for(
+                                        'admin_marksheet.view',
+                                        marksheet_id=marksheet[0]
+                                    ) }}"
+                                    target="_blank"
+                                    class="btn btn-sm btn-outline-primary ms-auto"
+                                >
+                                    <i class="bi bi-eye me-1"></i>
+                                    View
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
 
 
-                <!-- BODY -->
-
-                <div class="card-body p-4">
+                    <!-- FORM -->
 
                     <form
                         method="POST"
-                        action="{{ url_for(
-                            'admin_marksheet.edit',
-                            marksheet_id=marksheet[0]
-                        ) }}"
-                        id="editMarksheetForm"
+                        enctype="multipart/form-data"
                     >
-
-                        <!-- =================================================
-                             STUDENT INFORMATION
-                        ================================================== -->
-
-                        <div class="section-title mb-3">
-
-                            <i class="bi bi-person-fill me-2"></i>
-                            Student Information
-
-                        </div>
-
-
-                        <div class="row g-3">
-
-                            <!-- STUDENT ID -->
-
-                            <div class="col-md-4">
-
-                                <label class="form-label fw-semibold">
-                                    Student ID
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[3] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-
-                            <!-- NAME -->
-
-                            <div class="col-md-8">
-
-                                <label class="form-label fw-semibold">
-                                    Student Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[4] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-
-                            <!-- DEPARTMENT -->
-
-                            <div class="col-md-6">
-
-                                <label class="form-label fw-semibold">
-                                    Department
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[5] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-
-                            <!-- SEMESTER -->
-
-                            <div class="col-md-6">
-
-                                <label class="form-label fw-semibold">
-                                    Semester
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[6] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <hr class="my-4">
-
-
-                        <!-- =================================================
-                             SUBJECT INFORMATION
-                        ================================================== -->
-
-                        <div class="section-title mb-3">
-
-                            <i class="bi bi-book-fill me-2"></i>
-                            Subject Information
-
-                        </div>
-
-
-                        <div class="row g-3">
-
-                            <!-- SUBJECT CODE -->
-
-                            <div class="col-md-4">
-
-                                <label class="form-label fw-semibold">
-                                    Subject Code
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[7] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-
-                            <!-- SUBJECT NAME -->
-
-                            <div class="col-md-8">
-
-                                <label class="form-label fw-semibold">
-                                    Subject Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ marksheet[8] or 'N/A' }}"
-                                    readonly
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <hr class="my-4">
-
-
-                        <!-- =================================================
-                             MARKS
-                        ================================================== -->
-
-                        <div class="section-title mb-3">
-
-                            <i class="bi bi-bar-chart-fill me-2"></i>
-                            Marks Information
-
-                        </div>
-
-
-                        <div class="row g-3">
-
-                            <!-- THEORY -->
-
-                            <div class="col-md-4">
-
-                                <label
-                                    for="theory_marks"
-                                    class="form-label fw-semibold"
-                                >
-                                    Theory Marks
-                                    <span class="text-danger">*</span>
-                                </label>
-
-                                <div class="input-group">
-
-                                    <input
-                                        type="number"
-                                        name="theory_marks"
-                                        id="theory_marks"
-                                        class="form-control"
-                                        min="0"
-                                        max="70"
-                                        step="0.01"
-                                        value="{{ marksheet[9] or 0 }}"
-                                        required
-                                    >
-
-                                    <span class="input-group-text">
-                                        / 70
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    id="theoryError"
-                                    class="text-danger small mt-1"
-                                ></div>
-
-                            </div>
-
-
-                            <!-- PRACTICAL -->
-
-                            <div class="col-md-4">
-
-                                <label
-                                    for="practical_marks"
-                                    class="form-label fw-semibold"
-                                >
-                                    Practical Marks
-                                    <span class="text-danger">*</span>
-                                </label>
-
-                                <div class="input-group">
-
-                                    <input
-                                        type="number"
-                                        name="practical_marks"
-                                        id="practical_marks"
-                                        class="form-control"
-                                        min="0"
-                                        max="30"
-                                        step="0.01"
-                                        value="{{ marksheet[10] or 0 }}"
-                                        required
-                                    >
-
-                                    <span class="input-group-text">
-                                        / 30
-                                    </span>
-
-                                </div>
-
-                                <div
-                                    id="practicalError"
-                                    class="text-danger small mt-1"
-                                ></div>
-
-                            </div>
-
-
-                            <!-- TOTAL -->
-
-                            <div class="col-md-4">
-
-                                <label class="form-label fw-semibold">
-                                    Total Marks
-                                </label>
-
-                                <div class="input-group">
-
-                                    <input
-                                        type="text"
-                                        id="total_marks"
-                                        class="form-control fw-bold"
-                                        value="{{ '%.2f'|format(marksheet[11] or 0) }}"
-                                        readonly
-                                    >
-
-                                    <span class="input-group-text">
-                                        / 100
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- =================================================
-                             RESULT PREVIEW
-                        ================================================== -->
-
-                        <div class="result-preview mt-4">
-
-                            <div class="row align-items-center">
-
-                                <!-- GRADE -->
-
-                                <div class="col-md-4 text-center">
-
-                                    <div class="result-label">
-                                        Current / Updated Grade
-                                    </div>
-
-                                    <div
-                                        id="gradePreview"
-                                        class="result-grade"
-                                    >
-                                        {{ marksheet[12] or "F" }}
-                                    </div>
-
-                                </div>
-
-
-                                <!-- GRADE POINT -->
-
-                                <div class="col-md-4 text-center">
-
-                                    <div class="result-label">
-                                        Grade Point
-                                    </div>
-
-                                    <div
-                                        id="gradePointPreview"
-                                        class="result-value"
-                                    >
-                                        {{ "%.2f"|format(marksheet[13] or 0) }}
-                                    </div>
-
-                                </div>
-
-
-                                <!-- STATUS -->
-
-                                <div class="col-md-4 text-center">
-
-                                    <div class="result-label">
-                                        Result
-                                    </div>
-
-                                    <div
-                                        id="statusPreview"
-                                        class="result-status"
-                                    >
-                                        {% if (marksheet[11] or 0) >= 40 %}
-                                            <span class="text-success">
-                                                PASS
-                                            </span>
-                                        {% else %}
-                                            <span class="text-danger">
-                                                FAIL
-                                            </span>
-                                        {% endif %}
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <hr class="my-4">
-
-
-                        <!-- =================================================
-                             REMARKS
-                        ================================================== -->
-
-                        <div class="section-title mb-3">
-
-                            <i class="bi bi-chat-left-text-fill me-2"></i>
-                            Remarks
-
-                        </div>
-
 
                         <div class="mb-4">
 
                             <label
-                                for="remarks"
+                                for="marksheet_file"
                                 class="form-label fw-semibold"
                             >
-                                Remarks
+                                New Marksheet Photo / PDF
                             </label>
 
-                            <textarea
-                                name="remarks"
-                                id="remarks"
-                                class="form-control"
-                                rows="3"
-                                maxlength="100"
-                                placeholder="Enter remarks..."
-                            >{{ marksheet[14] or "" }}</textarea>
+                            <input
+                                type="file"
+                                name="marksheet_file"
+                                id="marksheet_file"
+                                class="form-control form-control-lg"
+                                accept=".jpg,.jpeg,.png,.webp,.pdf"
+                                required
+                            >
 
-                            <div class="text-end">
+                            <div class="form-text">
+                                Uploading a new file will replace the current marksheet.
+                            </div>
 
-                                <small
-                                    class="text-muted"
-                                    id="remarksCounter"
-                                >
-                                    0 / 100
-                                </small>
+                        </div>
+
+
+                        <div
+                            id="previewContainer"
+                            class="preview-container d-none mb-4"
+                        >
+
+                            <img
+                                id="imagePreview"
+                                class="img-fluid d-none"
+                                alt="Preview"
+                            >
+
+                            <div
+                                id="pdfPreview"
+                                class="text-center d-none"
+                            >
+
+                                <i class="bi bi-file-earmark-pdf-fill text-danger display-4"></i>
+
+                                <div
+                                    id="pdfName"
+                                    class="fw-semibold mt-2"
+                                ></div>
 
                             </div>
 
                         </div>
 
 
-                        <!-- =================================================
-                             BUTTONS
-                        ================================================== -->
-
-                        <div
-                            class="d-flex justify-content-between align-items-center"
-                        >
+                        <div class="d-flex justify-content-end gap-2">
 
                             <a
                                 href="{{ url_for('admin_marksheet.index') }}"
-                                class="btn btn-outline-secondary"
+                                class="btn btn-light border"
                             >
-                                <i class="bi bi-x-circle me-1"></i>
                                 Cancel
                             </a>
 
-
                             <button
                                 type="submit"
-                                class="btn btn-primary px-4"
-                                id="updateMarksButton"
+                                class="btn btn-primary"
                             >
-                                <i class="bi bi-check-circle me-1"></i>
-                                Update Marks
+                                <i class="bi bi-arrow-repeat me-1"></i>
+                                Replace Marksheet
                             </button>
 
                         </div>
@@ -517,566 +226,153 @@ Edit Marks - AI Smart Attendance System
 </div>
 
 
-<!-- ============================================================
-     CUSTOM CSS
-============================================================= -->
-
 <style>
 
-.marksheet-header-icon {
-
-    width: 50px;
-    height: 50px;
-
+.student-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-
-    border-radius: 12px;
-
-    background: #e8f0ff;
-    color: #0d6efd;
-
-    font-size: 23px;
-
+    gap: 15px;
 }
 
-
-.section-title {
-
-    font-size: 15px;
-    font-weight: 700;
-
-    color: #334155;
-
-}
-
-
-.section-title i {
-
-    color: #0d6efd;
-
-}
-
-
-.form-label {
-
-    color: #334155;
-
-}
-
-
-.form-control {
-
-    min-height: 44px;
-
-    border-radius: 8px;
-
-}
-
-
-.form-control:focus {
-
-    border-color: #86b7fe;
-
-    box-shadow:
-        0 0 0 .2rem rgba(13, 110, 253, .10);
-
-}
-
-
-.input-group-text {
-
-    background: #f8fafc;
-
-    color: #64748b;
-
-    font-weight: 600;
-
-}
-
-
-.result-preview {
-
-    background: #f8fafc;
-
-    border: 1px solid #e2e8f0;
-
-    border-radius: 14px;
-
-    padding: 22px 15px;
-
-}
-
-
-.result-label {
-
-    color: #64748b;
-
-    font-size: 13px;
-
-    font-weight: 600;
-
-    margin-bottom: 6px;
-
-}
-
-
-.result-grade {
-
+.avatar {
     width: 58px;
     height: 58px;
-
-    margin: 0 auto;
-
+    border-radius: 50%;
+    background: #eef2ff;
+    color: #4f46e5;
     display: flex;
-
     align-items: center;
     justify-content: center;
-
-    border-radius: 50%;
-
-    background: #fee2e2;
-
-    color: #dc2626;
-
-    font-size: 20px;
-
-    font-weight: 800;
-
+    font-size: 27px;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
-
-.result-value {
-
-    font-size: 23px;
-
-    font-weight: 800;
-
-    color: #334155;
-
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-
-.result-status {
-
-    font-size: 18px;
-
-    font-weight: 800;
-
+.preview-container {
+    padding: 15px;
+    border: 2px dashed #dbe2ea;
+    border-radius: 14px;
+    background: #f8fafc;
+    text-align: center;
 }
 
-
-.is-invalid {
-
-    border-color: #dc3545 !important;
-
-}
-
-
-@media (max-width: 768px) {
-
-    .container-fluid {
-
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-
-    }
-
-    .d-flex.justify-content-between.align-items-center {
-
-        gap: 15px;
-        flex-wrap: wrap;
-
-    }
-
-    .result-preview .col-md-4 {
-
-        margin-bottom: 20px;
-
-    }
-
-    .result-preview .col-md-4:last-child {
-
-        margin-bottom: 0;
-
-    }
-
+.preview-container img {
+    max-height: 500px;
+    max-width: 100%;
+    object-fit: contain;
 }
 
 </style>
 
 
-<!-- ============================================================
-     JAVASCRIPT
-============================================================= -->
-
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    const theoryInput =
-        document.getElementById("theory_marks");
+        const input =
+            document.getElementById(
+                "marksheet_file"
+            );
 
-    const practicalInput =
-        document.getElementById("practical_marks");
+        const container =
+            document.getElementById(
+                "previewContainer"
+            );
 
-    const totalInput =
-        document.getElementById("total_marks");
+        const image =
+            document.getElementById(
+                "imagePreview"
+            );
 
-    const gradePreview =
-        document.getElementById("gradePreview");
+        const pdf =
+            document.getElementById(
+                "pdfPreview"
+            );
 
-    const gradePointPreview =
-        document.getElementById("gradePointPreview");
+        const pdfName =
+            document.getElementById(
+                "pdfName"
+            );
 
-    const statusPreview =
-        document.getElementById("statusPreview");
 
-    const theoryError =
-        document.getElementById("theoryError");
+        input.addEventListener(
+            "change",
+            function () {
 
-    const practicalError =
-        document.getElementById("practicalError");
+                const file =
+                    this.files[0];
 
-    const remarks =
-        document.getElementById("remarks");
+                image.classList.add(
+                    "d-none"
+                );
 
-    const remarksCounter =
-        document.getElementById("remarksCounter");
+                pdf.classList.add(
+                    "d-none"
+                );
 
-    const form =
-        document.getElementById("editMarksheetForm");
+                container.classList.add(
+                    "d-none"
+                );
 
+                if (!file) {
+                    return;
+                }
 
-    /* =========================================================
-       CALCULATE RESULT
-    ========================================================== */
+                container.classList.remove(
+                    "d-none"
+                );
 
-    function calculateResult() {
 
-        let theory =
-            parseFloat(theoryInput.value) || 0;
+                if (
+                    file.type.startsWith(
+                        "image/"
+                    )
+                ) {
 
-        let practical =
-            parseFloat(practicalInput.value) || 0;
+                    const reader =
+                        new FileReader();
 
+                    reader.onload =
+                        function (event) {
 
-        if (theory < 0) {
-            theory = 0;
-        }
+                            image.src =
+                                event.target.result;
 
-        if (practical < 0) {
-            practical = 0;
-        }
+                            image.classList.remove(
+                                "d-none"
+                            );
 
+                        };
 
-        const total =
-            theory + practical;
+                    reader.readAsDataURL(
+                        file
+                    );
 
-        totalInput.value =
-            total.toFixed(2);
+                }
+                else {
 
+                    pdfName.textContent =
+                        file.name;
 
-        let grade = "F";
-        let gradePoint = 0.00;
+                    pdf.classList.remove(
+                        "d-none"
+                    );
 
+                }
 
-        if (total >= 90) {
-
-            grade = "A+";
-            gradePoint = 4.00;
-
-        } else if (total >= 80) {
-
-            grade = "A";
-            gradePoint = 3.60;
-
-        } else if (total >= 70) {
-
-            grade = "B+";
-            gradePoint = 3.20;
-
-        } else if (total >= 60) {
-
-            grade = "B";
-            gradePoint = 2.80;
-
-        } else if (total >= 50) {
-
-            grade = "C+";
-            gradePoint = 2.40;
-
-        } else if (total >= 40) {
-
-            grade = "C";
-            gradePoint = 2.00;
-
-        } else {
-
-            grade = "F";
-            gradePoint = 0.00;
-
-        }
-
-
-        /* GRADE */
-
-        gradePreview.textContent =
-            grade;
-
-
-        /* GRADE POINT */
-
-        gradePointPreview.textContent =
-            gradePoint.toFixed(2);
-
-
-        /* GRADE COLOR */
-
-        if (grade === "F") {
-
-            gradePreview.style.background =
-                "#fee2e2";
-
-            gradePreview.style.color =
-                "#dc2626";
-
-        } else if (
-            grade === "A+" ||
-            grade === "A"
-        ) {
-
-            gradePreview.style.background =
-                "#dcfce7";
-
-            gradePreview.style.color =
-                "#15803d";
-
-        } else if (
-            grade === "B+" ||
-            grade === "B"
-        ) {
-
-            gradePreview.style.background =
-                "#dbeafe";
-
-            gradePreview.style.color =
-                "#2563eb";
-
-        } else {
-
-            gradePreview.style.background =
-                "#fef3c7";
-
-            gradePreview.style.color =
-                "#b45309";
-
-        }
-
-
-        /* STATUS */
-
-        if (total >= 40) {
-
-            statusPreview.innerHTML =
-                '<span class="text-success">PASS</span>';
-
-        } else {
-
-            statusPreview.innerHTML =
-                '<span class="text-danger">FAIL</span>';
-
-        }
+            }
+        );
 
     }
-
-
-    /* =========================================================
-       THEORY
-    ========================================================== */
-
-    theoryInput.addEventListener(
-        "input",
-        function () {
-
-            const value =
-                parseFloat(this.value);
-
-            if (value > 70) {
-
-                theoryError.textContent =
-                    "Theory marks cannot exceed 70.";
-
-                this.classList.add(
-                    "is-invalid"
-                );
-
-            } else {
-
-                theoryError.textContent =
-                    "";
-
-                this.classList.remove(
-                    "is-invalid"
-                );
-
-            }
-
-            calculateResult();
-
-        }
-    );
-
-
-    /* =========================================================
-       PRACTICAL
-    ========================================================== */
-
-    practicalInput.addEventListener(
-        "input",
-        function () {
-
-            const value =
-                parseFloat(this.value);
-
-            if (value > 30) {
-
-                practicalError.textContent =
-                    "Practical marks cannot exceed 30.";
-
-                this.classList.add(
-                    "is-invalid"
-                );
-
-            } else {
-
-                practicalError.textContent =
-                    "";
-
-                this.classList.remove(
-                    "is-invalid"
-                );
-
-            }
-
-            calculateResult();
-
-        }
-    );
-
-
-    /* =========================================================
-       REMARKS COUNTER
-    ========================================================== */
-
-    function updateRemarksCounter() {
-
-        remarksCounter.textContent =
-            remarks.value.length +
-            " / 100";
-
-    }
-
-    remarks.addEventListener(
-        "input",
-        updateRemarksCounter
-    );
-
-    updateRemarksCounter();
-
-
-    /* =========================================================
-       FORM VALIDATION
-    ========================================================== */
-
-    form.addEventListener(
-        "submit",
-        function (event) {
-
-            const theory =
-                parseFloat(
-                    theoryInput.value
-                ) || 0;
-
-            const practical =
-                parseFloat(
-                    practicalInput.value
-                ) || 0;
-
-
-            if (
-                theory < 0 ||
-                theory > 70
-            ) {
-
-                event.preventDefault();
-
-                alert(
-                    "Theory marks must be between 0 and 70."
-                );
-
-                theoryInput.focus();
-
-                return;
-
-            }
-
-
-            if (
-                practical < 0 ||
-                practical > 30
-            ) {
-
-                event.preventDefault();
-
-                alert(
-                    "Practical marks must be between 0 and 30."
-                );
-
-                practicalInput.focus();
-
-                return;
-
-            }
-
-
-            const total =
-                theory + practical;
-
-
-            const confirmed =
-                confirm(
-                    "Update these marks?\n\n" +
-                    "Theory: " +
-                    theory.toFixed(2) +
-                    " / 70\n" +
-                    "Practical: " +
-                    practical.toFixed(2) +
-                    " / 30\n" +
-                    "Total: " +
-                    total.toFixed(2) +
-                    " / 100"
-                );
-
-
-            if (!confirmed) {
-
-                event.preventDefault();
-
-            }
-
-        }
-    );
-
-
-    /* =========================================================
-       INITIAL LOAD
-    ========================================================== */
-
-    calculateResult();
-
-});
+);
 
 </script>
 

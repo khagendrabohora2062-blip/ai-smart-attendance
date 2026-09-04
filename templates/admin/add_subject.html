@@ -1,315 +1,365 @@
-{% extends 'layouts/base.html' %}
+{% extends "layouts/base.html" %}
 
-{% block title %}
-Add Subject
-{% endblock %}
+{% block title %}Add Subject{% endblock %}
 
 {% block content %}
 
 <div class="container-fluid py-4">
 
-    <div class="row justify-content-center">
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
 
-        <div class="col-xl-9 col-lg-10">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
 
-            <div class="card shadow border-0">
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-book-fill me-2 text-primary"></i>
+                Add Subject
+            </h3>
 
-                <!-- HEADER -->
-                <div class="card-header bg-primary text-white py-3">
+            <p class="text-muted mb-0">
+                Add a new subject and assign it to a teacher.
+            </p>
+        </div>
 
-                    <h4 class="mb-0">
-                        <i class="bi bi-book-fill me-2"></i>
-                        Add Subject
-                    </h4>
+        <a href="{{ url_for('subjects.index') }}"
+           class="btn btn-light border px-4">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Subjects
+
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         FLASH MESSAGES
+    ====================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            {% for category, message in messages %}
+
+                <div class="alert alert-{{ category }} alert-dismissible fade show"
+                     role="alert">
+
+                    {% if category == "success" %}
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                    {% elif category == "danger" %}
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% elif category == "warning" %}
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                    {% endif %}
+
+                    {{ message }}
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert">
+                    </button>
 
                 </div>
 
-                <div class="card-body p-4">
+            {% endfor %}
 
-                    <form method="POST" id="subjectForm">
+        {% endif %}
 
-                        <!-- ================================================= -->
-                        <!-- BASIC SUBJECT INFORMATION -->
-                        <!-- ================================================= -->
+    {% endwith %}
 
-                        <h5 class="fw-bold mb-3">
-                            <i class="bi bi-info-circle-fill text-primary me-2"></i>
+
+    <!-- =====================================================
+         FORM CARD
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm subject-form-card">
+
+        <div class="card-body p-4 p-lg-5">
+
+            <form method="POST"
+                  action="{{ url_for('subjects.add_subject') }}"
+                  id="subjectForm"
+                  novalidate>
+
+
+                <!-- =================================================
+                     SUBJECT INFORMATION
+                ================================================== -->
+
+                <div class="section-heading mb-4">
+
+                    <div class="section-icon">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
                             Subject Information
                         </h5>
 
-                        <div class="row">
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-                                    Subject Code
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="subject_code"
-                                    class="form-control"
-                                    placeholder="e.g. COE101"
-                                    required
-                                >
-
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-                                    Subject Name
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="subject_name"
-                                    class="form-control"
-                                    placeholder="e.g. Computer Programming"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-                                    Semester
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="semester"
-                                    class="form-control"
-                                    placeholder="e.g. 3"
-                                    required
-                                >
-
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-                                    Department
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="department"
-                                    class="form-control"
-                                    placeholder="e.g. Computer Engineering"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
-                        <div class="mb-4">
-
-                            <label class="form-label fw-semibold">
-                                Assign Teacher
-                            </label>
-
-                            <select
-                                name="teacher_id"
-                                class="form-select"
-                                required
-                            >
-
-                                <option value="">
-                                    -- Select Teacher --
-                                </option>
-
-                                {% for teacher in teachers %}
-
-                                <option value="{{ teacher[0] }}">
-                                    {{ teacher[1] }}
-                                </option>
-
-                                {% endfor %}
-
-                            </select>
-
-                        </div>
-
-
-                        <!-- ================================================= -->
-                        <!-- MARKS CONFIGURATION -->
-                        <!-- ================================================= -->
-
-                        <div class="card border-primary mb-4">
-
-                            <div class="card-header bg-primary text-white">
-
-                                <h5 class="mb-0">
-                                    <i class="bi bi-calculator-fill me-2"></i>
-                                    Marks Configuration
-                                </h5>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="alert alert-info">
-
-                                    <i class="bi bi-info-circle-fill me-2"></i>
-
-                                    Admin can set any full marks.
-                                    Total Full Marks will be calculated automatically
-                                    from Theory + Practical.
-
-                                </div>
-
-                                <div class="row">
-
-                                    <!-- THEORY -->
-
-                                    <div class="col-md-4 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Theory Full Marks
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            name="theory_full_marks"
-                                            id="theoryFullMarks"
-                                            class="form-control"
-                                            min="0.01"
-                                            step="0.01"
-                                            placeholder="e.g. 50"
-                                            required
-                                        >
-
-                                    </div>
-
-                                    <!-- PRACTICAL -->
-
-                                    <div class="col-md-4 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Practical Full Marks
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            name="practical_full_marks"
-                                            id="practicalFullMarks"
-                                            class="form-control"
-                                            min="0"
-                                            step="0.01"
-                                            placeholder="e.g. 50"
-                                            required
-                                        >
-
-                                    </div>
-
-                                    <!-- TOTAL -->
-
-                                    <div class="col-md-4 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Total Full Marks
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            id="totalFullMarks"
-                                            class="form-control bg-light fw-bold"
-                                            readonly
-                                        >
-
-                                    </div>
-
-                                </div>
-
-                                <div class="row">
-
-                                    <!-- PASS MARKS -->
-
-                                    <div class="col-md-6 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Pass Marks
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            name="pass_marks"
-                                            id="passMarks"
-                                            class="form-control"
-                                            min="0"
-                                            step="0.01"
-                                            placeholder="e.g. 40"
-                                            required
-                                        >
-
-                                        <small class="text-muted">
-                                            Must not be greater than Total Full Marks.
-                                        </small>
-
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-
-                                        <label class="form-label fw-semibold">
-                                            Marks Summary
-                                        </label>
-
-                                        <div
-                                            id="marksSummary"
-                                            class="alert alert-secondary mb-0"
-                                        >
-                                            Set Theory and Practical Full Marks.
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ================================================= -->
-                        <!-- BUTTONS -->
-                        <!-- ================================================= -->
-
-                        <div class="d-flex gap-2">
-
-                            <button
-                                type="submit"
-                                class="btn btn-success"
-                            >
-
-                                <i class="bi bi-check-circle-fill me-1"></i>
-                                Save Subject
-
-                            </button>
-
-                            <a
-                                href="{{ url_for('subjects.index') }}"
-                                class="btn btn-secondary"
-                            >
-
-                                <i class="bi bi-arrow-left me-1"></i>
-                                Back
-
-                            </a>
-
-                        </div>
-
-                    </form>
+                        <small class="text-muted">
+                            Enter the basic information of the subject.
+                        </small>
+                    </div>
 
                 </div>
 
-            </div>
+
+                <div class="row g-4">
+
+
+                    <!-- =================================================
+                         SUBJECT CODE
+                    ================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <label for="subject_code"
+                               class="form-label fw-semibold">
+
+                            Subject Code
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        <input type="text"
+                               name="subject_code"
+                               id="subject_code"
+                               class="form-control form-control-lg"
+                               placeholder="e.g. COE101"
+                               maxlength="20"
+                               autocomplete="off"
+                               required>
+
+                        <div class="invalid-feedback">
+                            Please enter the subject code.
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SUBJECT NAME
+                    ================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <label for="subject_name"
+                               class="form-label fw-semibold">
+
+                            Subject Name
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        <input type="text"
+                               name="subject_name"
+                               id="subject_name"
+                               class="form-control form-control-lg"
+                               placeholder="e.g. Computer Programming"
+                               maxlength="100"
+                               autocomplete="off"
+                               required>
+
+                        <div class="invalid-feedback">
+                            Please enter the subject name.
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SEMESTER
+                    ================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <label for="semester"
+                               class="form-label fw-semibold">
+
+                            Semester
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        <select name="semester"
+                                id="semester"
+                                class="form-select form-select-lg"
+                                required>
+
+                            <option value="">
+                                -- Select Semester --
+                            </option>
+
+                            <option value="1">1st Semester</option>
+                            <option value="2">2nd Semester</option>
+                            <option value="3">3rd Semester</option>
+                            <option value="4">4th Semester</option>
+                            <option value="5">5th Semester</option>
+                            <option value="6">6th Semester</option>
+                            <option value="7">7th Semester</option>
+                            <option value="8">8th Semester</option>
+
+                        </select>
+
+                        <div class="invalid-feedback">
+                            Please select a semester.
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         DEPARTMENT
+                    ================================================== -->
+
+                    <div class="col-lg-6">
+
+                        <label for="department"
+                               class="form-label fw-semibold">
+
+                            Department
+                            <span class="text-danger">*</span>
+
+                        </label>
+
+                        <input type="text"
+                               name="department"
+                               id="department"
+                               class="form-control form-control-lg"
+                               placeholder="e.g. Computer Engineering"
+                               maxlength="100"
+                               autocomplete="off"
+                               required>
+
+                        <div class="invalid-feedback">
+                            Please enter the department.
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     ASSIGN TEACHER
+                ================================================== -->
+
+                <div class="section-heading mt-5 mb-4">
+
+                    <div class="section-icon teacher-icon">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            Assign Teacher
+                        </h5>
+
+                        <small class="text-muted">
+                            Select the teacher responsible for this subject.
+                        </small>
+                    </div>
+
+                </div>
+
+
+                <div class="teacher-box">
+
+                    <label for="teacher_id"
+                           class="form-label fw-semibold">
+
+                        Teacher
+                        <span class="text-danger">*</span>
+
+                    </label>
+
+                    <select name="teacher_id"
+                            id="teacher_id"
+                            class="form-select form-select-lg"
+                            required>
+
+                        <option value="">
+                            -- Select Teacher --
+                        </option>
+
+                        {% for teacher in teachers %}
+
+                            <option value="{{ teacher[0] }}">
+                                {{ teacher[1] }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <div class="invalid-feedback">
+                        Please select a teacher.
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     INFORMATION
+                ================================================== -->
+
+                <div class="alert alert-info border-0 rounded-3 mt-4 mb-0">
+
+                    <i class="bi bi-info-circle-fill me-2"></i>
+
+                    <strong>Subject information only.</strong>
+
+                    Marks configuration is managed separately and is
+                    not stored in the subject form.
+
+                </div>
+
+
+                <!-- =================================================
+                     BUTTONS
+                ================================================== -->
+
+                <div class="d-flex flex-wrap justify-content-end gap-2
+                            border-top pt-4 mt-5">
+
+                    <a href="{{ url_for('subjects.index') }}"
+                       class="btn btn-light border px-4 py-2">
+
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancel
+
+                    </a>
+
+
+                    <button type="reset"
+                            class="btn btn-outline-secondary px-4 py-2">
+
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Reset
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary px-4 py-2"
+                            id="submitButton">
+
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Add Subject
+
+                    </button>
+
+                </div>
+
+
+            </form>
 
         </div>
 
@@ -317,136 +367,296 @@ Add Subject
 
 </div>
 
-{% endblock %}
+
+<!-- =========================================================
+     CSS
+========================================================== -->
+
+<style>
+
+    .subject-form-card {
+        max-width: 1000px;
+        margin: 0 auto;
+        border-radius: 16px;
+    }
 
 
-{% block js %}
+    .section-heading {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+
+    .section-icon {
+        width: 44px;
+        height: 44px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 12px;
+
+        background: rgba(13, 110, 253, 0.10);
+        color: #0d6efd;
+
+        font-size: 19px;
+
+        flex-shrink: 0;
+    }
+
+
+    .section-icon.teacher-icon {
+        background: rgba(111, 66, 193, 0.10);
+        color: #6f42c1;
+    }
+
+
+    .form-label {
+        color: #172033;
+        margin-bottom: 8px;
+    }
+
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 1px solid #d9dee8;
+        min-height: 48px;
+    }
+
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.10);
+    }
+
+
+    .teacher-box {
+        padding: 20px;
+
+        border: 1px solid #e1e5eb;
+        border-radius: 14px;
+
+        background: #fafbfc;
+    }
+
+
+    .alert {
+        font-size: 14px;
+    }
+
+
+    .btn {
+        border-radius: 9px;
+        font-weight: 600;
+    }
+
+
+    @media (max-width: 767px) {
+
+        .subject-form-card .card-body {
+            padding: 22px !important;
+        }
+
+        .section-heading {
+            align-items: flex-start;
+        }
+
+    }
+
+</style>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================== -->
 
 <script>
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    const theoryInput =
-        document.getElementById("theoryFullMarks");
+    const form =
+        document.getElementById("subjectForm");
 
-    const practicalInput =
-        document.getElementById("practicalFullMarks");
+    const submitButton =
+        document.getElementById("submitButton");
 
-    const totalInput =
-        document.getElementById("totalFullMarks");
+    const subjectCode =
+        document.getElementById("subject_code");
 
-    const passInput =
-        document.getElementById("passMarks");
+    const subjectName =
+        document.getElementById("subject_name");
 
-    const summary =
-        document.getElementById("marksSummary");
+    const semester =
+        document.getElementById("semester");
+
+    const department =
+        document.getElementById("department");
+
+    const teacher =
+        document.getElementById("teacher_id");
 
 
-    function calculateTotal() {
+    /* =====================================================
+       UPPERCASE SUBJECT CODE
+    ====================================================== */
 
-        const theory =
-            parseFloat(theoryInput.value) || 0;
+    subjectCode.addEventListener(
+        "input",
+        function () {
 
-        const practical =
-            parseFloat(practicalInput.value) || 0;
+            this.value =
+                this.value.toUpperCase();
 
-        const total =
-            theory + practical;
-
-        totalInput.value =
-            total > 0 ? total.toFixed(2) : "";
-
-        passInput.max = total > 0 ? total : "";
-
-        if (total > 0) {
-
-            summary.className =
-                "alert alert-success mb-0";
-
-            summary.innerHTML =
-                "<strong>Theory:</strong> " +
-                theory.toFixed(2) +
-                " &nbsp; + &nbsp; " +
-                "<strong>Practical:</strong> " +
-                practical.toFixed(2) +
-                " &nbsp; = &nbsp; " +
-                "<strong>Total:</strong> " +
-                total.toFixed(2);
-
-        } else {
-
-            summary.className =
-                "alert alert-secondary mb-0";
-
-            summary.innerHTML =
-                "Set Theory and Practical Full Marks.";
         }
-    }
-
-
-    theoryInput.addEventListener(
-        "input",
-        calculateTotal
-    );
-
-    practicalInput.addEventListener(
-        "input",
-        calculateTotal
     );
 
 
-    document.getElementById("subjectForm")
-        .addEventListener("submit", function (event) {
+    /* =====================================================
+       FORM VALIDATION
+    ====================================================== */
 
-            const theory =
-                parseFloat(theoryInput.value) || 0;
+    form.addEventListener(
+        "submit",
+        function (event) {
 
-            const practical =
-                parseFloat(practicalInput.value) || 0;
-
-            const pass =
-                parseFloat(passInput.value) || 0;
-
-            const total =
-                theory + practical;
+            let valid = true;
 
 
-            if (theory <= 0) {
+            if (!subjectCode.value.trim()) {
 
-                alert(
-                    "Theory Full Marks must be greater than 0."
-                );
+                subjectCode.classList.add("is-invalid");
 
-                event.preventDefault();
-                return;
+                valid = false;
+
+            } else {
+
+                subjectCode.classList.remove("is-invalid");
+
             }
 
 
-            if (practical < 0) {
+            if (!subjectName.value.trim()) {
 
-                alert(
-                    "Practical Full Marks cannot be negative."
-                );
+                subjectName.classList.add("is-invalid");
 
-                event.preventDefault();
-                return;
+                valid = false;
+
+            } else {
+
+                subjectName.classList.remove("is-invalid");
+
             }
 
 
-            if (pass < 0 || pass > total) {
+            if (!semester.value) {
 
-                alert(
-                    "Pass Marks must be between 0 and Total Full Marks."
-                );
+                semester.classList.add("is-invalid");
 
-                event.preventDefault();
-                return;
+                valid = false;
+
+            } else {
+
+                semester.classList.remove("is-invalid");
+
             }
 
-        });
+
+            if (!department.value.trim()) {
+
+                department.classList.add("is-invalid");
+
+                valid = false;
+
+            } else {
+
+                department.classList.remove("is-invalid");
+
+            }
 
 
-    calculateTotal();
+            if (!teacher.value) {
+
+                teacher.classList.add("is-invalid");
+
+                valid = false;
+
+            } else {
+
+                teacher.classList.remove("is-invalid");
+
+            }
+
+
+            if (!valid) {
+
+                event.preventDefault();
+
+                return;
+
+            }
+
+
+            submitButton.disabled = true;
+
+            submitButton.innerHTML =
+                '<span class="spinner-border spinner-border-sm me-2"></span>' +
+                'Adding Subject...';
+
+        }
+    );
+
+
+    /* =====================================================
+       REMOVE INVALID STATE WHILE TYPING
+    ====================================================== */
+
+    [
+        subjectCode,
+        subjectName,
+        department
+    ].forEach(function (input) {
+
+        input.addEventListener(
+            "input",
+            function () {
+
+                if (this.value.trim()) {
+                    this.classList.remove("is-invalid");
+                }
+
+            }
+        );
+
+    });
+
+
+    semester.addEventListener(
+        "change",
+        function () {
+
+            if (this.value) {
+                this.classList.remove("is-invalid");
+            }
+
+        }
+    );
+
+
+    teacher.addEventListener(
+        "change",
+        function () {
+
+            if (this.value) {
+                this.classList.remove("is-invalid");
+            }
+
+        }
+    );
+
 
 });
 

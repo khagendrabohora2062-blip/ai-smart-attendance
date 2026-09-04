@@ -1,411 +1,220 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-Add Student Marks
+Upload Marksheet - AI Smart Attendance System
 {% endblock %}
 
 {% block content %}
 
 <div class="container-fluid py-4">
 
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i>
+                Upload Marksheet
+            </h3>
+
+            <p class="text-muted mb-0">
+                Upload the complete student marksheet as an image or PDF.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin_marksheet.index') }}"
+            class="btn btn-outline-primary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Marksheets
+        </a>
+
+    </div>
+
+
+    <!-- INFORMATION -->
+    <div class="alert alert-info border-0 shadow-sm">
+
+        <div class="d-flex gap-3">
+
+            <i class="bi bi-info-circle-fill fs-4"></i>
+
+            <div>
+                <strong>No manual marks entry required.</strong>
+
+                <div class="small mt-1">
+                    Upload the complete marksheet photo/PDF.
+                    All subjects, full marks, obtained marks,
+                    grades and other result information should be
+                    available in the uploaded marksheet.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FORM -->
     <div class="row justify-content-center">
 
-        <div class="col-xl-9 col-lg-10">
+        <div class="col-xl-7 col-lg-8">
 
-            <div class="card shadow border-0">
+            <div class="card border-0 shadow-sm">
 
-                <!-- HEADER -->
+                <div class="card-header bg-white border-0 py-3">
 
-                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="fw-bold mb-1">
+                        <i class="bi bi-file-earmark-arrow-up-fill me-2"></i>
+                        Marksheet Details
+                    </h5>
 
-                    <h4 class="mb-0">
-                        <i class="bi bi-pencil-square me-2"></i>
-                        Add Student Marks
-                    </h4>
+                    <small class="text-muted">
+                        Select student and upload the complete marksheet.
+                    </small>
 
                 </div>
 
 
-                <div class="card-body p-4">
+                <div class="card-body">
 
-                    <form method="POST" id="marksForm">
+                    <form
+                        method="POST"
+                        enctype="multipart/form-data"
+                    >
 
-                        <!-- ================================================= -->
                         <!-- STUDENT -->
-                        <!-- ================================================= -->
-
                         <div class="mb-4">
 
-                            <label class="form-label fw-semibold">
-                                Select Student
+                            <label
+                                for="student_id"
+                                class="form-label fw-semibold"
+                            >
+                                Student
+                                <span class="text-danger">*</span>
                             </label>
 
                             <select
                                 name="student_id"
-                                class="form-select"
+                                id="student_id"
+                                class="form-select form-select-lg"
                                 required
                             >
 
                                 <option value="">
-                                    -- Select Student --
+                                    Select Student
                                 </option>
 
                                 {% for student in students %}
 
-                                <option value="{{ student[0] }}">
-
-                                    {{ student[1] }}
-                                    -
-                                    {{ student[2] }}
-
-                                    {% if student[3] %}
-                                        | {{ student[3] }}
-                                    {% endif %}
-
-                                </option>
+                                    <option
+                                        value="{{ student[0] }}"
+                                    >
+                                        {{ student[2] }}
+                                        —
+                                        {{ student[1] }}
+                                        {% if student[3] %}
+                                            | {{ student[3] }}
+                                        {% endif %}
+                                        {% if student[4] %}
+                                            | Semester {{ student[4] }}
+                                        {% endif %}
+                                    </option>
 
                                 {% endfor %}
 
                             </select>
 
+                            <div class="form-text">
+                                Choose the student whose marksheet you are uploading.
+                            </div>
+
                         </div>
 
 
-                        <!-- ================================================= -->
-                        <!-- SUBJECT -->
-                        <!-- ================================================= -->
-
+                        <!-- FILE -->
                         <div class="mb-4">
 
-                            <label class="form-label fw-semibold">
-                                Select Subject
+                            <label
+                                for="marksheet_file"
+                                class="form-label fw-semibold"
+                            >
+                                Marksheet Photo / PDF
+                                <span class="text-danger">*</span>
                             </label>
 
-                            <select
-                                name="subject_id"
-                                id="subjectSelect"
-                                class="form-select"
+                            <input
+                                type="file"
+                                name="marksheet_file"
+                                id="marksheet_file"
+                                class="form-control form-control-lg"
+                                accept=".jpg,.jpeg,.png,.webp,.pdf"
                                 required
                             >
 
-                                <option value="">
-                                    -- Select Subject --
-                                </option>
-
-                                {% for subject in subjects %}
-
-                                <option
-                                    value="{{ subject[0] }}"
-
-                                    data-theory="{{ subject[5] }}"
-                                    data-practical="{{ subject[6] }}"
-                                    data-total="{{ subject[7] }}"
-                                    data-pass="{{ subject[8] }}"
-                                >
-
-                                    {{ subject[1] }}
-                                    -
-                                    {{ subject[2] }}
-
-                                    | Semester {{ subject[3] }}
-
-                                </option>
-
-                                {% endfor %}
-
-                            </select>
+                            <div class="form-text">
+                                Allowed formats:
+                                JPG, JPEG, PNG, WEBP and PDF.
+                            </div>
 
                         </div>
 
 
-                        <!-- ================================================= -->
-                        <!-- SUBJECT MARK CONFIGURATION -->
-                        <!-- ================================================= -->
-
+                        <!-- PREVIEW -->
                         <div
-                            id="markConfiguration"
-                            class="card border-primary mb-4"
-                            style="display:none;"
+                            id="previewContainer"
+                            class="mb-4 d-none"
                         >
-
-                            <div class="card-header bg-primary text-white">
-
-                                <h5 class="mb-0">
-
-                                    <i class="bi bi-calculator-fill me-2"></i>
-
-                                    Subject Mark Configuration
-
-                                </h5>
-
-                            </div>
-
-
-                            <div class="card-body">
-
-                                <div class="row text-center">
-
-                                    <div class="col-md-3">
-
-                                        <div class="p-3">
-
-                                            <small class="text-muted">
-                                                Theory Full Marks
-                                            </small>
-
-                                            <h4
-                                                id="theoryFull"
-                                                class="fw-bold"
-                                            >
-                                                0
-                                            </h4>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div class="col-md-3">
-
-                                        <div class="p-3">
-
-                                            <small class="text-muted">
-                                                Practical Full Marks
-                                            </small>
-
-                                            <h4
-                                                id="practicalFull"
-                                                class="fw-bold"
-                                            >
-                                                0
-                                            </h4>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div class="col-md-3">
-
-                                        <div class="p-3">
-
-                                            <small class="text-muted">
-                                                Total Full Marks
-                                            </small>
-
-                                            <h4
-                                                id="totalFull"
-                                                class="fw-bold text-primary"
-                                            >
-                                                0
-                                            </h4>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div class="col-md-3">
-
-                                        <div class="p-3">
-
-                                            <small class="text-muted">
-                                                Pass Marks
-                                            </small>
-
-                                            <h4
-                                                id="passFull"
-                                                class="fw-bold text-success"
-                                            >
-                                                0
-                                            </h4>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ================================================= -->
-                        <!-- STUDENT MARKS -->
-                        <!-- ================================================= -->
-
-                        <div class="row">
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-
-                                    Theory Marks
-
-                                    <span
-                                        id="theoryLimit"
-                                        class="text-muted"
-                                    >
-                                    </span>
-
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="theory_marks"
-                                    id="theoryMarks"
-                                    class="form-control"
-                                    min="0"
-                                    step="0.01"
-                                    value="0"
-                                    required
-                                >
-
-                            </div>
-
-
-                            <div class="col-md-6 mb-3">
-
-                                <label class="form-label fw-semibold">
-
-                                    Practical Marks
-
-                                    <span
-                                        id="practicalLimit"
-                                        class="text-muted"
-                                    >
-                                    </span>
-
-                                </label>
-
-                                <input
-                                    type="number"
-                                    name="practical_marks"
-                                    id="practicalMarks"
-                                    class="form-control"
-                                    min="0"
-                                    step="0.01"
-                                    value="0"
-                                    required
-                                >
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ================================================= -->
-                        <!-- TOTAL RESULT -->
-                        <!-- ================================================= -->
-
-                        <div
-                            id="resultBox"
-                            class="alert alert-secondary mb-4"
-                        >
-
-                            <div class="row text-center">
-
-                                <div class="col-md-4">
-
-                                    <small>
-                                        Obtained Total
-                                    </small>
-
-                                    <h4
-                                        id="obtainedTotal"
-                                        class="fw-bold mb-0"
-                                    >
-                                        0
-                                    </h4>
-
-                                </div>
-
-
-                                <div class="col-md-4">
-
-                                    <small>
-                                        Result
-                                    </small>
-
-                                    <h4
-                                        id="resultStatus"
-                                        class="fw-bold mb-0"
-                                    >
-                                        -
-                                    </h4>
-
-                                </div>
-
-
-                                <div class="col-md-4">
-
-                                    <small>
-                                        Grade
-                                    </small>
-
-                                    <h4
-                                        id="gradePreview"
-                                        class="fw-bold mb-0"
-                                    >
-                                        -
-                                    </h4>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <!-- ================================================= -->
-                        <!-- REMARKS -->
-                        <!-- ================================================= -->
-
-                        <div class="mb-4">
 
                             <label class="form-label fw-semibold">
-                                Remarks
+                                Preview
                             </label>
 
-                            <textarea
-                                name="remarks"
-                                class="form-control"
-                                rows="3"
-                                placeholder="Optional remarks..."
-                            ></textarea>
+                            <div class="preview-box">
+
+                                <img
+                                    id="imagePreview"
+                                    class="img-fluid d-none"
+                                    alt="Marksheet Preview"
+                                >
+
+                                <div
+                                    id="pdfPreview"
+                                    class="d-none text-center py-5"
+                                >
+
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger display-4"></i>
+
+                                    <div
+                                        id="pdfName"
+                                        class="fw-semibold mt-2"
+                                    ></div>
+
+                                </div>
+
+                            </div>
 
                         </div>
 
 
-                        <!-- ================================================= -->
                         <!-- BUTTONS -->
-                        <!-- ================================================= -->
-
-                        <div class="d-flex gap-2">
-
-                            <button
-                                type="submit"
-                                class="btn btn-success"
-                            >
-
-                                <i class="bi bi-check-circle-fill me-1"></i>
-
-                                Save Marks
-
-                            </button>
-
+                        <div class="d-flex justify-content-end gap-2">
 
                             <a
                                 href="{{ url_for('admin_marksheet.index') }}"
-                                class="btn btn-secondary"
+                                class="btn btn-light border"
                             >
-
-                                <i class="bi bi-arrow-left me-1"></i>
-
-                                Back
-
+                                Cancel
                             </a>
+
+                            <button
+                                type="submit"
+                                class="btn btn-primary"
+                            >
+                                <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+                                Upload Marksheet
+                            </button>
 
                         </div>
 
@@ -421,341 +230,135 @@ Add Student Marks
 
 </div>
 
-{% endblock %}
 
+<style>
 
-{% block js %}
+.preview-box {
+    min-height: 180px;
+    border: 2px dashed #dbe2ea;
+    border-radius: 14px;
+    padding: 15px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.preview-box img {
+    max-height: 500px;
+    max-width: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+</style>
+
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function () {
-
-    const subjectSelect =
-        document.getElementById("subjectSelect");
-
-    const theoryMarks =
-        document.getElementById("theoryMarks");
-
-    const practicalMarks =
-        document.getElementById("practicalMarks");
-
-    const theoryFull =
-        document.getElementById("theoryFull");
-
-    const practicalFull =
-        document.getElementById("practicalFull");
-
-    const totalFull =
-        document.getElementById("totalFull");
-
-    const passFull =
-        document.getElementById("passFull");
-
-    const theoryLimit =
-        document.getElementById("theoryLimit");
-
-    const practicalLimit =
-        document.getElementById("practicalLimit");
-
-    const obtainedTotal =
-        document.getElementById("obtainedTotal");
-
-    const resultStatus =
-        document.getElementById("resultStatus");
-
-    const gradePreview =
-        document.getElementById("gradePreview");
-
-    const markConfiguration =
-        document.getElementById("markConfiguration");
-
-
-    let currentTheoryFull = 0;
-    let currentPracticalFull = 0;
-    let currentTotalFull = 0;
-    let currentPassMark = 0;
-
-
-    // ========================================================
-    // GRADE
-    // ========================================================
-
-    function calculateGrade(total, full) {
-
-        if (full <= 0) {
-            return "-";
-        }
-
-        const percentage =
-            (total / full) * 100;
-
-
-        if (percentage >= 90)
-            return "A+";
-
-        if (percentage >= 80)
-            return "A";
-
-        if (percentage >= 70)
-            return "B+";
-
-        if (percentage >= 60)
-            return "B";
-
-        if (percentage >= 50)
-            return "C+";
-
-        if (percentage >= 40)
-            return "C";
-
-        return "F";
-    }
-
-
-    // ========================================================
-    // SUBJECT CHANGE
-    // ========================================================
-
-    subjectSelect.addEventListener(
-        "change",
-        function () {
-
-            const option =
-                this.options[this.selectedIndex];
-
-
-            if (!this.value) {
-
-                markConfiguration.style.display =
-                    "none";
-
-                currentTheoryFull = 0;
-                currentPracticalFull = 0;
-                currentTotalFull = 0;
-                currentPassMark = 0;
-
-                theoryMarks.max = "";
-                practicalMarks.max = "";
-
-                return;
-            }
-
-
-            currentTheoryFull =
-                parseFloat(
-                    option.dataset.theory
-                ) || 0;
-
-            currentPracticalFull =
-                parseFloat(
-                    option.dataset.practical
-                ) || 0;
-
-            currentTotalFull =
-                parseFloat(
-                    option.dataset.total
-                ) ||
-                (
-                    currentTheoryFull +
-                    currentPracticalFull
-                );
-
-            currentPassMark =
-                parseFloat(
-                    option.dataset.pass
-                ) || 0;
-
-
-            theoryFull.innerText =
-                currentTheoryFull;
-
-            practicalFull.innerText =
-                currentPracticalFull;
-
-            totalFull.innerText =
-                currentTotalFull;
-
-            passFull.innerText =
-                currentPassMark;
-
-
-            theoryLimit.innerText =
-                "(Max " +
-                currentTheoryFull +
-                ")";
-
-            practicalLimit.innerText =
-                "(Max " +
-                currentPracticalFull +
-                ")";
-
-
-            theoryMarks.max =
-                currentTheoryFull;
-
-            practicalMarks.max =
-                currentPracticalFull;
-
-
-            markConfiguration.style.display =
-                "block";
-
-
-            calculateResult();
-
-        }
-    );
-
-
-    // ========================================================
-    // CALCULATE RESULT
-    // ========================================================
-
-    function calculateResult() {
-
-        const theory =
-            parseFloat(
-                theoryMarks.value
-            ) || 0;
-
-        const practical =
-            parseFloat(
-                practicalMarks.value
-            ) || 0;
-
-
-        const total =
-            theory + practical;
-
-
-        obtainedTotal.innerText =
-            total.toFixed(2) +
-            " / " +
-            currentTotalFull;
-
-
-        if (total >= currentPassMark) {
-
-            resultStatus.innerText =
-                "PASS";
-
-            resultStatus.className =
-                "fw-bold mb-0 text-success";
-
-        } else {
-
-            resultStatus.innerText =
-                "FAIL";
-
-            resultStatus.className =
-                "fw-bold mb-0 text-danger";
-
-        }
-
-
-        gradePreview.innerText =
-            calculateGrade(
-                total,
-                currentTotalFull
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const fileInput =
+            document.getElementById(
+                "marksheet_file"
             );
 
-    }
+        const previewContainer =
+            document.getElementById(
+                "previewContainer"
+            );
+
+        const imagePreview =
+            document.getElementById(
+                "imagePreview"
+            );
+
+        const pdfPreview =
+            document.getElementById(
+                "pdfPreview"
+            );
+
+        const pdfName =
+            document.getElementById(
+                "pdfName"
+            );
 
 
-    theoryMarks.addEventListener(
-        "input",
-        calculateResult
-    );
+        fileInput.addEventListener(
+            "change",
+            function () {
 
-    practicalMarks.addEventListener(
-        "input",
-        calculateResult
-    );
+                const file =
+                    this.files[0];
 
+                imagePreview.classList.add(
+                    "d-none"
+                );
 
-    // ========================================================
-    // FORM VALIDATION
-    // ========================================================
+                pdfPreview.classList.add(
+                    "d-none"
+                );
 
-    document.getElementById("marksForm")
-        .addEventListener(
-            "submit",
-            function (event) {
+                previewContainer.classList.add(
+                    "d-none"
+                );
 
-                const theory =
-                    parseFloat(
-                        theoryMarks.value
-                    ) || 0;
-
-                const practical =
-                    parseFloat(
-                        practicalMarks.value
-                    ) || 0;
-
-
-                if (!subjectSelect.value) {
-
-                    alert(
-                        "Please select a subject."
-                    );
-
-                    event.preventDefault();
-
+                if (!file) {
                     return;
                 }
 
 
+                previewContainer.classList.remove(
+                    "d-none"
+                );
+
+
                 if (
-                    theory < 0 ||
-                    theory > currentTheoryFull
+                    file.type.startsWith(
+                        "image/"
+                    )
                 ) {
 
-                    alert(
-                        "Theory marks cannot exceed " +
-                        currentTheoryFull
-                    );
+                    const reader =
+                        new FileReader();
 
-                    event.preventDefault();
+                    reader.onload =
+                        function (event) {
 
-                    return;
+                            imagePreview.src =
+                                event.target.result;
+
+                            imagePreview.classList.remove(
+                                "d-none"
+                            );
+
+                        };
+
+                    reader.readAsDataURL(file);
+
                 }
-
-
-                if (
-                    practical < 0 ||
-                    practical > currentPracticalFull
+                else if (
+                    file.type ===
+                    "application/pdf"
                 ) {
 
-                    alert(
-                        "Practical marks cannot exceed " +
-                        currentPracticalFull
+                    pdfName.textContent =
+                        file.name;
+
+                    pdfPreview.classList.remove(
+                        "d-none"
                     );
 
-                    event.preventDefault();
-
-                    return;
-                }
-
-
-                if (
-                    theory + practical >
-                    currentTotalFull
-                ) {
-
-                    alert(
-                        "Total marks cannot exceed " +
-                        currentTotalFull
-                    );
-
-                    event.preventDefault();
-
-                    return;
                 }
 
             }
         );
 
-});
+    }
+);
 
 </script>
 

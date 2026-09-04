@@ -1,13 +1,15 @@
 from flask import (
     Blueprint,
     render_template,
+    session,
     redirect,
     url_for,
-    session,
-    flash
+    flash,
+    send_from_directory
 )
 
 from extensions import mysql
+import os
 
 
 # ============================================================
@@ -17,20 +19,23 @@ from extensions import mysql
 student_result = Blueprint(
     "student_result",
     __name__,
-    url_prefix="/student/results"
+    url_prefix="/student/result"
 )
 
 
 # ============================================================
-# LOGIN CHECK
+# MARKSHEET FOLDER
 # ============================================================
 
-def student_logged_in():
-    return "student_db_id" in session
+MARKSHEET_FOLDER = os.path.join(
+    "static",
+    "uploads",
+    "marksheets"
+)
 
 
 # ============================================================
-# STUDENT RESULT
+# STUDENT RESULT PAGE
 # ============================================================
 
 @student_result.route("/")
@@ -38,177 +43,68 @@ def index():
 
     # --------------------------------------------------------
     # LOGIN CHECK
+    # IMPORTANT:
+    # student_db_id = students table primary key
+    # student_id = student's visible ID such as 09
     # --------------------------------------------------------
 
-    if not student_logged_in():
+    student_db_id = session.get(
+        "student_db_id"
+    )
+
+    if not student_db_id:
+
         return redirect(
-            url_for("student_auth.login")
+            url_for(
+                "student_auth.login"
+            )
         )
 
     cursor = mysql.connection.cursor()
 
-    student = None
-    results = []
-
     try:
 
         # ====================================================
-        # GET LOGGED-IN STUDENT
+        # GET STUDENT + UPLOADED MARKSHEETS
         # ====================================================
 
         cursor.execute(
             """
             SELECT
-                id,
-                student_id,
-                full_name,
-                department,
-                semester,
-                section,
-                photo
-            FROM students
-            WHERE id = %s
-            LIMIT 1
-            """,
-            (
-                session["student_db_id"],
-            )
-        )
+                s.id,
+                s.student_id,
+                s.full_name,
+                s.department,
+                s.semester,
+                s.photo,
 
-        student = cursor.fetchone()
+                m.id AS marksheet_id,
+                m.marksheet_file,
+                m.created_at
 
-        if not student:
+            FROM students s
 
-            session.clear()
+            LEFT JOIN marksheets m
+                ON m.student_id = s.id
 
-            flash(
-                "Student account not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("student_auth.login")
-            )
-
-
-        # ====================================================
-        # GET ONLY LOGGED-IN STUDENT'S RESULTS
-        # ====================================================
-
-        cursor.execute(
-            """
-            SELECT
-
-                m.id,
-
-                sub.subject_code,
-                sub.subject_name,
-                sub.semester,
-
-                sub.theory_full_marks,
-                sub.practical_full_marks,
-                sub.full_marks,
-                sub.pass_marks,
-
-                m.theory_marks,
-                m.practical_marks,
-                m.total_marks,
-
-                m.grade,
-                m.grade_point,
-                m.remarks
-
-            FROM marksheets m
-
-            INNER JOIN subjects sub
-                ON sub.id = m.subject_id
-
-            WHERE m.student_id = %s
+            WHERE s.id = %s
 
             ORDER BY
-                sub.semester ASC,
-                sub.subject_name ASC
+                m.created_at DESC
             """,
             (
-                session["student_db_id"],
+                student_db_id,
             )
         )
 
-        results = cursor.fetchall()
-
-
-        # ====================================================
-        # SUMMARY
-        # ====================================================
-
-        total_subjects = len(results)
-
-        passed_subjects = 0
-        failed_subjects = 0
-
-        total_obtained = 0
-        total_full = 0
-
-        for result in results:
-
-            total = float(
-                result[10] or 0
-            )
-
-            full = float(
-                result[6] or 0
-            )
-
-            pass_marks = float(
-                result[7] or 0
-            )
-
-            total_obtained += total
-            total_full += full
-
-            if total >= pass_marks:
-                passed_subjects += 1
-            else:
-                failed_subjects += 1
-
-
-        # ====================================================
-        # OVERALL PERCENTAGE
-        # ====================================================
-
-        percentage = 0
-
-        if total_full > 0:
-
-            percentage = round(
-                (
-                    total_obtained /
-                    total_full
-                ) * 100,
-                2
-            )
-
-
-        return render_template(
-            "student/results.html",
-
-            student=student,
-            results=results,
-
-            total_subjects=total_subjects,
-            passed_subjects=passed_subjects,
-            failed_subjects=failed_subjects,
-
-            total_obtained=total_obtained,
-            total_full=total_full,
-
-            percentage=percentage
-        )
-
+        rows = cursor.fetchall()
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         print(
             "STUDENT RESULT ERROR:",
@@ -216,16 +112,233 @@ def index():
         )
 
         flash(
-            f"Unable to load results: {str(e)}",
+            "Unable to load result.",
+            "danger"
+        )
+
+        rows = []
+
+    finally:
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+    # ========================================================
+    # STUDENT NOT FOUND
+    # ========================================================
+
+    if not rows:
+
+        flash(
+            "Student record not found.",
             "danger"
         )
 
         return redirect(
             url_for(
-                "student_auth.dashboard"
+                "student_auth.login"
             )
         )
 
+
+    # ========================================================
+    # STUDENT INFORMATION
+    # ========================================================
+
+    student = {
+
+        "id": rows[0][0],
+
+        "student_id": rows[0][1],
+
+        "full_name": rows[0][2],
+
+        "department": rows[0][3],
+
+        "semester": rows[0][4],
+
+        "photo": rows[0][5]
+
+    }
+
+
+    # ========================================================
+    # MARKSHEETS LIST
+    # ========================================================
+
+    marksheets = []
+
+    for row in rows:
+
+        marksheet_id = row[6]
+
+        marksheet_file = row[7]
+
+        created_at = row[8]
+
+
+        if marksheet_id and marksheet_file:
+
+            marksheets.append(
+                {
+
+                    "id": marksheet_id,
+
+                    "file": marksheet_file,
+
+                    "created_at": created_at
+
+                }
+            )
+
+
+    # ========================================================
+    # RENDER PAGE
+    # ========================================================
+
+    return render_template(
+        "student/results.html",
+        student=student,
+        marksheets=marksheets
+    )
+
+
+# ============================================================
+# VIEW / OPEN MARKSHEET
+# ============================================================
+
+@student_result.route(
+    "/marksheet/<int:marksheet_id>"
+)
+def view_marksheet(marksheet_id):
+
+
+    # --------------------------------------------------------
+    # LOGIN CHECK
+    # --------------------------------------------------------
+
+    student_db_id = session.get(
+        "student_db_id"
+    )
+
+    if not student_db_id:
+
+        return redirect(
+            url_for(
+                "student_auth.login"
+            )
+        )
+
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        # ====================================================
+        # GET MARKSHEET
+        # Security:
+        # Student can only access their own marksheet
+        # ====================================================
+
+        cursor.execute(
+            """
+            SELECT
+                m.marksheet_file
+
+            FROM marksheets m
+
+            WHERE
+                m.id = %s
+
+                AND m.student_id = %s
+
+            LIMIT 1
+            """,
+            (
+                marksheet_id,
+                student_db_id
+            )
+        )
+
+        data = cursor.fetchone()
+
+
+    except Exception as e:
+
+        print(
+            "VIEW MARKSHEET ERROR:",
+            repr(e)
+        )
+
+        flash(
+            "Unable to open marksheet.",
+            "danger"
+        )
+
+        data = None
+
+
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+    # ========================================================
+    # MARKSHEET NOT FOUND
+    # ========================================================
+
+    if not data or not data[0]:
+
+        flash(
+            "Marksheet not found.",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "student_result.index"
+            )
+        )
+
+
+    marksheet_file = data[0]
+
+
+    # ========================================================
+    # FILE CHECK
+    # ========================================================
+
+    if not os.path.exists(
+        os.path.join(
+            MARKSHEET_FOLDER,
+            marksheet_file
+        )
+    ):
+
+        flash(
+            "Marksheet file is missing from the server.",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "student_result.index"
+            )
+        )
+
+
+    # ========================================================
+    # OPEN FILE
+    # ========================================================
+
+    return send_from_directory(
+        MARKSHEET_FOLDER,
+        marksheet_file,
+        as_attachment=False
+    )

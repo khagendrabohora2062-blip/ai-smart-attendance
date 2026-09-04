@@ -1,8 +1,6 @@
 # ============================================================
 # TEACHER ROUTINE
-#
-# File:
-# routes/teacher_routine.py
+# File: routes/teacher_routine.py
 # ============================================================
 
 from flask import (
@@ -14,8 +12,6 @@ from flask import (
     session,
     current_app
 )
-
-from jinja2 import TemplateNotFound
 
 
 # ============================================================
@@ -30,7 +26,7 @@ teacher_routine = Blueprint(
 
 
 # ============================================================
-# MYSQL HELPER
+# MYSQL
 # ============================================================
 
 def get_mysql():
@@ -50,7 +46,7 @@ def get_mysql():
     except Exception as e:
 
         print(
-            "TEACHER ROUTINE MYSQL IMPORT ERROR:",
+            "TEACHER ROUTINE MYSQL ERROR:",
             repr(e)
         )
 
@@ -60,7 +56,7 @@ def get_mysql():
 
 
 # ============================================================
-# TEACHER LOGIN CHECK
+# TEACHER LOGIN
 # ============================================================
 
 def teacher_required():
@@ -76,13 +72,11 @@ def teacher_required():
 
 def teacher_login_redirect():
 
-    possible_endpoints = [
+    for endpoint in (
         "teacher_auth.login",
         "teacher.login",
         "auth.login"
-    ]
-
-    for endpoint in possible_endpoints:
+    ):
 
         try:
 
@@ -91,21 +85,18 @@ def teacher_login_redirect():
             )
 
         except Exception:
+
             continue
 
     return redirect("/login")
 
 
 # ============================================================
-# ROUTINE PAGE
+# TEACHER ROUTINE
 # ============================================================
 
 @teacher_routine.route("/")
 def index():
-
-    # --------------------------------------------------------
-    # LOGIN CHECK
-    # --------------------------------------------------------
 
     if not teacher_required():
 
@@ -120,6 +111,7 @@ def index():
     mysql = None
     cursor = None
 
+
     try:
 
         mysql = get_mysql()
@@ -127,225 +119,81 @@ def index():
         cursor = mysql.connection.cursor()
 
 
-        # ====================================================
-        # GET LOGGED-IN TEACHER
-        # ====================================================
-
-        logged_teacher = session.get("teacher_id")
-
-
-        print(
-            "TEACHER ROUTINE SESSION:",
-            logged_teacher
-        )
-
-
-        # ====================================================
-        # FIND TEACHER DATABASE ID
-        # ====================================================
+        # ----------------------------------------------------
+        # CURRENT + RECENT ROUTINES
+        # ----------------------------------------------------
 
         cursor.execute(
             """
             SELECT
                 id,
-                teacher_id,
-                full_name,
-                department
-            FROM teachers
-            WHERE id = %s
-               OR teacher_id = %s
-            LIMIT 1
-            """,
-            (
-                logged_teacher,
-                logged_teacher
-            )
-        )
-
-        teacher = cursor.fetchone()
-
-
-        if not teacher:
-
-            flash(
-                "Teacher account was not found.",
-                "danger"
-            )
-
-            return redirect("/teacher/dashboard")
-
-
-        teacher_db_id = teacher[0]
-
-
-        # ====================================================
-        # GET TEACHER ROUTINE
-        # ====================================================
-
-        cursor.execute(
-            """
-            SELECT
-
-                r.id,
-
-                r.semester,
-
-                r.department,
-
-                r.section,
-
-                r.day,
-
-                r.start_time,
-
-                r.end_time,
-
-                r.room,
-
-                r.subject_id,
-
-                s.subject_code,
-
-                s.subject_name
-
-            FROM routines r
-
-            LEFT JOIN subjects s
-                ON r.subject_id = s.id
-
-            WHERE r.teacher_id = %s
-
+                title,
+                academic_year,
+                department,
+                semester,
+                description,
+                photo,
+                is_active,
+                uploaded_at
+            FROM routine_uploads
             ORDER BY
-
-                r.semester ASC,
-
-                r.department ASC,
-
-                CASE r.day
-
-                    WHEN 'Sunday' THEN 1
-                    WHEN 'Monday' THEN 2
-                    WHEN 'Tuesday' THEN 3
-                    WHEN 'Wednesday' THEN 4
-                    WHEN 'Thursday' THEN 5
-                    WHEN 'Friday' THEN 6
-                    WHEN 'Saturday' THEN 7
-
-                    ELSE 8
-
-                END ASC,
-
-                r.start_time ASC
-            """,
-            (
-                teacher_db_id,
-            )
+                is_active DESC,
+                uploaded_at DESC
+            """
         )
 
         routines = cursor.fetchall()
 
 
-        print(
-            "TEACHER ROUTINES LOADED:",
-            len(routines)
+        # ----------------------------------------------------
+        # TEACHER INFO
+        # ----------------------------------------------------
+
+        teacher = None
+
+        teacher_id = session.get(
+            "teacher_id"
         )
 
 
-        # ====================================================
-        # GET DISTINCT SEMESTERS
-        # ====================================================
+        try:
 
-        cursor.execute(
-            """
-            SELECT DISTINCT
-                r.semester
-
-            FROM routines r
-
-            WHERE r.teacher_id = %s
-
-            ORDER BY
-                r.semester ASC
-            """,
-            (
-                teacher_db_id,
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    teacher_id,
+                    full_name,
+                    department
+                FROM teachers
+                WHERE id = %s
+                   OR teacher_id = %s
+                LIMIT 1
+                """,
+                (
+                    teacher_id,
+                    teacher_id
+                )
             )
-        )
 
-        semesters = cursor.fetchall()
+            teacher = cursor.fetchone()
 
+        except Exception as e:
 
-        # ====================================================
-        # GET DISTINCT DEPARTMENTS
-        # ====================================================
-
-        cursor.execute(
-            """
-            SELECT DISTINCT
-                TRIM(r.department)
-
-            FROM routines r
-
-            WHERE r.teacher_id = %s
-
-              AND r.department IS NOT NULL
-
-              AND TRIM(r.department) <> ''
-
-            ORDER BY
-                TRIM(r.department) ASC
-            """,
-            (
-                teacher_db_id,
+            print(
+                "TEACHER INFO ERROR:",
+                repr(e)
             )
-        )
-
-        departments = cursor.fetchall()
 
 
-        # ====================================================
-        # TEMPLATE
-        # ====================================================
+        # ----------------------------------------------------
+        # RENDER
+        # ----------------------------------------------------
 
-        possible_templates = [
-
+        return render_template(
             "teacher/routine.html",
-
-            "teacher/routines.html",
-
-            "teacher_routine.html"
-
-        ]
-
-
-        for template_name in possible_templates:
-
-            try:
-
-                current_app.jinja_env.get_template(
-                    template_name
-                )
-
-                return render_template(
-                    template_name,
-
-                    routines=routines,
-
-                    semesters=semesters,
-
-                    departments=departments,
-
-                    teacher=teacher
-
-                )
-
-            except TemplateNotFound:
-
-                continue
-
-
-        raise TemplateNotFound(
-            "teacher/routine.html"
+            routines=routines,
+            teacher=teacher
         )
 
 
@@ -364,20 +212,36 @@ def index():
             "================================================"
         )
 
+
+        if mysql:
+
+            try:
+                mysql.connection.rollback()
+            except Exception:
+                pass
+
+
         flash(
-            f"Unable to load routine: {str(e)}",
+            f"Unable to load routines: {str(e)}",
             "danger"
         )
 
-        return redirect("/teacher/dashboard")
+
+        return redirect(
+            "/teacher/dashboard"
+        )
 
 
     finally:
 
-        if cursor is not None:
+        if cursor:
 
             try:
                 cursor.close()
-
             except Exception:
                 pass
+
+
+# ============================================================
+# END
+# ============================================================

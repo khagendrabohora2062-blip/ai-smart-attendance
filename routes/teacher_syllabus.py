@@ -13,7 +13,8 @@ from flask import (
     url_for,
     session,
     current_app,
-    send_from_directory
+    send_from_directory,
+    abort
 )
 
 from extensions import mysql
@@ -200,52 +201,132 @@ def index():
 
 
 # ============================================================
-# VIEW SYLLABUS
-# ============================================================
 
-@teacher_syllabus.route(
-    "/view/<filename>"
-)
-def view(filename):
+def _safe_syllabus_filename(filename):
+    if not filename:
+        return ""
+    return os.path.basename(str(filename).replace("\\", "/").strip())
 
-    if not teacher_logged_in():
 
-        return redirect(
-            url_for("teacher_auth.login")
-        )
-
+def _find_syllabus_file(filename):
+    safe_name = _safe_syllabus_filename(filename)
+    if not safe_name:
+        return None, None
 
     folder = get_syllabus_upload_folder()
+    physical = os.path.join(folder, safe_name)
 
+    if os.path.isfile(physical):
+        return folder, safe_name
+
+    return None, None
+
+# ==========================================================
+# VIEW / DOWNLOAD SYLLABUS
+# ==========================================================
+
+@teacher_syllabus.route("/view/<path:filename>")
+def view(filename):
+    if not teacher_logged_in():
+        return redirect(url_for("teacher_auth.login"))
+
+    safe_name = _safe_syllabus_filename(filename)
+    folder = get_syllabus_upload_folder()
+
+    if not safe_name.lower().endswith(".pdf"):
+        abort(404)
+
+    # The database stores paths such as uploads/syllabus/name.pdf,
+    # while the real file is in static/uploads/syllabus/name.pdf.
+    # Match by basename so both formats work.
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT file_name
+            FROM syllabus
+            WHERE file_name = %s
+               OR file_path = %s
+               OR file_path = %s
+            LIMIT 1
+            """,
+            (
+                safe_name,
+                filename.replace("\\", "/").lstrip("/"),
+                "uploads/syllabus/" + safe_name,
+            ),
+        )
+        row = cursor.fetchone()
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+        abort(404)
+
+    safe_name = _safe_syllabus_filename(row[0])
+    physical = os.path.join(folder, safe_name)
+
+    if not os.path.isfile(physical):
+        abort(404)
 
     return send_from_directory(
         folder,
-        filename,
-        as_attachment=False
+        safe_name,
+        as_attachment=False,
+        download_name=safe_name,
     )
 
 
-# ============================================================
-# DOWNLOAD SYLLABUS
-# ============================================================
-
-@teacher_syllabus.route(
-    "/download/<filename>"
-)
+@teacher_syllabus.route("/download/<path:filename>")
 def download(filename):
-
     if not teacher_logged_in():
+        return redirect(url_for("teacher_auth.login"))
 
-        return redirect(
-            url_for("teacher_auth.login")
-        )
-
-
+    safe_name = _safe_syllabus_filename(filename)
     folder = get_syllabus_upload_folder()
 
+    if not safe_name.lower().endswith(".pdf"):
+        abort(404)
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT file_name
+            FROM syllabus
+            WHERE file_name = %s
+               OR file_path = %s
+               OR file_path = %s
+            LIMIT 1
+            """,
+            (
+                safe_name,
+                filename.replace("\\", "/").lstrip("/"),
+                "uploads/syllabus/" + safe_name,
+            ),
+        )
+        row = cursor.fetchone()
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+        abort(404)
+
+    safe_name = _safe_syllabus_filename(row[0])
+    physical = os.path.join(folder, safe_name)
+
+    if not os.path.isfile(physical):
+        abort(404)
 
     return send_from_directory(
         folder,
-        filename,
-        as_attachment=True
+        safe_name,
+        as_attachment=True,
+        download_name=safe_name,
     )

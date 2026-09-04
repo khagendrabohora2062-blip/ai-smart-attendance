@@ -547,10 +547,7 @@ Teacher Syllabus - AI Smart Attendance
                         <!-- VIEW -->
 
                         <a
-                            href="{{ url_for(
-                                'teacher_syllabus.view',
-                                filename=syllabus[8]
-                            ) }}"
+                            href="{{ url_for('static', filename='uploads/syllabus/' ~ syllabus[8]) }}"
                             target="_blank"
                             class="syllabus-btn view-btn"
                         >
@@ -565,10 +562,7 @@ Teacher Syllabus - AI Smart Attendance
                         <!-- DOWNLOAD -->
 
                         <a
-                            href="{{ url_for(
-                                'teacher_syllabus.download',
-                                filename=syllabus[8]
-                            ) }}"
+                            href="{{ url_for('static', filename='uploads/syllabus/' ~ syllabus[8]) }}"
                             class="syllabus-btn download-btn"
                         >
 

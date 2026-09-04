@@ -1,7 +1,7 @@
 {% extends "layouts/base.html" %}
 
 {% block title %}
-My Routine - Teacher
+My Routine
 {% endblock %}
 
 
@@ -14,121 +14,108 @@ My Routine - Teacher
     }
 
     .routine-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
         margin-bottom: 22px;
     }
 
-    .routine-title h2 {
+    .routine-header h2 {
         margin: 0;
         font-size: 25px;
         font-weight: 700;
+        color: #1e293b;
     }
 
-    .routine-title p {
+    .routine-header p {
         margin: 5px 0 0;
         color: #64748b;
         font-size: 13px;
     }
 
-    .routine-info {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
-    }
-
-    .routine-badge {
-        padding: 7px 12px;
-        border-radius: 8px;
-        background: #eef4ff;
-        color: #2563eb;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
     .routine-card {
-        background: #ffffff;
-        border-radius: 14px;
-        box-shadow: 0 5px 20px rgba(15,23,42,.07);
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 5px 20px rgba(15,23,42,.06);
         overflow: hidden;
+        margin-bottom: 22px;
     }
 
     .routine-card-header {
-        padding: 16px 18px;
+        padding: 16px 20px;
         border-bottom: 1px solid #e5e7eb;
-        font-size: 15px;
+    }
+
+    .routine-card-header h5 {
+        margin: 0;
         font-weight: 700;
+        font-size: 16px;
     }
 
-    .routine-table-wrapper {
+    .routine-card-body {
+        padding: 20px;
+    }
+
+    .routine-photo {
         width: 100%;
-        overflow-x: auto;
-    }
-
-    .routine-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 850px;
-    }
-
-    .routine-table th {
+        max-height: 750px;
+        object-fit: contain;
+        display: block;
+        margin: auto;
+        border-radius: 10px;
         background: #f8fafc;
-        color: #475569;
-        font-size: 12px;
-        font-weight: 700;
-        padding: 13px 12px;
-        text-align: left;
-        border-bottom: 1px solid #e5e7eb;
     }
 
-    .routine-table td {
-        padding: 13px 12px;
-        font-size: 12px;
-        color: #334155;
-        border-bottom: 1px solid #eef2f7;
+    .routine-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
     }
 
-    .routine-table tr:hover {
-        background: #f8fbff;
-    }
-
-    .subject-code {
-        color: #2563eb;
-        font-weight: 700;
-    }
-
-    .subject-name {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .day-badge {
-        display: inline-block;
-        padding: 5px 9px;
-        border-radius: 7px;
+    .info-badge {
+        padding: 7px 11px;
+        border-radius: 8px;
         background: #eff6ff;
         color: #2563eb;
+        font-size: 12px;
         font-weight: 600;
     }
 
-    .time-text {
+    .routine-description {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    .routine-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+
+    .routine-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 13px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 12px;
         font-weight: 600;
-        white-space: nowrap;
+        background: #eff6ff;
+        color: #2563eb;
     }
 
     .empty-routine {
-        padding: 55px 20px;
         text-align: center;
+        padding: 65px 20px;
         color: #64748b;
     }
 
     .empty-routine i {
-        font-size: 42px;
-        color: #94a3b8;
         display: block;
+        font-size: 45px;
+        color: #94a3b8;
         margin-bottom: 12px;
     }
 
@@ -138,9 +125,6 @@ My Routine - Teacher
             padding: 15px;
         }
 
-        .routine-header {
-            align-items: flex-start;
-        }
     }
 
 </style>
@@ -148,212 +132,145 @@ My Routine - Teacher
 
 <div class="teacher-routine-page">
 
-
     <div class="routine-header">
 
-        <div class="routine-title">
-
-            <h2>
-                <i class="bi bi-calendar-week"></i>
-                My Teaching Routine
-            </h2>
-
-            <p>
-                View your assigned classes and teaching schedule.
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <!-- =====================================================
-         TEACHER INFO
-    ====================================================== -->
-
-    <div class="routine-info">
-
-        <span class="routine-badge">
-
-            <i class="bi bi-person-fill"></i>
-
-            {{ teacher[2] }}
-
-        </span>
-
-
-        {% if teacher[3] %}
-
-        <span class="routine-badge">
-
-            <i class="bi bi-building"></i>
-
-            {{ teacher[3] }}
-
-        </span>
-
-        {% endif %}
-
-
-        <span class="routine-badge">
-
-            <i class="bi bi-calendar3"></i>
-
-            {{ routines|length }} Classes
-
-        </span>
-
-    </div>
-
-
-    <!-- =====================================================
-         ROUTINE CARD
-    ====================================================== -->
-
-    <div class="routine-card">
-
-        <div class="routine-card-header">
-
+        <h2>
             <i class="bi bi-calendar-week"></i>
+            My Routine
+        </h2>
 
-            Weekly Teaching Schedule
-
-        </div>
-
-
-        {% if routines %}
-
-        <div class="routine-table-wrapper">
-
-            <table class="routine-table">
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Semester
-                        </th>
-
-                        <th>
-                            Department
-                        </th>
-
-                        <th>
-                            Section
-                        </th>
-
-                        <th>
-                            Day
-                        </th>
-
-                        <th>
-                            Time
-                        </th>
-
-                        <th>
-                            Subject
-                        </th>
-
-                        <th>
-                            Room
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    {% for r in routines %}
-
-                    <tr>
-
-                        <td>
-                            {{ r[1] }}
-                        </td>
-
-                        <td>
-                            {{ r[2] or '-' }}
-                        </td>
-
-                        <td>
-                            {{ r[3] or 'All' }}
-                        </td>
-
-                        <td>
-
-                            <span class="day-badge">
-
-                                {{ r[4] }}
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <span class="time-text">
-
-                                {{ r[5] }} -
-                                {{ r[6] }}
-
-                            </span>
-
-                        </td>
-
-                        <td>
-
-                            <div class="subject-code">
-
-                                {{ r[9] or '-' }}
-
-                            </div>
-
-                            <div class="subject-name">
-
-                                {{ r[10] or 'Subject' }}
-
-                            </div>
-
-                        </td>
-
-                        <td>
-
-                            {{ r[7] or '-' }}
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-        {% else %}
-
-        <div class="empty-routine">
-
-            <i class="bi bi-calendar-x"></i>
-
-            <strong>
-                No routine assigned
-            </strong>
-
-            <p>
-                Your teaching routine has not been added by the administrator yet.
-            </p>
-
-        </div>
-
-        {% endif %}
+        <p>
+            View the latest class routine uploaded by the administrator.
+        </p>
 
     </div>
+
+
+    {% if routines %}
+
+        {% for r in routines %}
+
+            <div class="routine-card">
+
+                <div class="routine-card-header">
+
+                    <h5>
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ r[1] }}
+
+                    </h5>
+
+                </div>
+
+
+                <div class="routine-card-body">
+
+                    <div class="routine-info">
+
+                        {% if r[2] %}
+
+                            <span class="info-badge">
+                                <i class="bi bi-calendar3"></i>
+                                {{ r[2] }}
+                            </span>
+
+                        {% endif %}
+
+
+                        {% if r[3] %}
+
+                            <span class="info-badge">
+                                <i class="bi bi-building"></i>
+                                {{ r[3] }}
+                            </span>
+
+                        {% endif %}
+
+
+                        {% if r[4] %}
+
+                            <span class="info-badge">
+                                <i class="bi bi-mortarboard"></i>
+                                {{ r[4] }}
+                            </span>
+
+                        {% else %}
+
+                            <span class="info-badge">
+                                All Semesters
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    {% if r[5] %}
+
+                        <div class="routine-description">
+                            {{ r[5] }}
+                        </div>
+
+                    {% endif %}
+
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
+                        alt="{{ r[1] }}"
+                        class="routine-photo"
+                    >
+
+
+                    <div class="routine-actions">
+
+                        <a
+                            href="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
+                            target="_blank"
+                            class="routine-btn"
+                        >
+                            <i class="bi bi-arrows-fullscreen"></i>
+                            View Full Screen
+                        </a>
+
+
+                        <a
+                            href="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
+                            download
+                            class="routine-btn"
+                        >
+                            <i class="bi bi-download"></i>
+                            Download
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="routine-card">
+
+            <div class="empty-routine">
+
+                <i class="bi bi-calendar-x"></i>
+
+                <strong>
+                    No routine available
+                </strong>
+
+                <p>
+                    The administrator has not uploaded a routine yet.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
 
 </div>
 

@@ -438,10 +438,7 @@
                 <div class="syllabus-actions">
 
                     <a
-                        href="{{ url_for(
-                            'student_syllabus.view',
-                            filename=syllabus[8]
-                        ) }}"
+                        href="{{ url_for('student_syllabus.view', filename=syllabus[8]) }}"
                         target="_blank"
                         class="syllabus-btn view-btn"
                     >
@@ -451,10 +448,7 @@
 
 
                     <a
-                        href="{{ url_for(
-                            'student_syllabus.download',
-                            filename=syllabus[8]
-                        ) }}"
+                        href="{{ url_for('student_syllabus.download', filename=syllabus[8]) }}"
                         class="syllabus-btn download-btn"
                     >
                         <i class="bi bi-download"></i>

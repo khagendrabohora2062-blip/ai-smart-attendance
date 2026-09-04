@@ -4,14 +4,19 @@
 Notice Management
 {% endblock %}
 
+
 {% block content %}
 
 <div class="container-fluid py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
 
         <div>
-            <h3 class="fw-bold mb-1">
+            <h3 class="fw-bold mb-1 text-primary">
                 <i class="bi bi-megaphone-fill me-2"></i>
                 Notice Management
             </h3>
@@ -23,7 +28,7 @@ Notice Management
 
         <a
             href="{{ url_for('admin_notice.add') }}"
-            class="btn btn-primary"
+            class="btn btn-primary add-notice-btn"
         >
             <i class="bi bi-plus-circle me-1"></i>
             Add Notice
@@ -32,7 +37,11 @@ Notice Management
     </div>
 
 
-    <div class="card border-0 shadow-sm">
+    <!-- =====================================================
+         NOTICE TABLE
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm notice-card">
 
         <div class="card-body">
 
@@ -40,22 +49,22 @@ Notice Management
 
             <div class="table-responsive">
 
-                <table class="table align-middle">
+                <table class="table align-middle notice-table">
 
                     <thead>
 
                         <tr>
-
                             <th>Notice</th>
                             <th>Type</th>
                             <th>Target</th>
+                            <th>Audience</th>
                             <th>Files</th>
                             <th>Status</th>
                             <th class="text-end">Action</th>
-
                         </tr>
 
                     </thead>
+
 
                     <tbody>
 
@@ -63,9 +72,13 @@ Notice Management
 
                         <tr>
 
+                            <!-- =================================================
+                                 NOTICE
+                            ================================================== -->
+
                             <td>
 
-                                <div class="fw-bold">
+                                <div class="fw-bold notice-title">
                                     {{ notice[1] }}
                                 </div>
 
@@ -76,6 +89,10 @@ Notice Management
                             </td>
 
 
+                            <!-- =================================================
+                                 TYPE
+                            ================================================== -->
+
                             <td>
 
                                 <span class="badge bg-info">
@@ -84,6 +101,10 @@ Notice Management
 
                             </td>
 
+
+                            <!-- =================================================
+                                 TARGET
+                            ================================================== -->
 
                             <td>
 
@@ -100,47 +121,92 @@ Notice Management
                             </td>
 
 
+                            <!-- =================================================
+                                 AUDIENCE
+                            ================================================== -->
+
+                            <td>
+
+                                {% if notice[11] == "Students" %}
+
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-mortarboard me-1"></i>
+                                        Students
+                                    </span>
+
+                                {% elif notice[11] == "Teachers" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-person-workspace me-1"></i>
+                                        Teachers
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-people me-1"></i>
+                                        Everyone
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- =================================================
+                                 FILES
+                            ================================================== -->
+
                             <td>
 
                                 {% if notice[3] %}
 
-                                <span class="badge bg-success me-1">
-                                    <i class="bi bi-image"></i>
-                                    Photo
-                                </span>
+                                    <span class="badge bg-success me-1">
+                                        <i class="bi bi-image me-1"></i>
+                                        Photo
+                                    </span>
 
                                 {% endif %}
 
 
                                 {% if notice[4] %}
 
-                                <span class="badge bg-danger">
-                                    <i class="bi bi-file-earmark-pdf"></i>
-                                    PDF
-                                </span>
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                                        PDF
+                                    </span>
 
                                 {% endif %}
 
+
                                 {% if not notice[3] and not notice[4] %}
+
                                     <span class="text-muted">
                                         Text only
                                     </span>
+
                                 {% endif %}
 
                             </td>
 
+
+                            <!-- =================================================
+                                 STATUS
+                            ================================================== -->
 
                             <td>
 
                                 {% if notice[8] %}
 
                                     <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>
                                         Published
                                     </span>
 
                                 {% else %}
 
                                     <span class="badge bg-secondary">
+                                        <i class="bi bi-eye-slash me-1"></i>
                                         Draft
                                     </span>
 
@@ -149,46 +215,97 @@ Notice Management
                             </td>
 
 
+                            <!-- =================================================
+                                 ACTIONS
+                            ================================================== -->
+
                             <td class="text-end">
 
-                                <div class="d-flex justify-content-end gap-1">
+                                <div class="action-buttons">
+
+
+                                    <!-- =====================================
+                                         VIEW
+                                         IMPORTANT:
+                                         This is ONLY GET.
+                                         It NEVER deletes or toggles.
+                                    ====================================== -->
+
+                                    <a
+                                        href="{{ url_for('admin_notice.view', notice_id=notice[0]) }}"
+                                        class="action-btn view-btn"
+                                        title="View Notice"
+                                    >
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+
+                                    <!-- =====================================
+                                         PUBLISH / UNPUBLISH
+                                         Separate POST form.
+                                    ====================================== -->
 
                                     <form
                                         method="POST"
                                         action="{{ url_for('admin_notice.toggle_publish', notice_id=notice[0]) }}"
+                                        class="action-form"
                                     >
 
                                         <button
-                                            class="btn btn-sm btn-outline-success"
-                                            title="Publish / Unpublish"
+                                            type="submit"
+                                            class="action-btn publish-btn"
+                                            title="{% if notice[8] %}Unpublish Notice{% else %}Publish Notice{% endif %}"
                                         >
-                                            <i class="bi bi-eye"></i>
+
+                                            {% if notice[8] %}
+
+                                                <i class="bi bi-eye-slash"></i>
+
+                                            {% else %}
+
+                                                <i class="bi bi-check-circle"></i>
+
+                                            {% endif %}
+
                                         </button>
 
                                     </form>
 
 
+                                    <!-- =====================================
+                                         EDIT
+                                    ====================================== -->
+
                                     <a
                                         href="{{ url_for('admin_notice.edit', notice_id=notice[0]) }}"
-                                        class="btn btn-sm btn-outline-primary"
+                                        class="action-btn edit-btn"
+                                        title="Edit Notice"
                                     >
                                         <i class="bi bi-pencil"></i>
                                     </a>
 
 
+                                    <!-- =====================================
+                                         DELETE
+                                    ====================================== -->
+
                                     <form
                                         method="POST"
                                         action="{{ url_for('admin_notice.delete', notice_id=notice[0]) }}"
-                                        onsubmit="return confirm('Delete this notice?');"
+                                        class="action-form"
+                                        onsubmit="return confirm('Are you sure you want to delete this notice?');"
                                     >
 
                                         <button
-                                            class="btn btn-sm btn-outline-danger"
+                                            type="submit"
+                                            class="action-btn delete-btn"
+                                            title="Delete Notice"
                                         >
                                             <i class="bi bi-trash"></i>
                                         </button>
 
                                     </form>
+
 
                                 </div>
 
@@ -204,7 +321,12 @@ Notice Management
 
             </div>
 
+
             {% else %}
+
+                <!-- =================================================
+                     EMPTY
+                ================================================== -->
 
                 <div class="text-center py-5">
 
@@ -224,6 +346,7 @@ Notice Management
                         href="{{ url_for('admin_notice.add') }}"
                         class="btn btn-primary"
                     >
+                        <i class="bi bi-plus-circle me-1"></i>
                         Add Notice
                     </a>
 
@@ -236,5 +359,157 @@ Notice Management
     </div>
 
 </div>
+
+
+<!-- =========================================================
+     STYLE
+========================================================== -->
+
+<style>
+
+.notice-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.notice-table {
+    margin-bottom: 0;
+}
+
+.notice-table thead th {
+    font-weight: 700;
+    color: #111827;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.notice-table tbody td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.notice-title {
+    color: #111827;
+    font-size: 16px;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.action-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.action-btn {
+    width: 34px;
+    height: 34px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 6px;
+    background: transparent;
+
+    text-decoration: none;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.15s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+.view-btn {
+    color: #198754;
+    border: 1px solid #198754;
+}
+
+.view-btn:hover {
+    background: #198754;
+    color: white;
+}
+
+.publish-btn {
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.publish-btn:hover {
+    background: #6c757d;
+    color: white;
+}
+
+.edit-btn {
+    color: #0d6efd;
+    border: 1px solid #0d6efd;
+}
+
+.edit-btn:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+.delete-btn {
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.delete-btn:hover {
+    background: #dc3545;
+    color: white;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+
+    .container-fluid {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+
+    .add-notice-btn {
+        width: 100%;
+    }
+
+    .notice-card .card-body {
+        padding: 12px !important;
+    }
+
+    .notice-table {
+        min-width: 1100px;
+    }
+
+    .notice-table td,
+    .notice-table th {
+        white-space: nowrap;
+    }
+
+}
+
+</style>
 
 {% endblock %}

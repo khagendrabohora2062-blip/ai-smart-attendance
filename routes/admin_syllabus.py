@@ -7,7 +7,8 @@ from flask import (
     session,
     flash,
     current_app,
-    send_from_directory
+    send_from_directory,
+    abort
 )
 
 from extensions import mysql
@@ -748,194 +749,181 @@ def upload():
 
 
 # ==========================================================
-# VIEW / DOWNLOAD SYLLABUS
-# ==========================================================
 
-@admin_syllabus.route(
-    "/file/<filename>"
-)
-def file(filename):
-
-    # ------------------------------------------------------
-    # LOGIN CHECK
-    # ------------------------------------------------------
-
-    if not admin_logged_in():
-
-        return redirect(
-            url_for("auth.login")
-        )
+def _safe_syllabus_filename(filename):
+    if not filename:
+        return ""
+    return os.path.basename(str(filename).replace("\\", "/").strip())
 
 
-    folder = (
-        get_syllabus_upload_folder()
-    )
+def _find_syllabus_file(filename):
+    safe_name = _safe_syllabus_filename(filename)
+    if not safe_name:
+        return None, None
 
+    folder = get_syllabus_upload_folder()
+    physical = os.path.join(folder, safe_name)
 
-    return send_from_directory(
-        folder,
-        filename
-    )
+    if os.path.isfile(physical):
+        return folder, safe_name
 
+    return None, None
 
 # ==========================================================
 # DELETE SYLLABUS
 # ==========================================================
 
-@admin_syllabus.route(
-    "/delete/<int:id>",
-    methods=["POST"]
-)
+@admin_syllabus.route("/delete/<int:id>", methods=["POST"])
 def delete(id):
-
-    # ------------------------------------------------------
-    # LOGIN CHECK
-    # ------------------------------------------------------
-
     if not admin_logged_in():
-
-        return redirect(
-            url_for("auth.login")
-        )
-
+        return redirect(url_for("auth.login"))
 
     cursor = mysql.connection.cursor()
+    file_name = None
 
     try:
+        cursor.execute("SELECT file_name FROM syllabus WHERE id = %s LIMIT 1", (id,))
+        row = cursor.fetchone()
 
-        # ==================================================
-        # GET SYLLABUS FILE
-        # ==================================================
+        if not row:
+            flash("Syllabus not found.", "warning")
+            return redirect(url_for("admin_syllabus.index"))
 
-        cursor.execute(
-            """
-            SELECT
-                file_name
-
-            FROM syllabus
-
-            WHERE id = %s
-
-            LIMIT 1
-            """,
-            (id,)
-        )
-
-        syllabus = cursor.fetchone()
-
-
-        # --------------------------------------------------
-        # NOT FOUND
-        # --------------------------------------------------
-
-        if not syllabus:
-
-            flash(
-                "Syllabus not found.",
-                "warning"
-            )
-
-            return redirect(
-                url_for(
-                    "admin_syllabus.index"
-                )
-            )
-
-
-        file_name = syllabus[0]
-
-
-        # ==================================================
-        # DELETE DATABASE RECORD
-        # ==================================================
-
-        cursor.execute(
-            """
-            DELETE FROM syllabus
-
-            WHERE id = %s
-            """,
-            (id,)
-        )
-
-
+        file_name = _safe_syllabus_filename(row[0])
+        cursor.execute("DELETE FROM syllabus WHERE id = %s", (id,))
         mysql.connection.commit()
 
-
-        # ==================================================
-        # DELETE PHYSICAL PDF
-        # ==================================================
-
-        if file_name:
-
-            folder = (
-                get_syllabus_upload_folder()
-            )
-
-            physical_file = os.path.join(
-                folder,
-                file_name
-            )
-
-
-            if os.path.exists(
-                physical_file
-            ):
-
-                try:
-
-                    os.remove(
-                        physical_file
-                    )
-
-                except Exception:
-                    pass
-
-
-        # ==================================================
-        # SUCCESS MESSAGE
-        # ==================================================
-
-        flash(
-            "Syllabus deleted successfully.",
-            "success"
-        )
-
-
     except Exception as e:
-
-        # --------------------------------------------------
-        # ROLLBACK
-        # --------------------------------------------------
-
         try:
-
             mysql.connection.rollback()
-
         except Exception:
             pass
-
-
-        # --------------------------------------------------
-        # ERROR MESSAGE
-        # --------------------------------------------------
-
-        flash(
-            f"Syllabus delete error: {e}",
-            "danger"
-        )
-
-
+        flash(f"Unable to delete syllabus: {e}", "danger")
+        return redirect(url_for("admin_syllabus.index"))
     finally:
-
         try:
             cursor.close()
         except Exception:
             pass
 
+    if file_name:
+        try:
+            physical_file = os.path.join(get_syllabus_upload_folder(), file_name)
+            if os.path.isfile(physical_file):
+                os.remove(physical_file)
+        except Exception as e:
+            print("SYLLABUS FILE DELETE WARNING:", repr(e))
 
-    return redirect(
-        url_for(
-            "admin_syllabus.index"
+    flash("Syllabus deleted successfully.", "success")
+    return redirect(url_for("admin_syllabus.index"))
+
+
+# ==========================================================
+# VIEW / DOWNLOAD SYLLABUS
+# ==========================================================
+
+@admin_syllabus.route("/file/<path:filename>")
+def file(filename):
+    if not admin_logged_in():
+        return redirect(url_for("auth.login"))
+
+    safe_name = _safe_syllabus_filename(filename)
+    folder = get_syllabus_upload_folder()
+
+    if not safe_name.lower().endswith(".pdf"):
+        abort(404)
+
+    # The database stores paths such as uploads/syllabus/name.pdf,
+    # while the real file is in static/uploads/syllabus/name.pdf.
+    # Match by basename so both formats work.
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT file_name
+            FROM syllabus
+            WHERE file_name = %s
+               OR file_path = %s
+               OR file_path = %s
+            LIMIT 1
+            """,
+            (
+                safe_name,
+                filename.replace("\\", "/").lstrip("/"),
+                "uploads/syllabus/" + safe_name,
+            ),
         )
+        row = cursor.fetchone()
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+        abort(404)
+
+    safe_name = _safe_syllabus_filename(row[0])
+    physical = os.path.join(folder, safe_name)
+
+    if not os.path.isfile(physical):
+        abort(404)
+
+    return send_from_directory(
+        folder,
+        safe_name,
+        as_attachment=False,
+        download_name=safe_name,
+    )
+
+
+@admin_syllabus.route("/download/<path:filename>")
+def download(filename):
+    if not admin_logged_in():
+        return redirect(url_for("auth.login"))
+
+    safe_name = _safe_syllabus_filename(filename)
+    folder = get_syllabus_upload_folder()
+
+    if not safe_name.lower().endswith(".pdf"):
+        abort(404)
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT file_name
+            FROM syllabus
+            WHERE file_name = %s
+               OR file_path = %s
+               OR file_path = %s
+            LIMIT 1
+            """,
+            (
+                safe_name,
+                filename.replace("\\", "/").lstrip("/"),
+                "uploads/syllabus/" + safe_name,
+            ),
+        )
+        row = cursor.fetchone()
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+        abort(404)
+
+    safe_name = _safe_syllabus_filename(row[0])
+    physical = os.path.join(folder, safe_name)
+
+    if not os.path.isfile(physical):
+        abort(404)
+
+    return send_from_directory(
+        folder,
+        safe_name,
+        as_attachment=True,
+        download_name=safe_name,
     )

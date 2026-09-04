@@ -400,6 +400,32 @@ Student Management
                                 </a>
 
 
+                                <!-- Reset Password -->
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'students.reset_student_password',
+                                        id=student[0]
+                                    ) }}"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Reset password for {{ student[2]|e }}?
+Temporary password will be: student123');">
+
+                                    <button
+                                        type="submit"
+                                        class="btn btn-outline-primary btn-sm"
+                                        title="Reset Student Password">
+
+                                        <i class="bi bi-key-fill me-1"></i>
+
+                                        Reset Password
+
+                                    </button>
+
+                                </form>
+
+
                                 <!-- Edit -->
 
                                 <a
@@ -629,7 +655,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 #studentTable td:last-child > div {
     display: grid !important;
-    grid-template-columns: repeat(5, auto);
+    grid-template-columns: repeat(6, auto);
     justify-content: center;
     gap: 5px !important;
 }

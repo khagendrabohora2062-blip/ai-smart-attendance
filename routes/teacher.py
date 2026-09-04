@@ -906,7 +906,110 @@ def edit_teacher(id):
             cursor.close()
 
 
+# RESET TEACHER PASSWORD
 # =========================================================
+
+@teachers.route(
+    "/reset-password/<int:id>",
+    methods=["POST"]
+)
+def reset_teacher_password(id):
+
+    if "admin_id" not in session:
+        return redirect(
+            url_for("auth.login")
+        )
+
+    # --------------------------------------------------------
+    # DEFAULT TEMPORARY PASSWORD
+    # --------------------------------------------------------
+    # Existing teacher login checks password directly,
+    # so keep the same format as the existing teacher system.
+    temporary_password = "teacher123"
+
+    cursor = None
+
+    try:
+
+        cursor = mysql.connection.cursor()
+
+        # ----------------------------------------------------
+        # CHECK TEACHER
+        # ----------------------------------------------------
+        cursor.execute(
+            """
+            SELECT
+                id,
+                teacher_id,
+                full_name
+            FROM teachers
+            WHERE id=%s
+            LIMIT 1
+            """,
+            (id,)
+        )
+
+        teacher = cursor.fetchone()
+
+        if not teacher:
+
+            flash(
+                "Teacher not found!",
+                "danger"
+            )
+
+            return redirect(
+                url_for("teachers.index")
+            )
+
+        # ----------------------------------------------------
+        # RESET PASSWORD
+        # ----------------------------------------------------
+        cursor.execute(
+            """
+            UPDATE teachers
+            SET password=%s
+            WHERE id=%s
+            """,
+            (
+                temporary_password,
+                id
+            )
+        )
+
+        mysql.connection.commit()
+
+        flash(
+            f"Password reset successfully for {teacher[2]}. Temporary password: {temporary_password}",
+            "success"
+        )
+
+    except Exception as e:
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        current_app.logger.exception(
+            "Error resetting teacher password"
+        )
+
+        flash(
+            f"Unable to reset teacher password: {e}",
+            "danger"
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+    return redirect(
+        url_for("teachers.index")
+    )
+        # -------------------------------------------------
+        # =========================================================
 # DELETE TEACHER
 # =========================================================
 
@@ -959,9 +1062,8 @@ def delete_teacher(id):
 
         photo = teacher[0]
 
-
-        # -------------------------------------------------
-        # DELETE TEACHER
+             # =========================================================
+# DELETE TEACHER
         # -------------------------------------------------
 
         cursor.execute(
