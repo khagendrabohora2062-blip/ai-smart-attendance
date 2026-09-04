@@ -33,25 +33,40 @@ teacher_face = Blueprint(
 # FACE SETTINGS
 # ============================================================
 
-# LBPH distance:
-# LOWER = BETTER MATCH
-#
-# 65 is a reasonable starting point.
-# If false matches happen, reduce to 55-60.
-# If your own face still becomes Unknown, test 70.
+FACE_SIZE = (200, 200)
+
+FACE_MARGIN = 0.15
+
 MAX_DISTANCE = 65.0
 
 REQUIRED_CONFIRMATIONS = 3
 
 CONFIRMATION_TIMEOUT = 3.0
 
-FACE_SIZE = (200, 200)
 
-FACE_MARGIN = 0.15
+# ============================================================
+# BASE / TRAINER PATH
+# ============================================================
+
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
+
+TRAINER_DIR = os.path.join(
+    BASE_DIR,
+    "trainer"
+)
+
+TRAINER_PATH = os.path.join(
+    TRAINER_DIR,
+    "trainer.yml"
+)
 
 
 # ============================================================
-# CLEAR FACE CONFIRMATION
+# CLEAR CONFIRMATION
 # ============================================================
 
 def clear_face_confirmation(session_id):
@@ -71,6 +86,8 @@ def clear_face_confirmation(session_id):
         None
     )
 
+    session.modified = True
+
 
 # ============================================================
 # START FACE ATTENDANCE
@@ -88,11 +105,13 @@ def start_face_attendance(session_id):
             url_for("teacher_auth.login")
         )
 
+
     cursor = mysql.connection.cursor()
 
     try:
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT
                 id,
                 session_status
@@ -100,16 +119,19 @@ def start_face_attendance(session_id):
             WHERE id=%s
             AND teacher_id=%s
             LIMIT 1
-        """, (
-            session_id,
-            session["teacher_id"]
-        ))
+            """,
+            (
+                session_id,
+                session["teacher_id"]
+            )
+        )
 
         attendance_session = cursor.fetchone()
 
     finally:
 
         cursor.close()
+
 
     if not attendance_session:
 
@@ -122,6 +144,7 @@ def start_face_attendance(session_id):
             url_for("teacher_attendance.index")
         )
 
+
     if attendance_session[1] != "OPEN":
 
         flash(
@@ -133,6 +156,7 @@ def start_face_attendance(session_id):
             url_for("teacher_attendance.index")
         )
 
+
     return render_template(
         "teacher/browser_face.html",
         session_id=session_id
@@ -140,8 +164,23 @@ def start_face_attendance(session_id):
 
 
 # ============================================================
-# FACE RECOGNITION API
-# Browser Camera -> Flask -> OpenCV
+# BROWSER FACE RECOGNITION API
+#
+# Browser Camera
+#       ↓
+# JavaScript
+#       ↓
+# JPEG
+#       ↓
+# Flask
+#       ↓
+# OpenCV
+#       ↓
+# trainer.yml
+#       ↓
+# Student
+#       ↓
+# Attendance
 # ============================================================
 
 @teacher_face.route(
@@ -149,10 +188,6 @@ def start_face_attendance(session_id):
     methods=["POST"]
 )
 def recognize_browser_face():
-
-    # ========================================================
-    # TEACHER LOGIN CHECK
-    # ========================================================
 
     if "teacher_id" not in session:
 
@@ -172,7 +207,7 @@ def recognize_browser_face():
     try:
 
         # ====================================================
-        # GET SESSION ID
+        # SESSION ID
         # ====================================================
 
         session_id = request.form.get(
@@ -211,7 +246,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # GET IMAGE
+        # IMAGE
         # ====================================================
 
         image_file = request.files.get(
@@ -254,7 +289,8 @@ def recognize_browser_face():
 
         try:
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     s.id,
                     s.session_status,
@@ -266,10 +302,12 @@ def recognize_browser_face():
                 WHERE s.id=%s
                 AND s.teacher_id=%s
                 LIMIT 1
-            """, (
-                session_id,
-                teacher_id
-            ))
+                """,
+                (
+                    session_id,
+                    teacher_id
+                )
+            )
 
             attendance_session = cursor.fetchone()
 
@@ -326,7 +364,20 @@ def recognize_browser_face():
         )
 
 
-        if not os.path.exists(
+        # Fallback to absolute project path
+
+        if not os.path.isfile(
+            trainer_path
+        ):
+
+            trainer_path = TRAINER_PATH
+
+
+        # ====================================================
+        # CHECK TRAINER
+        # ====================================================
+
+        if not os.path.isfile(
             trainer_path
         ):
 
@@ -341,13 +392,36 @@ def recognize_browser_face():
                 "confidence": 0,
                 "distance": 0,
                 "status":
-                    "trainer.yml not found. "
-                    "Please train the face model first."
+                    "trainer.yml not found at "
+                    + trainer_path
+                    + ". Please train the face model "
+                      "and make sure trainer/trainer.yml "
+                      "is deployed."
             })
 
 
         # ====================================================
-        # CHECK OPENCV FACE MODULE
+        # CHECK EMPTY TRAINER
+        # ====================================================
+
+        if os.path.getsize(
+            trainer_path
+        ) <= 0:
+
+            return jsonify({
+                "success": False,
+                "name": "",
+                "student_id": "",
+                "confidence": 0,
+                "distance": 0,
+                "status":
+                    "trainer.yml is empty. "
+                    "Please train the face model again."
+            })
+
+
+        # ====================================================
+        # OPENCV FACE MODULE
         # ====================================================
 
         if not hasattr(
@@ -406,20 +480,6 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # HISTOGRAM EQUALIZATION
-        #
-        # IMPORTANT:
-        #
-        # Training and recognition now use
-        # the same preprocessing.
-        # ====================================================
-
-        gray = cv2.equalizeHist(
-            gray
-        )
-
-
-        # ====================================================
         # FACE DETECTOR
         # ====================================================
 
@@ -450,8 +510,6 @@ def recognize_browser_face():
 
         # ====================================================
         # DETECT FACE
-        #
-        # Slightly more tolerant than old settings.
         # ====================================================
 
         faces = face_detector.detectMultiScale(
@@ -504,15 +562,11 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # SELECT FACE
+        # FACE COORDINATES
         # ====================================================
 
         x, y, w, h = faces[0]
 
-
-        # ====================================================
-        # FACE SIZE VALIDATION
-        # ====================================================
 
         if w < 100 or h < 100:
 
@@ -529,7 +583,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # ADD SAME MARGIN USED DURING TRAINING
+        # SAME CROP AS CAPTURE
         # ====================================================
 
         margin = int(
@@ -544,28 +598,21 @@ def recognize_browser_face():
             x - margin
         )
 
-
         y1 = max(
             0,
             y - margin
         )
-
 
         x2 = min(
             gray.shape[1],
             x + w + margin
         )
 
-
         y2 = min(
             gray.shape[0],
             y + h + margin
         )
 
-
-        # ====================================================
-        # CROP FACE
-        # ====================================================
 
         face_image = gray[
             y1:y2,
@@ -602,7 +649,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # FINAL HISTOGRAM EQUALIZATION
+        # EQUALIZE
         # ====================================================
 
         face_image = cv2.equalizeHist(
@@ -611,7 +658,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # LOAD LBPH MODEL
+        # CREATE RECOGNIZER
         # ====================================================
 
         recognizer = (
@@ -624,13 +671,17 @@ def recognize_browser_face():
         )
 
 
+        # ====================================================
+        # LOAD MODEL
+        # ====================================================
+
         try:
 
             recognizer.read(
                 trainer_path
             )
 
-        except Exception as model_error:
+        except Exception as e:
 
             current_app.logger.exception(
                 "Unable to load trainer.yml"
@@ -643,8 +694,8 @@ def recognize_browser_face():
                 "confidence": 0,
                 "distance": 0,
                 "status":
-                    f"Model load error: "
-                    f"{str(model_error)}"
+                    "Model load error: "
+                    + str(e)
             }), 500
 
 
@@ -660,7 +711,7 @@ def recognize_browser_face():
                 )
             )
 
-        except Exception as predict_error:
+        except Exception as e:
 
             current_app.logger.exception(
                 "Face prediction error"
@@ -673,42 +724,18 @@ def recognize_browser_face():
                 "confidence": 0,
                 "distance": 0,
                 "status":
-                    f"Prediction error: "
-                    f"{str(predict_error)}"
+                    "Prediction error: "
+                    + str(e)
             }), 500
 
 
-        # ====================================================
-        # NORMALIZE VALUES
-        # ====================================================
+        label = int(label)
 
-        try:
-
-            label = int(
-                label
-            )
-
-        except Exception:
-
-            label = 0
-
-
-        try:
-
-            distance = float(
-                distance
-            )
-
-        except Exception:
-
-            distance = 999.0
+        distance = float(distance)
 
 
         # ====================================================
-        # CONFIDENCE
-        #
-        # This is only a display score.
-        # LBPH distance itself is the actual criterion.
+        # DISPLAY CONFIDENCE
         # ====================================================
 
         confidence = max(
@@ -721,7 +748,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # UNKNOWN FACE
+        # UNKNOWN
         # ====================================================
 
         if (
@@ -752,27 +779,16 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # GET STUDENT USING DATABASE PRIMARY KEY
-        #
-        # IMPORTANT:
-        #
-        # The trained model label MUST be students.id
-        #
-        # Example:
-        #
-        # students.id       = 7
-        # students.student_id = 24001
-        #
-        # Model label = 7
-        #
-        # Then this query finds student 24001.
+        # FIND STUDENT
+        # MODEL LABEL = students.id
         # ====================================================
 
         cursor = mysql.connection.cursor()
 
         try:
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     id,
                     student_id,
@@ -782,9 +798,11 @@ def recognize_browser_face():
                 FROM students
                 WHERE id=%s
                 LIMIT 1
-            """, (
-                label,
-            ))
+                """,
+                (
+                    label,
+                )
+            )
 
             student = cursor.fetchone()
 
@@ -794,7 +812,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # MODEL LABEL DOES NOT EXIST IN DATABASE
+        # STUDENT NOT FOUND
         # ====================================================
 
         if not student:
@@ -821,10 +839,6 @@ def recognize_browser_face():
             })
 
 
-        # ====================================================
-        # STUDENT DATA
-        # ====================================================
-
         student_db_id = int(
             student[0]
         )
@@ -835,42 +849,40 @@ def recognize_browser_face():
 
         student_name = (
             student[2]
-            if student[2]
-            else "Unknown Student"
+            or
+            "Unknown Student"
         )
 
 
         # ====================================================
-        # DUPLICATE ATTENDANCE CHECK
+        # DUPLICATE CHECK
         # ====================================================
 
         cursor = mysql.connection.cursor()
 
         try:
 
-            cursor.execute("""
-                SELECT id
+            cursor.execute(
+                """
+                SELECT
+                    id
                 FROM attendance
                 WHERE student_id=%s
                 AND session_id=%s
                 LIMIT 1
-            """, (
-                student_db_id,
-                session_id
-            ))
-
-            already_marked = (
-                cursor.fetchone()
+                """,
+                (
+                    student_db_id,
+                    session_id
+                )
             )
+
+            already_marked = cursor.fetchone()
 
         finally:
 
             cursor.close()
 
-
-        # ====================================================
-        # ALREADY MARKED
-        # ====================================================
 
         if already_marked:
 
@@ -890,12 +902,13 @@ def recognize_browser_face():
                     distance,
                     2
                 ),
-                "status": "Already Marked"
+                "status":
+                    "Already Marked"
             })
 
 
         # ====================================================
-        # CONFIRMATION SETTINGS
+        # CONFIRMATION
         # ====================================================
 
         candidate_key = (
@@ -915,12 +928,10 @@ def recognize_browser_face():
             candidate_key
         )
 
-
         old_count = session.get(
             count_key,
             0
         )
-
 
         old_time = session.get(
             time_key,
@@ -931,10 +942,6 @@ def recognize_browser_face():
         current_time = time.time()
 
 
-        # ====================================================
-        # SAME PERSON CONFIRMATION
-        # ====================================================
-
         if (
             old_candidate == student_db_id
             and
@@ -942,18 +949,12 @@ def recognize_browser_face():
             <= CONFIRMATION_TIMEOUT
         ):
 
-            count = (
-                old_count + 1
-            )
+            count = old_count + 1
 
         else:
 
             count = 1
 
-
-        # ====================================================
-        # SAVE CONFIRMATION STATE
-        # ====================================================
 
         session[candidate_key] = (
             student_db_id
@@ -967,19 +968,14 @@ def recognize_browser_face():
             current_time
         )
 
-        # Helps Flask save modified session
         session.modified = True
 
 
         # ====================================================
-        # CONFIRMATION NOT COMPLETE
+        # NOT YET CONFIRMED
         # ====================================================
 
-        if (
-            count
-            <
-            REQUIRED_CONFIRMATIONS
-        ):
+        if count < REQUIRED_CONFIRMATIONS:
 
             return jsonify({
                 "success": False,
@@ -1008,59 +1004,48 @@ def recognize_browser_face():
 
         try:
 
-            # ------------------------------------------------
-            # FINAL DUPLICATE CHECK
-            # ------------------------------------------------
-
-            cursor.execute("""
-                SELECT id
+            cursor.execute(
+                """
+                SELECT
+                    id
                 FROM attendance
                 WHERE student_id=%s
                 AND session_id=%s
                 LIMIT 1
-            """, (
-                student_db_id,
-                session_id
-            ))
-
-
-            duplicate = (
-                cursor.fetchone()
+                """,
+                (
+                    student_db_id,
+                    session_id
+                )
             )
+
+            duplicate = cursor.fetchone()
 
 
             if duplicate:
 
-                result = (
-                    "Already Marked"
-                )
+                result = "Already Marked"
 
             else:
 
-                # --------------------------------------------
-                # GENERATE ATTENDANCE ID
-                # --------------------------------------------
-
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT
                         COALESCE(
                             MAX(id),
                             0
                         ) + 1
                     FROM attendance
-                """)
-
+                    """
+                )
 
                 next_id = (
                     cursor.fetchone()[0]
                 )
 
 
-                # --------------------------------------------
-                # INSERT ATTENDANCE
-                # --------------------------------------------
-
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO attendance
                     (
                         id,
@@ -1083,20 +1068,19 @@ def recognize_browser_face():
                         'Present',
                         %s
                     )
-                """, (
-                    next_id,
-                    student_db_id,
-                    session_id,
-                    "Attendance marked using browser face recognition"
-                ))
+                    """,
+                    (
+                        next_id,
+                        student_db_id,
+                        session_id,
+                        "Attendance marked using browser face recognition"
+                    )
+                )
 
 
                 mysql.connection.commit()
 
-
-                result = (
-                    "Present"
-                )
+                result = "Present"
 
 
         except Exception:
@@ -1104,7 +1088,6 @@ def recognize_browser_face():
             mysql.connection.rollback()
 
             raise
-
 
         finally:
 
@@ -1121,7 +1104,7 @@ def recognize_browser_face():
 
 
         # ====================================================
-        # SUCCESS RESPONSE
+        # RESPONSE
         # ====================================================
 
         return jsonify({
@@ -1151,10 +1134,6 @@ def recognize_browser_face():
         })
 
 
-    # ========================================================
-    # GLOBAL ERROR
-    # ========================================================
-
     except Exception as e:
 
         current_app.logger.exception(
@@ -1162,7 +1141,6 @@ def recognize_browser_face():
         )
 
 
-        # Try to clear confirmation if session_id exists
         try:
 
             if "session_id" in locals():
@@ -1183,5 +1161,6 @@ def recognize_browser_face():
             "confidence": 0,
             "distance": 0,
             "status":
-                f"Face Error: {str(e)}"
+                "Face Error: "
+                + str(e)
         }), 500

@@ -1,4 +1,3 @@
-
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 
@@ -16,30 +15,36 @@ const cameraError = document.getElementById("cameraError");
 let stream = null;
 let interval = null;
 let processing = false;
+let stopped = false;
 
 
-// =====================================================
-// START CAMERA
-// =====================================================
+// ============================================================
+// START BROWSER CAMERA
+// ============================================================
 
 async function startCamera() {
 
     try {
 
+        stopped = false;
+
         cameraError.classList.add("d-none");
         cameraError.innerText = "";
 
-        if (!navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia) {
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
 
             throw new Error(
-                "Your browser does not support camera access."
+                "Browser camera is not supported."
             );
-
         }
 
 
-        // Stop previous stream
+        // ----------------------------------------------------
+        // Stop old camera
+        // ----------------------------------------------------
 
         if (stream) {
 
@@ -47,24 +52,37 @@ async function startCamera() {
                 track => track.stop()
             );
 
+            stream = null;
         }
 
 
-        // Browser camera
+        // ----------------------------------------------------
+        // OPEN DEVICE CAMERA
+        // ----------------------------------------------------
 
         stream = await navigator.mediaDevices.getUserMedia({
+
             video: {
-                facingMode: "user",
+                facingMode: {
+                    ideal: "user"
+                },
+
                 width: {
                     ideal: 1280
                 },
+
                 height: {
                     ideal: 720
                 }
             },
+
             audio: false
         });
 
+
+        // ----------------------------------------------------
+        // SHOW CAMERA
+        // ----------------------------------------------------
 
         video.srcObject = stream;
 
@@ -74,61 +92,86 @@ async function startCamera() {
         cameraMessage.style.display = "none";
 
         status.innerText = "Camera Started";
-        status.className = "badge bg-success";
+
+        status.className =
+            "badge bg-success";
+
 
         startBtn.disabled = true;
+
         stopBtn.disabled = false;
 
 
-        // Capture every 1 second
+        // ----------------------------------------------------
+        // START FACE SCANNING
+        // ----------------------------------------------------
 
         if (interval) {
-            clearInterval(interval);
+
+            clearInterval(
+                interval
+            );
         }
+
 
         interval = setInterval(
             captureFrame,
-            1000
+            900
         );
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Camera Error:",
             error
         );
 
-        cameraMessage.style.display = "flex";
 
-        status.innerText = "Camera Error";
-        status.className = "badge bg-danger";
+        cameraMessage.style.display =
+            "flex";
+
+
+        status.innerText =
+            "Camera Error";
+
+        status.className =
+            "badge bg-danger";
+
 
         cameraError.innerText =
-            "Camera access failed: " +
-            error.message +
-            ". Please allow camera permission and try again.";
+            "Camera access failed: "
+            +
+            error.message
+            +
+            ". Allow camera permission and try again.";
 
-        cameraError.classList.remove("d-none");
 
+        cameraError.classList.remove(
+            "d-none"
+        );
     }
-
 }
 
 
-// =====================================================
+// ============================================================
 // STOP CAMERA
-// =====================================================
+// ============================================================
 
 function stopCamera() {
 
+    stopped = true;
+
+
     if (interval) {
 
-        clearInterval(interval);
-        interval = null;
+        clearInterval(
+            interval
+        );
 
+        interval = null;
     }
+
 
     if (stream) {
 
@@ -137,56 +180,83 @@ function stopCamera() {
         );
 
         stream = null;
-
     }
+
 
     video.srcObject = null;
 
+
     cameraMessage.innerText =
-        "Click \"Start Camera\"";
+        'Click "Start Camera"';
 
-    cameraMessage.style.display = "flex";
 
-    status.innerText = "Camera Off";
-    status.className = "badge bg-secondary";
+    cameraMessage.style.display =
+        "flex";
 
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
 
-    processing = false;
+    status.innerText =
+        "Camera Off";
 
+    status.className =
+        "badge bg-secondary";
+
+
+    startBtn.disabled =
+        false;
+
+    stopBtn.disabled =
+        true;
+
+
+    processing =
+        false;
 }
 
 
-// =====================================================
+// ============================================================
 // CAPTURE FRAME
-// =====================================================
+// ============================================================
 
 function captureFrame() {
 
-    if (!stream ||
-        video.readyState < 2 ||
-        processing) {
+    if (
+        stopped ||
+        !stream ||
+        processing
+    ) {
 
         return;
-
     }
 
+
     if (
+        video.readyState < 2 ||
         video.videoWidth <= 0 ||
         video.videoHeight <= 0
     ) {
 
         return;
-
     }
+
 
     processing = true;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
 
-    const ctx = canvas.getContext("2d");
+    canvas.width =
+        video.videoWidth;
+
+    canvas.height =
+        video.videoHeight;
+
+
+    const ctx =
+        canvas.getContext(
+            "2d",
+            {
+                willReadFrequently: true
+            }
+        );
+
 
     ctx.drawImage(
         video,
@@ -202,30 +272,36 @@ function captureFrame() {
         "image/jpeg",
         0.85
     );
-
 }
 
 
-// =====================================================
-// SEND IMAGE TO FLASK
-// =====================================================
+// ============================================================
+// SEND FRAME TO FLASK
+// ============================================================
 
 function sendFrame(blob) {
 
-    if (!blob) {
+    if (
+        !blob ||
+        stopped
+    ) {
 
         processing = false;
-        return;
 
+        return;
     }
 
-    const formData = new FormData();
+
+    const formData =
+        new FormData();
+
 
     formData.append(
         "image",
         blob,
-        "camera.jpg"
+        "browser-camera.jpg"
     );
+
 
     formData.append(
         "session_id",
@@ -237,103 +313,234 @@ function sendFrame(blob) {
         "/teacher/face/recognize",
         {
             method: "POST",
+
             body: formData,
-            credentials: "same-origin"
+
+            credentials: "same-origin",
+
+            headers: {
+                "X-Requested-With":
+                    "XMLHttpRequest"
+            }
         }
     )
 
-    .then(response => {
 
-        if (!response.ok) {
-            throw new Error(
-                "Server error: " +
-                response.status
+    .then(
+        response => {
+
+            if (!response.ok) {
+
+                return response.json()
+                    .catch(
+                        () => {
+                            throw new Error(
+                                "Server error: "
+                                +
+                                response.status
+                            );
+                        }
+                    )
+                    .then(
+                        data => {
+                            throw new Error(
+                                data.status
+                                ||
+                                "Server error: "
+                                +
+                                response.status
+                            );
+                        }
+                    );
+            }
+
+
+            return response.json();
+        }
+    )
+
+
+    .then(
+        data => {
+
+            // ----------------------------------------------
+            // STUDENT NAME
+            // ----------------------------------------------
+
+            studentName.innerText =
+                data.name
+                ||
+                "Waiting...";
+
+
+            // ----------------------------------------------
+            // STUDENT ID
+            // ----------------------------------------------
+
+            studentId.innerText =
+                data.student_id
+                ||
+                "-";
+
+
+            // ----------------------------------------------
+            // CONFIDENCE
+            // ----------------------------------------------
+
+            confidence.innerText =
+                (
+                    data.confidence
+                    ||
+                    0
+                )
+                +
+                "%";
+
+
+            // ----------------------------------------------
+            // STATUS
+            // ----------------------------------------------
+
+            status.innerText =
+                data.status
+                ||
+                "Processing";
+
+
+            const currentStatus =
+                (
+                    data.status
+                    ||
+                    ""
+                )
+                .toLowerCase();
+
+
+            // ----------------------------------------------
+            // SUCCESS
+            // ----------------------------------------------
+
+            if (data.success) {
+
+                status.className =
+                    "badge bg-success";
+
+            }
+
+            // ----------------------------------------------
+            // CONFIRMING
+            // ----------------------------------------------
+
+            else if (
+                currentStatus.includes(
+                    "confirm"
+                )
+            ) {
+
+                status.className =
+                    "badge bg-warning text-dark";
+
+            }
+
+            // ----------------------------------------------
+            // ALREADY MARKED
+            // ----------------------------------------------
+
+            else if (
+                currentStatus.includes(
+                    "already"
+                )
+            ) {
+
+                status.className =
+                    "badge bg-info text-dark";
+
+            }
+
+            // ----------------------------------------------
+            // NO FACE
+            // ----------------------------------------------
+
+            else if (
+                currentStatus.includes(
+                    "no face"
+                )
+            ) {
+
+                status.className =
+                    "badge bg-secondary";
+
+            }
+
+            // ----------------------------------------------
+            // UNKNOWN
+            // ----------------------------------------------
+
+            else if (
+                currentStatus.includes(
+                    "unknown"
+                )
+            ) {
+
+                status.className =
+                    "badge bg-danger";
+
+            }
+
+            // ----------------------------------------------
+            // OTHER
+            // ----------------------------------------------
+
+            else {
+
+                status.className =
+                    "badge bg-danger";
+            }
+        }
+    )
+
+
+    .catch(
+        error => {
+
+            console.error(
+                "Face request error:",
+                error
             );
+
+            if (!stopped) {
+
+                status.innerText =
+                    error.message
+                    ||
+                    "Connection error";
+
+                status.className =
+                    "badge bg-danger";
+            }
         }
-
-        return response.json();
-
-    })
-
-    .then(data => {
-
-        studentName.innerText =
-            data.name || "Waiting...";
-
-        studentId.innerText =
-            data.student_id || "-";
-
-        confidence.innerText =
-            (data.confidence || 0) + "%";
-
-        status.innerText =
-            data.status || "Processing";
+    )
 
 
-        if (data.success) {
+    .finally(
+        () => {
 
-            status.className =
-                "badge bg-success";
-
+            processing =
+                false;
         }
-
-        else if (
-            (data.status || "")
-                .toLowerCase()
-                .includes("confirm")
-        ) {
-
-            status.className =
-                "badge bg-warning text-dark";
-
-        }
-
-        else if (
-            (data.status || "")
-                .toLowerCase()
-                .includes("already")
-        ) {
-
-            status.className =
-                "badge bg-info text-dark";
-
-        }
-
-        else {
-
-            status.className =
-                "badge bg-danger";
-
-        }
-
-    })
-
-    .catch(error => {
-
-        console.error(
-            "Face request error:",
-            error
-        );
-
-    })
-
-    .finally(() => {
-
-        processing = false;
-
-    });
-
+    );
 }
 
 
-// =====================================================
+// ============================================================
 // BUTTON EVENTS
-// =====================================================
+// ============================================================
 
 startBtn.addEventListener(
     "click",
     startCamera
 );
+
 
 stopBtn.addEventListener(
     "click",
@@ -341,16 +548,17 @@ stopBtn.addEventListener(
 );
 
 
-// =====================================================
+// ============================================================
 // INITIAL STATE
-// =====================================================
+// ============================================================
 
-stopBtn.disabled = true;
+stopBtn.disabled =
+    true;
 
 
-// =====================================================
-// STOP WHEN LEAVING PAGE
-// =====================================================
+// ============================================================
+// PAGE LEAVE
+// ============================================================
 
 window.addEventListener(
     "beforeunload",

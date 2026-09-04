@@ -1,15 +1,19 @@
-
 {% extends "layouts/base.html" %}
 
 {% block title %}
 Face Attendance
 {% endblock %}
 
+
 {% block content %}
 
 <div class="container-fluid py-4">
 
     <div class="row g-4">
+
+        <!-- ================================================= -->
+        <!-- CAMERA -->
+        <!-- ================================================= -->
 
         <div class="col-lg-8">
 
@@ -18,11 +22,15 @@ Face Attendance
                 <div class="card-header bg-primary text-white">
 
                     <h4 class="mb-0">
+
                         <i class="bi bi-camera-video-fill me-2"></i>
+
                         Face Attendance
+
                     </h4>
 
                 </div>
+
 
                 <div class="card-body text-center">
 
@@ -35,6 +43,7 @@ Face Attendance
                             playsinline>
                         </video>
 
+
                         <div
                             id="cameraMessage"
                             class="camera-message">
@@ -45,7 +54,15 @@ Face Attendance
 
                     </div>
 
+
+                    <!-- Hidden canvas used for frame capture -->
+
                     <canvas id="canvas"></canvas>
+
+
+                    <!-- ================================================= -->
+                    <!-- BUTTONS -->
+                    <!-- ================================================= -->
 
                     <div class="mt-4">
 
@@ -55,9 +72,11 @@ Face Attendance
                             class="btn btn-success me-2">
 
                             <i class="bi bi-camera-fill me-1"></i>
+
                             Start Camera
 
                         </button>
+
 
                         <button
                             type="button"
@@ -65,11 +84,17 @@ Face Attendance
                             class="btn btn-danger">
 
                             <i class="bi bi-stop-fill me-1"></i>
+
                             Stop Camera
 
                         </button>
 
                     </div>
+
+
+                    <!-- ================================================= -->
+                    <!-- CAMERA ERROR -->
+                    <!-- ================================================= -->
 
                     <div
                         id="cameraError"
@@ -83,19 +108,33 @@ Face Attendance
         </div>
 
 
+        <!-- ================================================= -->
+        <!-- LIVE ATTENDANCE -->
+        <!-- ================================================= -->
+
         <div class="col-lg-4">
 
             <div class="card shadow-sm border-0">
 
                 <div class="card-header bg-dark text-white">
+
+                    <i class="bi bi-person-check-fill me-2"></i>
+
                     Live Attendance
+
                 </div>
+
 
                 <div class="card-body">
 
-                    <h5 id="studentName">
+                    <h5
+                        id="studentName"
+                        class="mb-3">
+
                         Waiting...
+
                     </h5>
+
 
                     <p class="mb-2">
 
@@ -107,22 +146,33 @@ Face Attendance
 
                     </p>
 
+
                     <hr>
 
+
                     <p>
+
                         Status:
+
                         <span
                             id="status"
                             class="badge bg-secondary">
+
                             Camera Off
+
                         </span>
+
                     </p>
 
+
                     <p>
+
                         Confidence:
-                        <span id="confidence">
+
+                        <strong id="confidence">
                             0%
-                        </span>
+                        </strong>
+
                     </p>
 
                 </div>
@@ -138,45 +188,130 @@ Face Attendance
 
 <style>
 
+/* ============================================================
+   CAMERA CONTAINER
+   ============================================================ */
+
 .camera-wrapper {
+
     position: relative;
+
     width: 100%;
+
     max-width: 760px;
+
     margin: auto;
+
     background: #111827;
-    border-radius: 12px;
+
+    border-radius: 14px;
+
     overflow: hidden;
+
 }
+
+
+/* ============================================================
+   VIDEO
+   ============================================================ */
 
 #video {
+
     width: 100%;
+
     height: auto;
+
     min-height: 420px;
+
+    max-height: 650px;
+
     object-fit: cover;
+
     display: block;
+
     background: #111827;
+
 }
+
+
+/* ============================================================
+   HIDDEN CANVAS
+   ============================================================ */
 
 #canvas {
+
     display: none;
+
 }
 
+
+/* ============================================================
+   CAMERA MESSAGE
+   ============================================================ */
+
 .camera-message {
+
     position: absolute;
+
     inset: 0;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     color: white;
+
     font-size: 18px;
-    background: rgba(0,0,0,0.35);
+
+    background: rgba(0, 0, 0, 0.40);
+
     pointer-events: none;
+
 }
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
 
 @media (max-width: 768px) {
 
+    .container-fluid {
+
+        padding-left: 10px !important;
+
+        padding-right: 10px !important;
+
+    }
+
+
     #video {
+
         min-height: 300px;
+
+        max-height: 70vh;
+
+        object-fit: cover;
+
+    }
+
+
+    .camera-wrapper {
+
+        border-radius: 10px;
+
+    }
+
+
+    #startBtn,
+    #stopBtn {
+
+        width: 45%;
+
+        min-width: 130px;
+
     }
 
 }
@@ -185,9 +320,19 @@ Face Attendance
 
 
 <script>
-const sessionId = {{ session_id|tojson }};
+
+const sessionId =
+    {{ session_id|tojson }};
+
 </script>
 
-<script src="{{ url_for('static', filename='js/browser_face.js') }}"></script>
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/browser_face.js'
+    ) }}">
+</script>
+
 
 {% endblock %}
