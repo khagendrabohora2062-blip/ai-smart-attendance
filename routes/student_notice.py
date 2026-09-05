@@ -1,9 +1,6 @@
-# ============================================================
-# STUDENT NOTICE
-# File: routes/student_notice.py
-# ============================================================
-
 import os
+
+from io import BytesIO
 
 from flask import (
     Blueprint,
@@ -13,9 +10,17 @@ from flask import (
     flash,
     session,
     current_app,
-    send_file
+    send_file,
+    abort
 )
 
+from extensions import mysql
+
+
+# ============================================================
+# STUDENT NOTICE
+# File: routes/student_notice.py
+# ============================================================
 
 student_notice = Blueprint(
     "student_notice",
@@ -25,44 +30,75 @@ student_notice = Blueprint(
 
 
 # ============================================================
-# MYSQL
-# ============================================================
-
-def get_mysql():
-
-    mysql = current_app.extensions.get("mysql")
-
-    if mysql is not None:
-        return mysql
-
-    try:
-
-        from app import mysql as app_mysql
-
-        if app_mysql is not None:
-            return app_mysql
-
-    except Exception as e:
-
-        print(
-            "STUDENT NOTICE MYSQL ERROR:",
-            repr(e)
-        )
-
-    raise RuntimeError(
-        "MySQL connection is not initialized."
-    )
-
-
-# ============================================================
-# STUDENT LOGIN
+# LOGIN
 # ============================================================
 
 def student_required():
 
     return bool(
-        session.get("student_id")
+        session.get("student_db_id")
     )
+
+
+# ============================================================
+# GET STUDENT
+# ============================================================
+
+def get_student(cursor):
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            student_id,
+            full_name,
+            department,
+            semester,
+            section,
+            photo
+        FROM students
+        WHERE id = %s
+        LIMIT 1
+        """,
+        (
+            session.get(
+                "student_db_id"
+            ),
+        )
+    )
+
+    return cursor.fetchone()
+
+
+# ============================================================
+# VISIBILITY CONDITION
+# ============================================================
+
+def visibility_sql():
+
+    return """
+        AND (
+            n.audience IS NULL
+            OR LOWER(TRIM(n.audience))
+               IN ('everyone', 'students')
+        )
+
+        AND (
+            n.target_semester IS NULL
+            OR TRIM(n.target_semester) = ''
+            OR LOWER(TRIM(n.target_semester))
+               =
+               LOWER(TRIM(%s))
+        )
+
+        AND (
+            n.target_department IS NULL
+            OR TRIM(n.target_department) = ''
+            OR LOWER(TRIM(n.target_department))
+               =
+               LOWER(TRIM(%s))
+        )
+    """
 
 
 # ============================================================
@@ -74,112 +110,52 @@ def index():
 
     if not student_required():
 
-        flash(
-            "Please login as student.",
-            "warning"
-        )
-
         return redirect(
-            "/student/login"
+            url_for("student_auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
-        logged_student = session.get(
-            "student_id"
-        )
-
-        # ----------------------------------------------------
-        # STUDENT INFO
-        # ----------------------------------------------------
-
-        cursor.execute(
-            """
-            SELECT
-                department,
-                semester
-            FROM students
-            WHERE id = %s
-               OR student_id = %s
-            LIMIT 1
-            """,
-            (
-                logged_student,
-                logged_student
-            )
-        )
-
-        student = cursor.fetchone()
+        student = get_student(cursor)
 
         if not student:
 
-            flash(
-                "Student account was not found.",
-                "danger"
-            )
+            session.clear()
 
             return redirect(
-                "/student/dashboard"
+                url_for("student_auth.login")
             )
-
-        department = student[0]
-        semester = student[1]
-
-        # ----------------------------------------------------
-        # NOTICE QUERY
-        #
-        # Everyone  -> visible
-        # Students  -> visible
-        # Teachers   -> hidden
-        # ----------------------------------------------------
 
         cursor.execute(
             """
             SELECT
-                id,
-                title,
-                description,
-                image,
-                pdf_file,
-                target_semester,
-                target_department,
-                notice_type,
-                created_at
-            FROM notices
-            WHERE is_published = 1
+                n.id,
+                n.title,
+                n.description,
+                n.image,
+                n.pdf_file,
+                n.target_semester,
+                n.target_department,
+                n.notice_type,
+                n.created_at,
+                n.image_data,
+                n.pdf_data
 
-              AND (
-                    audience IS NULL
-                    OR LOWER(TRIM(audience))
-                       IN ('everyone', 'students')
-                  )
+            FROM notices n
 
-              AND
-              (
-                    target_semester IS NULL
-                    OR TRIM(target_semester) = ''
-                    OR LOWER(TRIM(target_semester))
-                       =
-                       LOWER(TRIM(%s))
-              )
-
-              AND
-              (
-                    target_department IS NULL
-                    OR TRIM(target_department) = ''
-                    OR LOWER(TRIM(target_department))
-                       =
-                       LOWER(TRIM(%s))
-              )
-
-            ORDER BY created_at DESC
+            WHERE n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
+            ORDER BY
+                n.created_at DESC
             """,
             (
-                semester,
-                department
+                student[4],
+                student[3]
             )
         )
 
@@ -192,26 +168,37 @@ def index():
 
     except Exception as e:
 
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
         print(
             "STUDENT NOTICE ERROR:",
             repr(e)
         )
 
         flash(
-            f"Unable to load notices: {str(e)}",
+            "Unable to load notices.",
             "danger"
         )
 
         return redirect(
-            "/student/dashboard"
+            url_for(
+                "student_auth.dashboard"
+            )
         )
 
     finally:
-        cursor.close()
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
-# SINGLE NOTICE
+# NOTICE VIEW
 # ============================================================
 
 @student_notice.route(
@@ -222,37 +209,50 @@ def view(notice_id):
     if not student_required():
 
         return redirect(
-            "/student/login"
+            url_for("student_auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
+        student = get_student(cursor)
+
+        if not student:
+
+            abort(404)
+
         cursor.execute(
             """
             SELECT
-                id,
-                title,
-                description,
-                image,
-                pdf_file,
-                target_semester,
-                target_department,
-                notice_type,
-                created_at
-            FROM notices
-            WHERE id = %s
-              AND is_published = 1
-              AND (
-                    audience IS NULL
-                    OR LOWER(TRIM(audience))
-                       IN ('everyone', 'students')
-                  )
+                n.id,
+                n.title,
+                n.description,
+                n.image,
+                n.pdf_file,
+                n.target_semester,
+                n.target_department,
+                n.notice_type,
+                n.created_at,
+                n.image_data,
+                n.pdf_data
+
+            FROM notices n
+
+            WHERE
+                n.id = %s
+                AND n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
             LIMIT 1
             """,
-            (notice_id,)
+            (
+                notice_id,
+                student[4],
+                student[3]
+            )
         )
 
         notice = cursor.fetchone()
@@ -260,12 +260,14 @@ def view(notice_id):
         if not notice:
 
             flash(
-                "Notice not found.",
+                "Notice not found or not available for you.",
                 "warning"
             )
 
             return redirect(
-                url_for("student_notice.index")
+                url_for(
+                    "student_notice.index"
+                )
             )
 
         return render_template(
@@ -274,11 +276,137 @@ def view(notice_id):
         )
 
     finally:
-        cursor.close()
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
-# DOWNLOAD NOTICE PHOTO
+# NOTICE IMAGE
+# ============================================================
+
+@student_notice.route(
+    "/image/<int:notice_id>"
+)
+def image(notice_id):
+
+    if not student_required():
+
+        return redirect(
+            url_for("student_auth.login")
+        )
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        student = get_student(cursor)
+
+        if not student:
+
+            abort(404)
+
+        cursor.execute(
+            """
+            SELECT
+                n.image,
+                n.image_data
+
+            FROM notices n
+
+            WHERE
+                n.id = %s
+                AND n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
+            LIMIT 1
+            """,
+            (
+                notice_id,
+                student[4],
+                student[3]
+            )
+        )
+
+        row = cursor.fetchone()
+
+    finally:
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+
+        abort(404)
+
+    filename = os.path.basename(
+        str(row[0] or "")
+    )
+
+    data = row[1]
+
+    if data:
+
+        extension = (
+            os.path.splitext(
+                filename
+            )[1].lower()
+        )
+
+        mimetype_map = {
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".gif": "image/gif"
+        }
+
+        mimetype = mimetype_map.get(
+            extension,
+            "application/octet-stream"
+        )
+
+        return send_file(
+            BytesIO(bytes(data)),
+            mimetype=mimetype,
+            as_attachment=False,
+            download_name=(
+                filename
+                or f"notice_{notice_id}{extension}"
+            )
+        )
+
+    # --------------------------------------------------------
+    # OLD FILE
+    # --------------------------------------------------------
+
+    path = os.path.join(
+        current_app.root_path,
+        "static",
+        "uploads",
+        "notices",
+        filename
+    )
+
+    if os.path.isfile(path):
+
+        return send_file(
+            path,
+            as_attachment=False,
+            download_name=filename
+        )
+
+    abort(404)
+
+
+# ============================================================
+# DOWNLOAD NOTICE IMAGE
 # ============================================================
 
 @student_notice.route(
@@ -289,106 +417,215 @@ def download_image(notice_id):
     if not student_required():
 
         return redirect(
-            "/student/login"
+            url_for("student_auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
+        student = get_student(cursor)
+
+        if not student:
+
+            abort(404)
+
         cursor.execute(
             """
             SELECT
-                id,
-                title,
-                image
-            FROM notices
-            WHERE id = %s
-              AND is_published = 1
-              AND (
-                    audience IS NULL
-                    OR LOWER(TRIM(audience))
-                       IN ('everyone', 'students')
-                  )
+                n.image,
+                n.image_data
+
+            FROM notices n
+
+            WHERE
+                n.id = %s
+                AND n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
             LIMIT 1
             """,
-            (notice_id,)
+            (
+                notice_id,
+                student[4],
+                student[3]
+            )
         )
 
-        notice = cursor.fetchone()
-
-        if not notice:
-
-            flash(
-                "Notice not found.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("student_notice.index")
-            )
-
-        image_name = notice[2]
-
-        if not image_name:
-
-            flash(
-                "This notice does not have a photo.",
-                "warning"
-            )
-
-            return redirect(
-                url_for(
-                    "student_notice.view",
-                    notice_id=notice_id
-                )
-            )
-
-        image_folder = os.path.join(
-            current_app.root_path,
-            "static",
-            "uploads",
-            "notices"
-        )
-
-        image_path = os.path.join(
-            image_folder,
-            os.path.basename(image_name)
-        )
-
-        if not os.path.isfile(image_path):
-
-            flash(
-                "Notice photo file was not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for(
-                    "student_notice.view",
-                    notice_id=notice_id
-                )
-            )
-
-        extension = os.path.splitext(
-            image_name
-        )[1].lower()
-
-        download_name = (
-            "Notice_"
-            + str(notice_id)
-            + extension
-        )
-
-        return send_file(
-            image_path,
-            as_attachment=True,
-            download_name=download_name
-        )
+        row = cursor.fetchone()
 
     finally:
-        cursor.close()
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+
+        abort(404)
+
+    filename = os.path.basename(
+        str(row[0] or "")
+    )
+
+    data = row[1]
+
+    if data:
+
+        return send_file(
+            BytesIO(bytes(data)),
+            mimetype="application/octet-stream",
+            as_attachment=True,
+            download_name=(
+                filename
+                or f"Notice_{notice_id}"
+            )
+        )
+
+    path = os.path.join(
+        current_app.root_path,
+        "static",
+        "uploads",
+        "notices",
+        filename
+    )
+
+    if os.path.isfile(path):
+
+        return send_file(
+            path,
+            as_attachment=True,
+            download_name=filename
+        )
+
+    flash(
+        "Notice photo is not available.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_notice.view",
+            notice_id=notice_id
+        )
+    )
+
+
+# ============================================================
+# NOTICE PDF VIEW
+# ============================================================
+
+@student_notice.route(
+    "/pdf/<int:notice_id>"
+)
+def pdf(notice_id):
+
+    if not student_required():
+
+        return redirect(
+            url_for("student_auth.login")
+        )
+
+    cursor = mysql.connection.cursor()
+
+    try:
+
+        student = get_student(cursor)
+
+        if not student:
+
+            abort(404)
+
+        cursor.execute(
+            """
+            SELECT
+                n.pdf_file,
+                n.pdf_data
+
+            FROM notices n
+
+            WHERE
+                n.id = %s
+                AND n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
+            LIMIT 1
+            """,
+            (
+                notice_id,
+                student[4],
+                student[3]
+            )
+        )
+
+        row = cursor.fetchone()
+
+    finally:
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+
+        abort(404)
+
+    filename = os.path.basename(
+        str(row[0] or "")
+    )
+
+    data = row[1]
+
+    if not filename:
+
+        filename = (
+            f"Notice_{notice_id}.pdf"
+        )
+
+    if data:
+
+        return send_file(
+            BytesIO(bytes(data)),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=filename
+        )
+
+    path = os.path.join(
+        current_app.root_path,
+        "static",
+        "uploads",
+        "notices",
+        "pdf",
+        filename
+    )
+
+    if os.path.isfile(path):
+
+        return send_file(
+            path,
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=filename
+        )
+
+    flash(
+        "Notice PDF is not available.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_notice.view",
+            notice_id=notice_id
+        )
+    )
 
 
 # ============================================================
@@ -403,100 +640,103 @@ def download_pdf(notice_id):
     if not student_required():
 
         return redirect(
-            "/student/login"
+            url_for("student_auth.login")
         )
 
-    mysql = get_mysql()
     cursor = mysql.connection.cursor()
 
     try:
 
+        student = get_student(cursor)
+
+        if not student:
+
+            abort(404)
+
         cursor.execute(
             """
             SELECT
-                id,
-                title,
-                pdf_file
-            FROM notices
-            WHERE id = %s
-              AND is_published = 1
-              AND (
-                    audience IS NULL
-                    OR LOWER(TRIM(audience))
-                       IN ('everyone', 'students')
-                  )
+                n.pdf_file,
+                n.pdf_data
+
+            FROM notices n
+
+            WHERE
+                n.id = %s
+                AND n.is_published = 1
+            """
+            + visibility_sql()
+            +
+            """
             LIMIT 1
             """,
-            (notice_id,)
+            (
+                notice_id,
+                student[4],
+                student[3]
+            )
         )
 
-        notice = cursor.fetchone()
-
-        if not notice:
-
-            flash(
-                "Notice not found.",
-                "warning"
-            )
-
-            return redirect(
-                url_for("student_notice.index")
-            )
-
-        pdf_name = notice[2]
-
-        if not pdf_name:
-
-            flash(
-                "This notice does not have a PDF.",
-                "warning"
-            )
-
-            return redirect(
-                url_for(
-                    "student_notice.view",
-                    notice_id=notice_id
-                )
-            )
-
-        pdf_folder = os.path.join(
-            current_app.root_path,
-            "static",
-            "uploads",
-            "notices",
-            "pdf"
-        )
-
-        pdf_path = os.path.join(
-            pdf_folder,
-            os.path.basename(pdf_name)
-        )
-
-        if not os.path.isfile(pdf_path):
-
-            flash(
-                "Notice PDF file was not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for(
-                    "student_notice.view",
-                    notice_id=notice_id
-                )
-            )
-
-        download_name = (
-            "Notice_"
-            + str(notice_id)
-            + ".pdf"
-        )
-
-        return send_file(
-            pdf_path,
-            as_attachment=True,
-            download_name=download_name
-        )
+        row = cursor.fetchone()
 
     finally:
-        cursor.close()
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not row:
+
+        abort(404)
+
+    filename = os.path.basename(
+        str(row[0] or "")
+    )
+
+    data = row[1]
+
+    if not filename:
+
+        filename = (
+            f"Notice_{notice_id}.pdf"
+        )
+
+    if data:
+
+        return send_file(
+            BytesIO(bytes(data)),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=filename
+        )
+
+    path = os.path.join(
+        current_app.root_path,
+        "static",
+        "uploads",
+        "notices",
+        "pdf",
+        filename
+    )
+
+    if os.path.isfile(path):
+
+        return send_file(
+            path,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=filename
+        )
+
+    flash(
+        "Notice PDF is not available.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_notice.view",
+            notice_id=notice_id
+        )
+    )

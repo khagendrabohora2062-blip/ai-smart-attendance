@@ -1168,11 +1168,12 @@ def change_photo(id):
                 cursor.execute(
                     """
                     UPDATE students
-                    SET photo = %s
+                    SET photo = %s, photo_data = %s
                     WHERE id = %s
                     """,
                     (
                         new_photo,
+                        open(os.path.join(UPLOAD_FOLDER, new_photo), "rb").read(),
                         id
                     )
                 )
@@ -1276,7 +1277,7 @@ def remove_photo(id):
             cursor.execute(
                 """
                 UPDATE students
-                SET photo = NULL
+                SET photo = NULL, photo_data = NULL
                 WHERE id = %s
                 """,
                 (id,)

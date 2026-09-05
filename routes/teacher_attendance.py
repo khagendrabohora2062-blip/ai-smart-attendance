@@ -919,21 +919,58 @@ def delete_session(session_id):
             )
 
         # ====================================================
-        # DELETE ATTENDANCE
+        # IMPORTANT: DO NOT DELETE A SESSION THAT HAS
+        # ATTENDANCE RECORDS.
+        #
+        # Attendance records keep session_id, and the subject is
+        # resolved through attendance_sessions.subject_id.
+        # Deleting the session creates orphan attendance rows and
+        # causes My Attendance to show N/A / Unknown Subject.
         # ====================================================
 
         cursor.execute(
             """
-            DELETE FROM attendance
+            SELECT COUNT(*)
+            FROM attendance
             WHERE session_id = %s
             """,
-            (
-                session_id,
-            )
+            (session_id,)
         )
 
+        attendance_count = int(cursor.fetchone()[0] or 0)
+
+        if attendance_count > 0:
+
+            # Keep the session because attendance depends on it
+            # for subject information. Close it instead.
+            cursor.execute(
+                """
+                UPDATE attendance_sessions
+                SET session_status = 'CLOSED'
+                WHERE id = %s
+                AND teacher_id = %s
+                """,
+                (
+                    session_id,
+                    teacher_id
+                )
+            )
+
+            mysql.connection.commit()
+
+            flash(
+                "This session contains attendance records, so it was kept to preserve subject information. The session has been closed instead.",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "teacher_attendance.index"
+                )
+            )
+
         # ====================================================
-        # DELETE SESSION
+        # DELETE EMPTY SESSION ONLY
         # ====================================================
 
         cursor.execute(

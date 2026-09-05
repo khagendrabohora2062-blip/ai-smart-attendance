@@ -687,10 +687,7 @@
                 {% if session.get('student_photo') %}
 
                     <img
-                        src="{{ url_for(
-                            'static',
-                            filename='uploads/students/' + session.get('student_photo')
-                        ) }}"
+                        src="{{ url_for('student_auth.profile_photo') }}"
                         alt="Profile">
 
                 {% else %}

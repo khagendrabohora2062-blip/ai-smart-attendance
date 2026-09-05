@@ -1,3 +1,8 @@
+import os
+import uuid
+
+from io import BytesIO
+
 from flask import (
     Blueprint,
     render_template,
@@ -7,18 +12,18 @@ from flask import (
     session,
     flash,
     current_app,
-    send_from_directory
+    send_file,
+    abort
 )
 
-from extensions import mysql
 from werkzeug.utils import secure_filename
 
-import os
-import uuid
+from extensions import mysql
 
 
 # ============================================================
-# BLUEPRINT
+# STUDENT ASSIGNMENT
+# File: routes/student_assignment.py
 # ============================================================
 
 student_assignment = Blueprint(
@@ -29,10 +34,10 @@ student_assignment = Blueprint(
 
 
 # ============================================================
-# ALLOWED FILE TYPES
+# FILE TYPES
 # ============================================================
 
-ASSIGNMENT_ALLOWED_EXTENSIONS = {
+ASSIGNMENT_EXTENSIONS = {
     "pdf",
     "doc",
     "docx",
@@ -43,7 +48,7 @@ ASSIGNMENT_ALLOWED_EXTENSIONS = {
     "webp"
 }
 
-SUBMISSION_ALLOWED_EXTENSIONS = {
+SUBMISSION_EXTENSIONS = {
     "pdf",
     "doc",
     "docx",
@@ -57,48 +62,46 @@ SUBMISSION_ALLOWED_EXTENSIONS = {
 
 
 # ============================================================
-# LOGIN CHECK
+# LOGIN
 # ============================================================
 
 def student_logged_in():
-    return "student_db_id" in session
+
+    return bool(
+        session.get("student_db_id")
+    )
 
 
 # ============================================================
 # FILE VALIDATION
 # ============================================================
 
-def allowed_assignment_file(filename):
+def allowed_file(
+    filename,
+    extensions
+):
 
     return (
-        filename
+        bool(filename)
         and "." in filename
-        and filename.rsplit(".", 1)[1].lower()
-        in ASSIGNMENT_ALLOWED_EXTENSIONS
-    )
-
-
-def allowed_submission_file(filename):
-
-    return (
-        filename
-        and "." in filename
-        and filename.rsplit(".", 1)[1].lower()
-        in SUBMISSION_ALLOWED_EXTENSIONS
+        and filename.rsplit(
+            ".",
+            1
+        )[1].lower() in extensions
     )
 
 
 # ============================================================
-# ASSIGNMENT UPLOAD FOLDER
+# UPLOAD FOLDER
 # ============================================================
 
-def assignment_upload_folder():
+def get_upload_folder(folder_name):
 
     folder = os.path.join(
         current_app.root_path,
         "static",
         "uploads",
-        "assignments"
+        folder_name
     )
 
     os.makedirs(
@@ -110,35 +113,10 @@ def assignment_upload_folder():
 
 
 # ============================================================
-# SUBMISSION UPLOAD FOLDER
-# ============================================================
-
-def submission_upload_folder():
-
-    folder = os.path.join(
-        current_app.root_path,
-        "static",
-        "uploads",
-        "assignment_submissions"
-    )
-
-    os.makedirs(
-        folder,
-        exist_ok=True
-    )
-
-    return folder
-
-
-# ============================================================
-# GET LOGGED-IN STUDENT
+# STUDENT
 # ============================================================
 
 def get_student(cursor):
-
-    student_db_id = session.get(
-        "student_db_id"
-    )
 
     cursor.execute(
         """
@@ -156,7 +134,9 @@ def get_student(cursor):
         LIMIT 1
         """,
         (
-            student_db_id,
+            session.get(
+                "student_db_id"
+            ),
         )
     )
 
@@ -183,36 +163,19 @@ def index():
 
     try:
 
-        # ----------------------------------------------------
-        # STUDENT
-        # ----------------------------------------------------
-
         student = get_student(cursor)
 
         if not student:
 
             session.clear()
 
-            flash(
-                "Student account not found.",
-                "danger"
-            )
-
             return redirect(
                 url_for("student_auth.login")
             )
 
-        student_id = student[0]
-        student_department = student[4]
-        student_semester = student[5]
-
-        # ----------------------------------------------------
-        # ASSIGNMENTS
-        # ----------------------------------------------------
-        # IMPORTANT:
-        # Use a.attachment
-        # NOT a.file_name
-        # ----------------------------------------------------
+        student_db_id = student[0]
+        department = student[4]
+        semester = student[5]
 
         cursor.execute(
             """
@@ -227,12 +190,12 @@ def index():
                 a.status,
                 a.created_at,
 
-                s.id AS subject_id,
+                s.id,
                 s.subject_code,
                 s.subject_name,
                 s.semester,
 
-                t.full_name AS teacher_name
+                t.full_name
 
             FROM assignments a
 
@@ -245,10 +208,41 @@ def index():
             WHERE
                 a.status = 'ACTIVE'
 
-                AND s.semester = %s
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.semester,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
-                AND LOWER(TRIM(s.department))
-                    = LOWER(TRIM(%s))
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.department,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
             ORDER BY
                 a.due_date ASC,
@@ -256,20 +250,14 @@ def index():
                 a.created_at DESC
             """,
             (
-                student_semester,
-                student_department
+                semester,
+                department
             )
         )
 
-        assignment_rows = cursor.fetchall()
+        rows = cursor.fetchall() or []
 
-        # ----------------------------------------------------
-        # SUBMISSION INFORMATION
-        # ----------------------------------------------------
-
-        for assignment in assignment_rows:
-
-            assignment_id = assignment[0]
+        for row in rows:
 
             cursor.execute(
                 """
@@ -280,19 +268,17 @@ def index():
                     submitted_at,
                     marks,
                     feedback,
-                    status
-
+                    status,
+                    attachment_data
                 FROM assignment_submissions
-
                 WHERE
                     assignment_id = %s
                     AND student_id = %s
-
                 LIMIT 1
                 """,
                 (
-                    assignment_id,
-                    student_id
+                    row[0],
+                    student_db_id
                 )
             )
 
@@ -300,59 +286,73 @@ def index():
 
             assignments.append({
 
-                "id": assignment[0],
+                "id": row[0],
 
-                "title": assignment[1],
+                "title": row[1],
 
-                "description": assignment[2],
+                "description": row[2],
 
-                "total_marks": assignment[3],
+                "total_marks": row[3],
 
-                "due_date": assignment[4],
+                "due_date": row[4],
 
-                "due_time": assignment[5],
+                "due_time": row[5],
 
-                "attachment": assignment[6],
+                "attachment": row[6],
 
-                "status": assignment[7],
+                "status": row[7],
 
-                "created_at": assignment[8],
+                "created_at": row[8],
 
-                "subject_id": assignment[9],
+                "subject_id": row[9],
 
-                "subject_code": assignment[10],
+                "subject_code": row[10],
 
-                "subject_name": assignment[11],
+                "subject_name": row[11],
 
-                "semester": assignment[12],
+                "semester": row[12],
 
-                "teacher_name": (
-                    assignment[13]
-                    if assignment[13]
-                    else "Not Assigned"
-                ),
+                "teacher_name":
+                    row[13] or "Not Assigned",
 
-                "submission": submission
+                "submission":
+                    submission
+
             })
+
+        return render_template(
+            "student/assignments.html",
+            assignments=assignments,
+            student=student
+        )
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+
+        print(
+            "STUDENT ASSIGNMENT ERROR:",
+            repr(e)
+        )
 
         flash(
-            f"Unable to load assignments: {e}",
+            "Unable to load assignments.",
             "danger"
+        )
+
+        return redirect(
+            url_for("student_auth.dashboard")
         )
 
     finally:
 
-        cursor.close()
-
-    return render_template(
-        "student/assignments.html",
-        assignments=assignments,
-        student=student
-    )
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
@@ -372,34 +372,15 @@ def view_assignment(assignment_id):
 
     cursor = mysql.connection.cursor()
 
-    assignment = None
-    submission = None
-    student = None
-
     try:
-
-        # ----------------------------------------------------
-        # STUDENT
-        # ----------------------------------------------------
 
         student = get_student(cursor)
 
         if not student:
 
-            flash(
-                "Student account not found.",
-                "danger"
-            )
-
             return redirect(
                 url_for("student_auth.login")
             )
-
-        student_id = student[0]
-
-        # ----------------------------------------------------
-        # ASSIGNMENT
-        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -418,7 +399,7 @@ def view_assignment(assignment_id):
                 s.subject_name,
                 s.semester,
 
-                t.full_name AS teacher_name
+                t.full_name
 
             FROM assignments a
 
@@ -430,13 +411,43 @@ def view_assignment(assignment_id):
 
             WHERE
                 a.id = %s
-
                 AND a.status = 'ACTIVE'
 
-                AND s.semester = %s
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.semester,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
-                AND LOWER(TRIM(s.department))
-                    = LOWER(TRIM(%s))
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.department,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
             LIMIT 1
             """,
@@ -453,16 +464,14 @@ def view_assignment(assignment_id):
 
             flash(
                 "Assignment not found or not available for you.",
-                "danger"
+                "warning"
             )
 
             return redirect(
-                url_for("student_assignment.index")
+                url_for(
+                    "student_assignment.index"
+                )
             )
-
-        # ----------------------------------------------------
-        # EXISTING SUBMISSION
-        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -473,47 +482,53 @@ def view_assignment(assignment_id):
                 submitted_at,
                 marks,
                 feedback,
-                status
-
+                status,
+                attachment_data
             FROM assignment_submissions
-
             WHERE
                 assignment_id = %s
                 AND student_id = %s
-
             LIMIT 1
             """,
             (
                 assignment_id,
-                student_id
+                student[0]
             )
         )
 
         submission = cursor.fetchone()
 
+        return render_template(
+            "student/assignment_detail.html",
+            assignment=assignment,
+            submission=submission,
+            student=student
+        )
+
     except Exception as e:
 
-        mysql.connection.rollback()
+        print(
+            "VIEW ASSIGNMENT ERROR:",
+            repr(e)
+        )
 
         flash(
-            f"Unable to load assignment: {e}",
+            "Unable to load assignment.",
             "danger"
         )
 
         return redirect(
-            url_for("student_assignment.index")
+            url_for(
+                "student_assignment.index"
+            )
         )
 
     finally:
 
-        cursor.close()
-
-    return render_template(
-        "student/assignment_detail.html",
-        assignment=assignment,
-        submission=submission,
-        student=student
-    )
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
 
 # ============================================================
@@ -524,7 +539,9 @@ def view_assignment(assignment_id):
     "/submit/<int:assignment_id>",
     methods=["POST"]
 )
-def submit_assignment(assignment_id):
+def submit_assignment(
+    assignment_id
+):
 
     if not student_logged_in():
 
@@ -534,28 +551,15 @@ def submit_assignment(assignment_id):
 
     cursor = mysql.connection.cursor()
 
-    uploaded_file_path = None
-
     try:
-
-        # ----------------------------------------------------
-        # STUDENT
-        # ----------------------------------------------------
 
         student = get_student(cursor)
 
         if not student:
 
-            flash(
-                "Student account not found.",
-                "danger"
-            )
-
             return redirect(
                 url_for("student_auth.login")
             )
-
-        student_id = student[0]
 
         # ----------------------------------------------------
         # VERIFY ASSIGNMENT
@@ -564,15 +568,7 @@ def submit_assignment(assignment_id):
         cursor.execute(
             """
             SELECT
-                a.id,
-                a.title,
-                a.due_date,
-                a.due_time,
-                a.status,
-
-                s.semester,
-                s.department
-
+                a.id
             FROM assignments a
 
             INNER JOIN subjects s
@@ -580,13 +576,43 @@ def submit_assignment(assignment_id):
 
             WHERE
                 a.id = %s
-
                 AND a.status = 'ACTIVE'
 
-                AND s.semester = %s
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.semester,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
-                AND LOWER(TRIM(s.department))
-                    = LOWER(TRIM(%s))
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.department,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
             LIMIT 1
             """,
@@ -597,70 +623,43 @@ def submit_assignment(assignment_id):
             )
         )
 
-        assignment = cursor.fetchone()
-
-        if not assignment:
+        if not cursor.fetchone():
 
             flash(
-                "Assignment not found or unavailable.",
+                "Assignment is not available.",
                 "danger"
             )
 
             return redirect(
-                url_for("student_assignment.index")
+                url_for(
+                    "student_assignment.index"
+                )
             )
-
-        # ----------------------------------------------------
-        # ANSWER
-        # ----------------------------------------------------
 
         answer = request.form.get(
             "answer",
             ""
         ).strip()
 
-        # ----------------------------------------------------
-        # SUBMISSION FILE
-        # ----------------------------------------------------
-
-        submission_file = request.files.get(
+        uploaded_file = request.files.get(
             "submission_file"
         )
 
         filename = None
+        file_data = None
 
         # ----------------------------------------------------
-        # VALIDATION
-        # ----------------------------------------------------
-
-        if not answer and (
-            not submission_file
-            or not submission_file.filename
-        ):
-
-            flash(
-                "Please write an answer or upload a file.",
-                "warning"
-            )
-
-            return redirect(
-                url_for(
-                    "student_assignment.view_assignment",
-                    assignment_id=assignment_id
-                )
-            )
-
-        # ----------------------------------------------------
-        # FILE UPLOAD
+        # FILE
         # ----------------------------------------------------
 
         if (
-            submission_file
-            and submission_file.filename
+            uploaded_file
+            and uploaded_file.filename
         ):
 
-            if not allowed_submission_file(
-                submission_file.filename
+            if not allowed_file(
+                uploaded_file.filename,
+                SUBMISSION_EXTENSIONS
             ):
 
                 flash(
@@ -675,14 +674,14 @@ def submit_assignment(assignment_id):
                     )
                 )
 
-            original_name = secure_filename(
-                submission_file.filename
+            original = secure_filename(
+                uploaded_file.filename
             )
 
-            if not original_name:
+            if not original:
 
                 flash(
-                    "Invalid submission filename.",
+                    "Invalid filename.",
                     "danger"
                 )
 
@@ -693,15 +692,12 @@ def submit_assignment(assignment_id):
                     )
                 )
 
-            extension = ""
-
-            if "." in original_name:
-
-                extension = (
-                    original_name
-                    .rsplit(".", 1)[1]
-                    .lower()
-                )
+            extension = (
+                original.rsplit(
+                    ".",
+                    1
+                )[1].lower()
+            )
 
             filename = (
                 uuid.uuid4().hex
@@ -709,21 +705,42 @@ def submit_assignment(assignment_id):
                 + extension
             )
 
-            upload_folder = (
-                submission_upload_folder()
+            file_data = uploaded_file.read()
+
+            if not file_data:
+
+                flash(
+                    "Uploaded file is empty.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "student_assignment.view_assignment",
+                        assignment_id=assignment_id
+                    )
+                )
+
+        # ----------------------------------------------------
+        # ANSWER OR FILE REQUIRED
+        # ----------------------------------------------------
+
+        if not answer and not file_data:
+
+            flash(
+                "Please write an answer or upload a file.",
+                "warning"
             )
 
-            uploaded_file_path = os.path.join(
-                upload_folder,
-                filename
-            )
-
-            submission_file.save(
-                uploaded_file_path
+            return redirect(
+                url_for(
+                    "student_assignment.view_assignment",
+                    assignment_id=assignment_id
+                )
             )
 
         # ----------------------------------------------------
-        # CHECK OLD SUBMISSION
+        # EXISTING SUBMISSION
         # ----------------------------------------------------
 
         cursor.execute(
@@ -731,87 +748,63 @@ def submit_assignment(assignment_id):
             SELECT
                 id,
                 attachment
-
             FROM assignment_submissions
-
             WHERE
                 assignment_id = %s
                 AND student_id = %s
-
             LIMIT 1
             """,
             (
                 assignment_id,
-                student_id
+                student[0]
             )
         )
 
-        old_submission = cursor.fetchone()
+        old = cursor.fetchone()
 
-        # ====================================================
-        # UPDATE EXISTING SUBMISSION
-        # ====================================================
+        if old:
 
-        if old_submission:
+            if file_data is not None:
 
-            old_submission_id = old_submission[0]
-
-            old_attachment = old_submission[1]
-
-            # Keep old file if no new file
-            if not filename:
-
-                filename = old_attachment
-
-            cursor.execute(
-                """
-                UPDATE assignment_submissions
-
-                SET
-                    answer = %s,
-                    attachment = %s,
-                    submitted_at = NOW(),
-                    marks = NULL,
-                    feedback = NULL,
-                    status = 'Submitted'
-
-                WHERE id = %s
-                """,
-                (
-                    answer if answer else None,
-                    filename,
-                    old_submission_id
-                )
-            )
-
-            # ------------------------------------------------
-            # Delete old file if replaced
-            # ------------------------------------------------
-
-            if (
-                uploaded_file_path
-                and old_attachment
-                and old_attachment != filename
-            ):
-
-                old_path = os.path.join(
-                    submission_upload_folder(),
-                    os.path.basename(old_attachment)
+                cursor.execute(
+                    """
+                    UPDATE assignment_submissions
+                    SET
+                        answer = %s,
+                        attachment = %s,
+                        attachment_data = %s,
+                        submitted_at = NOW(),
+                        marks = NULL,
+                        feedback = NULL,
+                        status = 'Submitted'
+                    WHERE id = %s
+                    """,
+                    (
+                        answer or None,
+                        filename,
+                        file_data,
+                        old[0]
+                    )
                 )
 
-                if os.path.exists(old_path):
+            else:
 
-                    try:
-
-                        os.remove(old_path)
-
-                    except Exception:
-
-                        pass
-
-        # ====================================================
-        # CREATE NEW SUBMISSION
-        # ====================================================
+                cursor.execute(
+                    """
+                    UPDATE assignment_submissions
+                    SET
+                        answer = %s,
+                        submitted_at = NOW(),
+                        marks = NULL,
+                        feedback = NULL,
+                        status = 'Submitted'
+                    WHERE id = %s
+                    """,
+                    (
+                        answer or None,
+                        old[0]
+                    )
+                )
 
         else:
 
@@ -823,14 +816,15 @@ def submit_assignment(assignment_id):
                     student_id,
                     answer,
                     attachment,
+                    attachment_data,
                     submitted_at,
                     marks,
                     feedback,
                     status
                 )
-
                 VALUES
                 (
+                    %s,
                     %s,
                     %s,
                     %s,
@@ -843,9 +837,10 @@ def submit_assignment(assignment_id):
                 """,
                 (
                     assignment_id,
-                    student_id,
-                    answer if answer else None,
-                    filename
+                    student[0],
+                    answer or None,
+                    filename,
+                    file_data
                 )
             )
 
@@ -858,33 +853,27 @@ def submit_assignment(assignment_id):
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
-        # Delete uploaded file after failed DB operation
-        if uploaded_file_path:
-
-            try:
-
-                if os.path.exists(
-                    uploaded_file_path
-                ):
-
-                    os.remove(
-                        uploaded_file_path
-                    )
-
-            except Exception:
-
-                pass
+        print(
+            "SUBMIT ASSIGNMENT ERROR:",
+            repr(e)
+        )
 
         flash(
-            f"Unable to submit assignment: {e}",
+            "Unable to submit assignment.",
             "danger"
         )
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
     return redirect(
         url_for(
@@ -895,7 +884,7 @@ def submit_assignment(assignment_id):
 
 
 # ============================================================
-# DOWNLOAD ASSIGNMENT FILE
+# ASSIGNMENT FILE
 # ============================================================
 
 @student_assignment.route(
@@ -911,39 +900,18 @@ def assignment_file(assignment_id):
 
     cursor = mysql.connection.cursor()
 
-    result = None
-
     try:
-
-        # ----------------------------------------------------
-        # GET STUDENT
-        # ----------------------------------------------------
 
         student = get_student(cursor)
 
         if not student:
-
-            flash(
-                "Student account not found.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("student_auth.login")
-            )
-
-        # ----------------------------------------------------
-        # GET ATTACHMENT
-        # ----------------------------------------------------
-        # IMPORTANT:
-        # Database column is attachment.
-        # NOT file_name.
-        # ----------------------------------------------------
+            abort(404)
 
         cursor.execute(
             """
             SELECT
-                a.attachment
+                a.attachment,
+                a.attachment_data
 
             FROM assignments a
 
@@ -952,13 +920,43 @@ def assignment_file(assignment_id):
 
             WHERE
                 a.id = %s
-
                 AND a.status = 'ACTIVE'
 
-                AND s.semester = %s
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.semester,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
-                AND LOWER(TRIM(s.department))
-                    = LOWER(TRIM(%s))
+                AND LOWER(
+                    TRIM(
+                        COALESCE(
+                            s.department,
+                            ''
+                        )
+                    )
+                )
+                =
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            %s,
+                            ''
+                        )
+                    )
+                )
 
             LIMIT 1
             """,
@@ -969,82 +967,76 @@ def assignment_file(assignment_id):
             )
         )
 
-        result = cursor.fetchone()
-
-    except Exception as e:
-
-        mysql.connection.rollback()
-
-        flash(
-            f"Unable to download assignment: {e}",
-            "danger"
-        )
-
-        return redirect(
-            url_for("student_assignment.index")
-        )
+        row = cursor.fetchone()
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
-    # --------------------------------------------------------
-    # FILE NOT FOUND
-    # --------------------------------------------------------
+    if not row:
 
-    if not result or not result[0]:
+        abort(404)
 
-        flash(
-            "Assignment file not found.",
-            "warning"
-        )
-
-        return redirect(
-            url_for("student_assignment.index")
-        )
-
-    # --------------------------------------------------------
-    # CLEAN FILE NAME
-    # --------------------------------------------------------
-
-    stored_filename = os.path.basename(
-        str(result[0])
+    filename = os.path.basename(
+        str(row[0] or "")
     )
 
-    file_path = os.path.join(
-        assignment_upload_folder(),
-        stored_filename
+    file_data = row[1]
+
+    if not filename:
+
+        filename = (
+            f"assignment_{assignment_id}"
+        )
+
+    # ----------------------------------------------------
+    # DATABASE FILE
+    # ----------------------------------------------------
+
+    if file_data:
+
+        return send_file(
+            BytesIO(bytes(file_data)),
+            mimetype="application/octet-stream",
+            as_attachment=True,
+            download_name=filename
+        )
+
+    # ----------------------------------------------------
+    # OLD PHYSICAL FILE
+    # ----------------------------------------------------
+
+    path = os.path.join(
+        get_upload_folder("assignments"),
+        filename
     )
 
-    # --------------------------------------------------------
-    # CHECK PHYSICAL FILE
-    # --------------------------------------------------------
+    if os.path.isfile(path):
 
-    if not os.path.isfile(file_path):
-
-        flash(
-            "Assignment file is missing from the server.",
-            "danger"
+        return send_file(
+            path,
+            as_attachment=True,
+            download_name=filename
         )
 
-        return redirect(
-            url_for("student_assignment.index")
+    flash(
+        "Assignment file is not available. "
+        "Please ask the teacher to migrate or re-upload it.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_assignment.index"
         )
-
-    # --------------------------------------------------------
-    # ACTUAL DOWNLOAD
-    # --------------------------------------------------------
-
-    return send_from_directory(
-        assignment_upload_folder(),
-        stored_filename,
-        as_attachment=True,
-        download_name=stored_filename
     )
 
 
 # ============================================================
-# DOWNLOAD OWN SUBMISSION
+# STUDENT SUBMISSION FILE
 # ============================================================
 
 @student_assignment.route(
@@ -1060,95 +1052,81 @@ def submission_file(submission_id):
 
     cursor = mysql.connection.cursor()
 
-    result = None
-
     try:
-
-        student_id = session.get(
-            "student_db_id"
-        )
 
         cursor.execute(
             """
             SELECT
-                attachment
-
+                attachment,
+                attachment_data
             FROM assignment_submissions
-
             WHERE
                 id = %s
-
                 AND student_id = %s
-
             LIMIT 1
             """,
             (
                 submission_id,
-                student_id
+                session["student_db_id"]
             )
         )
 
-        result = cursor.fetchone()
-
-    except Exception as e:
-
-        mysql.connection.rollback()
-
-        flash(
-            f"Unable to download submission: {e}",
-            "danger"
-        )
-
-        return redirect(
-            url_for("student_assignment.index")
-        )
+        row = cursor.fetchone()
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
-    # --------------------------------------------------------
-    # FILE NOT FOUND
-    # --------------------------------------------------------
+    if not row:
 
-    if not result or not result[0]:
+        abort(404)
 
-        flash(
-            "Submission file not found.",
-            "warning"
-        )
-
-        return redirect(
-            url_for("student_assignment.index")
-        )
-
-    stored_filename = os.path.basename(
-        str(result[0])
+    filename = os.path.basename(
+        str(row[0] or "")
     )
 
-    file_path = os.path.join(
-        submission_upload_folder(),
-        stored_filename
+    file_data = row[1]
+
+    if not filename:
+
+        filename = (
+            f"submission_{submission_id}"
+        )
+
+    if file_data:
+
+        return send_file(
+            BytesIO(bytes(file_data)),
+            mimetype="application/octet-stream",
+            as_attachment=True,
+            download_name=filename
+        )
+
+    path = os.path.join(
+        get_upload_folder(
+            "assignment_submissions"
+        ),
+        filename
     )
 
-    if not os.path.isfile(file_path):
+    if os.path.isfile(path):
 
-        flash(
-            "Submission file is missing from the server.",
-            "danger"
+        return send_file(
+            path,
+            as_attachment=True,
+            download_name=filename
         )
 
-        return redirect(
-            url_for("student_assignment.index")
+    flash(
+        "Your submitted file is not available on the server.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_assignment.index"
         )
-
-    # --------------------------------------------------------
-    # ACTUAL DOWNLOAD
-    # --------------------------------------------------------
-
-    return send_from_directory(
-        submission_upload_folder(),
-        stored_filename,
-        as_attachment=True,
-        download_name=stored_filename
     )

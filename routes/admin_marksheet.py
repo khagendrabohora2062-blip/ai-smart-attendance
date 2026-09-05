@@ -6,7 +6,8 @@ from flask import (
     flash,
     session,
     request,
-    send_from_directory
+    send_from_directory,
+    send_file
 )
 
 from extensions import mysql
@@ -14,6 +15,8 @@ from werkzeug.utils import secure_filename
 
 import os
 import uuid
+import io
+import mimetypes
 
 
 # ============================================================
@@ -70,10 +73,10 @@ def admin_required():
 
 
 # ============================================================
-# SAVE MARKSHEET FILE
+# VALIDATE + READ MARKSHEET FILE
 # ============================================================
 
-def save_marksheet_file(file):
+def read_marksheet_file(file):
 
     if not file or not file.filename:
         raise ValueError(
@@ -93,6 +96,25 @@ def save_marksheet_file(file):
             "Only JPG, JPEG, PNG, WEBP and PDF files are allowed."
         )
 
+    file_data = file.read()
+
+    if not file_data:
+        raise ValueError(
+            "The selected marksheet file is empty."
+        )
+
+    return extension, file_data
+
+
+# ============================================================
+# SAVE PHYSICAL FILE
+# ============================================================
+
+def save_marksheet_file(file, file_data=None, extension=None):
+
+    if file_data is None or extension is None:
+        extension, file_data = read_marksheet_file(file)
+
     new_filename = (
         uuid.uuid4().hex
         + extension
@@ -103,13 +125,14 @@ def save_marksheet_file(file):
         new_filename
     )
 
-    file.save(file_path)
+    with open(file_path, "wb") as output_file:
+        output_file.write(file_data)
 
     return new_filename
 
 
 # ============================================================
-# DELETE MARKSHEET FILE
+# DELETE PHYSICAL FILE
 # ============================================================
 
 def delete_marksheet_file(filename):
@@ -136,17 +159,35 @@ def delete_marksheet_file(filename):
 
 
 # ============================================================
+# MIME TYPE
+# ============================================================
+
+def get_marksheet_mimetype(filename):
+
+    extension = os.path.splitext(
+        filename or ""
+    )[1].lower()
+
+    mime_types = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp"
+    }
+
+    return (
+        mime_types.get(extension)
+        or mimetypes.guess_type(filename or "")[0]
+        or "application/octet-stream"
+    )
+
+
+# ============================================================
 # GENERATE INTEGER ID
 # ============================================================
 
 def generate_marksheet_id(cursor):
-
-    """
-    Generates a unique integer ID.
-
-    This works even if marksheets.id
-    is NOT AUTO_INCREMENT.
-    """
 
     while True:
 
@@ -192,21 +233,6 @@ def index():
     cursor = mysql.connection.cursor()
 
     try:
-
-        # ----------------------------------------------------
-        # IMPORTANT
-        #
-        # NO subject_id
-        # NO theory marks
-        # NO practical marks
-        # NO full marks
-        # NO pass marks
-        # NO grade
-        # NO created_at
-        # NO updated_at
-        #
-        # Only new marksheets table fields are used.
-        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -302,10 +328,6 @@ def add():
                 ""
             ).strip()
 
-            # ------------------------------------------------
-            # VALIDATE STUDENT
-            # ------------------------------------------------
-
             if not student_db_id:
 
                 flash(
@@ -314,9 +336,7 @@ def add():
                 )
 
                 return redirect(
-                    url_for(
-                        "admin_marksheet.add"
-                    )
+                    url_for("admin_marksheet.add")
                 )
 
             # ------------------------------------------------
@@ -348,9 +368,7 @@ def add():
                 )
 
                 return redirect(
-                    url_for(
-                        "admin_marksheet.add"
-                    )
+                    url_for("admin_marksheet.add")
                 )
 
             # ------------------------------------------------
@@ -372,14 +390,10 @@ def add():
                 )
 
                 return redirect(
-                    url_for(
-                        "admin_marksheet.add"
-                    )
+                    url_for("admin_marksheet.add")
                 )
 
             # ------------------------------------------------
-            # CHECK EXISTING MARKSHEET
-            #
             # ONE MARKSHEET PER STUDENT
             # ------------------------------------------------
 
@@ -405,18 +419,37 @@ def add():
                 )
 
                 return redirect(
-                    url_for(
-                        "admin_marksheet.add"
-                    )
+                    url_for("admin_marksheet.add")
                 )
 
             # ------------------------------------------------
-            # SAVE FILE
+            # READ FILE ONCE
             # ------------------------------------------------
 
-            uploaded_file_name = save_marksheet_file(
+            extension, file_data = read_marksheet_file(
                 marksheet_file
             )
+
+            # ------------------------------------------------
+            # GENERATE FILENAME
+            # ------------------------------------------------
+
+            uploaded_file_name = (
+                uuid.uuid4().hex
+                + extension
+            )
+
+            # ------------------------------------------------
+            # OPTIONAL PHYSICAL BACKUP
+            # ------------------------------------------------
+
+            file_path = os.path.join(
+                MARKSHEET_UPLOAD_FOLDER,
+                uploaded_file_name
+            )
+
+            with open(file_path, "wb") as output_file:
+                output_file.write(file_data)
 
             # ------------------------------------------------
             # GENERATE ID
@@ -427,16 +460,9 @@ def add():
             )
 
             # ------------------------------------------------
-            # INSERT
+            # INSERT DATABASE
             #
-            # IMPORTANT:
-            #
-            # ONLY:
-            # id
-            # student_id
-            # marksheet_file
-            #
-            # NOTHING ELSE
+            # file_data contains the actual PDF/image bytes.
             # ------------------------------------------------
 
             cursor.execute(
@@ -445,10 +471,12 @@ def add():
                 (
                     id,
                     student_id,
-                    marksheet_file
+                    marksheet_file,
+                    file_data
                 )
                 VALUES
                 (
+                    %s,
                     %s,
                     %s,
                     %s
@@ -457,7 +485,8 @@ def add():
                 (
                     new_marksheet_id,
                     student_db_id,
-                    uploaded_file_name
+                    uploaded_file_name,
+                    file_data
                 )
             )
 
@@ -471,9 +500,7 @@ def add():
             )
 
             return redirect(
-                url_for(
-                    "admin_marksheet.index"
-                )
+                url_for("admin_marksheet.index")
             )
 
         # ====================================================
@@ -506,7 +533,6 @@ def add():
     except ValueError as e:
 
         if uploaded_file_name:
-
             delete_marksheet_file(
                 uploaded_file_name
             )
@@ -522,15 +548,12 @@ def add():
         )
 
         return redirect(
-            url_for(
-                "admin_marksheet.add"
-            )
+            url_for("admin_marksheet.add")
         )
 
     except Exception as e:
 
         if uploaded_file_name:
-
             delete_marksheet_file(
                 uploaded_file_name
             )
@@ -551,9 +574,7 @@ def add():
         )
 
         return redirect(
-            url_for(
-                "admin_marksheet.add"
-            )
+            url_for("admin_marksheet.add")
         )
 
     finally:
@@ -562,7 +583,7 @@ def add():
 
 
 # ============================================================
-# VIEW MARKSHEET
+# VIEW MARKSHEET - ADMIN
 # ============================================================
 
 @admin_marksheet.route(
@@ -588,7 +609,8 @@ def view(marksheet_id):
         cursor.execute(
             """
             SELECT
-                marksheet_file
+                marksheet_file,
+                file_data
             FROM marksheets
             WHERE id = %s
             LIMIT 1
@@ -611,18 +633,12 @@ def view(marksheet_id):
         )
 
         return redirect(
-            url_for(
-                "admin_marksheet.index"
-            )
+            url_for("admin_marksheet.index")
         )
 
     finally:
 
         cursor.close()
-
-    # --------------------------------------------------------
-    # CHECK DATABASE RECORD
-    # --------------------------------------------------------
 
     if not data:
 
@@ -632,59 +648,60 @@ def view(marksheet_id):
         )
 
         return redirect(
-            url_for(
-                "admin_marksheet.index"
-            )
+            url_for("admin_marksheet.index")
         )
 
     filename = data[0]
+    file_data = data[1]
 
-    # --------------------------------------------------------
-    # CHECK FILE NAME
-    # --------------------------------------------------------
+    # ========================================================
+    # DATABASE BLOB FIRST
+    # ========================================================
 
-    if not filename:
+    if file_data:
 
-        flash(
-            "Marksheet file is missing.",
-            "danger"
-        )
+        try:
 
-        return redirect(
-            url_for(
-                "admin_marksheet.index"
+            return send_file(
+                io.BytesIO(bytes(file_data)),
+                mimetype=get_marksheet_mimetype(filename),
+                as_attachment=False,
+                download_name=filename
             )
+
+        except Exception as e:
+
+            print(
+                "DATABASE MARKSHEET VIEW ERROR:",
+                repr(e)
+            )
+
+    # ========================================================
+    # PHYSICAL FILE FALLBACK
+    # ========================================================
+
+    if filename:
+
+        file_path = os.path.join(
+            MARKSHEET_UPLOAD_FOLDER,
+            filename
         )
 
-    # --------------------------------------------------------
-    # CHECK FILE EXISTS
-    # --------------------------------------------------------
+        if os.path.isfile(file_path):
 
-    file_path = os.path.join(
-        MARKSHEET_UPLOAD_FOLDER,
-        filename
+            return send_from_directory(
+                MARKSHEET_UPLOAD_FOLDER,
+                filename,
+                as_attachment=False
+            )
+
+    flash(
+        "Marksheet file is missing.",
+        "danger"
     )
 
-    if not os.path.exists(file_path):
-
-        flash(
-            "Marksheet file was not found on the server.",
-            "danger"
-        )
-
-        return redirect(
-            url_for(
-                "admin_marksheet.index"
-            )
-        )
-
-    # --------------------------------------------------------
-    # SEND FILE
-    # --------------------------------------------------------
-
-    return send_from_directory(
-        MARKSHEET_UPLOAD_FOLDER,
-        filename
+    return redirect(
+        url_for("admin_marksheet.index")
     )
 
 
@@ -752,9 +769,7 @@ def edit(marksheet_id):
             )
 
             return redirect(
-                url_for(
-                    "admin_marksheet.index"
-                )
+                url_for("admin_marksheet.index")
             )
 
         old_file = marksheet[2]
@@ -787,29 +802,51 @@ def edit(marksheet_id):
                 )
 
             # ------------------------------------------------
-            # SAVE NEW FILE
+            # READ NEW FILE
             # ------------------------------------------------
 
-            new_file = save_marksheet_file(
+            extension, file_data = read_marksheet_file(
                 marksheet_file
             )
 
             # ------------------------------------------------
+            # GENERATE NEW FILE NAME
+            # ------------------------------------------------
+
+            new_file = (
+                uuid.uuid4().hex
+                + extension
+            )
+
+            new_file_path = os.path.join(
+                MARKSHEET_UPLOAD_FOLDER,
+                new_file
+            )
+
+            with open(
+                new_file_path,
+                "wb"
+            ) as output_file:
+
+                output_file.write(
+                    file_data
+                )
+
+            # ------------------------------------------------
             # UPDATE DATABASE
-            #
-            # Student remains same.
-            # Only file changes.
             # ------------------------------------------------
 
             cursor.execute(
                 """
                 UPDATE marksheets
                 SET
-                    marksheet_file = %s
+                    marksheet_file = %s,
+                    file_data = %s
                 WHERE id = %s
                 """,
                 (
                     new_file,
+                    file_data,
                     marksheet_id
                 )
             )
@@ -817,7 +854,7 @@ def edit(marksheet_id):
             mysql.connection.commit()
 
             # ------------------------------------------------
-            # DELETE OLD FILE
+            # DELETE OLD PHYSICAL FILE
             # ------------------------------------------------
 
             if (
@@ -837,9 +874,7 @@ def edit(marksheet_id):
             )
 
             return redirect(
-                url_for(
-                    "admin_marksheet.index"
-                )
+                url_for("admin_marksheet.index")
             )
 
         # ====================================================
@@ -854,7 +889,6 @@ def edit(marksheet_id):
     except ValueError as e:
 
         if new_file:
-
             delete_marksheet_file(
                 new_file
             )
@@ -879,7 +913,6 @@ def edit(marksheet_id):
     except Exception as e:
 
         if new_file:
-
             delete_marksheet_file(
                 new_file
             )
@@ -936,10 +969,6 @@ def delete(marksheet_id):
 
     try:
 
-        # ====================================================
-        # GET FILE
-        # ====================================================
-
         cursor.execute(
             """
             SELECT
@@ -961,16 +990,14 @@ def delete(marksheet_id):
             )
 
             return redirect(
-                url_for(
-                    "admin_marksheet.index"
-                )
+                url_for("admin_marksheet.index")
             )
 
         filename = data[0]
 
-        # ====================================================
+        # ----------------------------------------------------
         # DELETE DATABASE RECORD
-        # ====================================================
+        # ----------------------------------------------------
 
         cursor.execute(
             """
@@ -982,9 +1009,9 @@ def delete(marksheet_id):
 
         mysql.connection.commit()
 
-        # ====================================================
+        # ----------------------------------------------------
         # DELETE PHYSICAL FILE
-        # ====================================================
+        # ----------------------------------------------------
 
         if filename:
 
@@ -1019,7 +1046,5 @@ def delete(marksheet_id):
         cursor.close()
 
     return redirect(
-        url_for(
-            "admin_marksheet.index"
-        )
+        url_for("admin_marksheet.index")
     )

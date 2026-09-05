@@ -5,7 +5,10 @@ from flask import (
     redirect,
     url_for,
     session,
-    flash
+    flash,
+    send_file,
+    send_from_directory,
+    current_app
 )
 
 from werkzeug.security import (
@@ -18,6 +21,8 @@ from werkzeug.utils import secure_filename
 
 import os
 import uuid
+import io
+import mimetypes
 
 
 # =========================================================
@@ -470,7 +475,7 @@ def profile():
 
             cursor.execute(
                 """
-                SELECT photo
+                SELECT photo, photo_data
                 FROM students
                 WHERE id = %s
                 LIMIT 1
@@ -486,7 +491,14 @@ def profile():
                 else None
             )
 
+            old_photo_data = (
+                old_result[1]
+                if old_result and len(old_result) > 1
+                else None
+            )
+
             new_photo = old_photo
+            new_photo_data = old_photo_data
 
             # -------------------------------------------------
             # PHOTO UPLOAD
@@ -547,14 +559,26 @@ def profile():
                     + extension
                 )
 
+                photo_bytes = photo.read()
+
+                if not photo_bytes:
+                    flash(
+                        "Selected photo is empty or invalid.",
+                        "danger"
+                    )
+                    return redirect(
+                        url_for("student_auth.profile")
+                    )
+
                 photo_path = os.path.join(
                     upload_folder,
                     new_photo
                 )
 
-                photo.save(
-                    photo_path
-                )
+                with open(photo_path, "wb") as photo_file:
+                    photo_file.write(photo_bytes)
+
+                new_photo_data = photo_bytes
 
                 # Delete old photo
                 if old_photo:
@@ -586,7 +610,8 @@ def profile():
                     full_name = %s,
                     email = %s,
                     phone = %s,
-                    photo = %s
+                    photo = %s,
+                    photo_data = %s
                 WHERE id = %s
                 """,
                 (
@@ -594,6 +619,7 @@ def profile():
                     email,
                     phone,
                     new_photo,
+                    new_photo_data,
                     student_db_id
                 )
             )
@@ -684,6 +710,152 @@ def profile():
 
     finally:
 
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+# =========================================================
+# STUDENT PROFILE PHOTO
+# =========================================================
+
+@student_auth.route("/profile/photo")
+def profile_photo():
+
+    if "student_db_id" not in session:
+        return redirect(url_for("student_auth.login"))
+
+    student_db_id = session["student_db_id"]
+    cursor = mysql.connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT photo, photo_data
+            FROM students
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (student_db_id,)
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            return "", 404
+
+        filename = row[0]
+        photo_data = row[1]
+
+        if photo_data:
+            filename = filename or "profile.jpg"
+            mimetype = mimetypes.guess_type(filename)[0] or "image/jpeg"
+            return send_file(
+                io.BytesIO(bytes(photo_data)),
+                mimetype=mimetype,
+                as_attachment=False,
+                download_name=filename
+            )
+
+        if filename:
+            upload_folder = os.path.join(
+                current_app.root_path,
+                "static",
+                "uploads",
+                "students"
+            )
+            file_path = os.path.join(upload_folder, filename)
+
+            if os.path.isfile(file_path):
+                mimetype = mimetypes.guess_type(filename)[0] or "image/jpeg"
+                return send_from_directory(
+                    upload_folder,
+                    filename,
+                    mimetype=mimetype
+                )
+
+        return "", 404
+
+    except Exception as e:
+        print("STUDENT PROFILE PHOTO ERROR:", repr(e))
+        return "", 404
+
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+@student_auth.route("/profile/delete-photo", methods=["POST"])
+def delete_profile_photo():
+
+    if "student_db_id" not in session:
+        return redirect(url_for("student_auth.login"))
+
+    student_db_id = session["student_db_id"]
+    cursor = mysql.connection.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT photo
+            FROM students
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (student_db_id,)
+        )
+
+        row = cursor.fetchone()
+
+        if not row:
+            flash("Student profile not found.", "danger")
+            return redirect(url_for("student_auth.login"))
+
+        old_photo = row[0]
+
+        cursor.execute(
+            """
+            UPDATE students
+            SET photo = NULL, photo_data = NULL
+            WHERE id = %s
+            """,
+            (student_db_id,)
+        )
+
+        mysql.connection.commit()
+
+        if old_photo:
+            upload_folder = os.path.join(
+                current_app.root_path,
+                "static",
+                "uploads",
+                "students"
+            )
+            old_path = os.path.join(upload_folder, old_photo)
+            try:
+                if os.path.isfile(old_path):
+                    os.remove(old_path)
+            except OSError:
+                pass
+
+        session["student_photo"] = None
+
+        flash("Profile photo deleted successfully.", "success")
+        return redirect(url_for("student_auth.profile"))
+
+    except Exception as e:
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
+        print("DELETE STUDENT PROFILE PHOTO ERROR:", repr(e))
+        flash("Unable to delete profile photo. Please try again.", "danger")
+        return redirect(url_for("student_auth.profile"))
+
+    finally:
         try:
             cursor.close()
         except Exception:

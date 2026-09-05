@@ -9,120 +9,433 @@ Class Routine
 
 <style>
 
+    /* ======================================================
+       STUDENT ROUTINE PAGE
+    ====================================================== */
+
     .student-routine-page {
-        padding: 24px;
+        padding: 28px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
+
+    /* ======================================================
+       HEADER
+    ====================================================== */
+
     .routine-header {
-        margin-bottom: 22px;
+        margin-bottom: 24px;
     }
 
     .routine-header h2 {
         margin: 0;
-        font-size: 25px;
-        font-weight: 700;
-        color: #1e293b;
+        font-size: 28px;
+        line-height: 1.3;
+        font-weight: 800;
+        color: #172033;
+    }
+
+    .routine-header h2 i {
+        color: #2563eb;
+        margin-right: 7px;
     }
 
     .routine-header p {
-        margin-top: 5px;
+        margin: 7px 0 0;
         color: #64748b;
-        font-size: 13px;
+        font-size: 15px;
+        line-height: 1.6;
     }
 
-    .routine-card {
-        background: #fff;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 5px 20px rgba(15,23,42,.06);
-        overflow: hidden;
+
+    /* ======================================================
+       STUDENT INFORMATION
+    ====================================================== */
+
+    .student-routine-info {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-bottom: 22px;
     }
 
+    .student-routine-info .info-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .student-routine-info .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 9px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid #dbeafe;
+    }
+
+
+    /* ======================================================
+       ROUTINE CARD
+    ====================================================== */
+
+    .routine-card {
+        background: #ffffff;
+        border-radius: 17px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 7px 25px rgba(15, 23, 42, 0.07);
+        overflow: hidden;
+        margin-bottom: 25px;
+    }
+
+
+    /* ======================================================
+       ROUTINE HEADER
+    ====================================================== */
+
     .routine-card-header {
-        padding: 17px 20px;
+        padding: 19px 22px;
         border-bottom: 1px solid #e5e7eb;
+        background: #ffffff;
     }
 
     .routine-card-header h5 {
         margin: 0;
-        font-size: 16px;
-        font-weight: 700;
+        font-size: 19px;
+        line-height: 1.4;
+        font-weight: 800;
+        color: #172033;
     }
 
-    .routine-body {
-        padding: 20px;
+    .routine-card-header h5 i {
+        color: #2563eb;
     }
+
+
+    /* ======================================================
+       BODY
+    ====================================================== */
+
+    .routine-body {
+        padding: 22px;
+    }
+
+
+    /* ======================================================
+       INFORMATION BADGES
+    ====================================================== */
 
     .routine-info {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 15px;
+        gap: 9px;
+        margin-bottom: 17px;
     }
 
     .routine-badge {
-        padding: 7px 10px;
-        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 9px;
         background: #eff6ff;
-        color: #2563eb;
-        font-size: 12px;
-        font-weight: 600;
+        color: #1d4ed8;
+        border: 1px solid #dbeafe;
+        font-size: 13px;
+        line-height: 1.3;
+        font-weight: 700;
+    }
+
+    .routine-badge i {
+        font-size: 14px;
+    }
+
+
+    /* ======================================================
+       DESCRIPTION
+    ====================================================== */
+
+    .routine-description {
+        margin-bottom: 18px;
+        padding: 13px 15px;
+        background: #f8fafc;
+        border-left: 4px solid #2563eb;
+        border-radius: 8px;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+
+    /* ======================================================
+       ROUTINE IMAGE
+    ====================================================== */
+
+    .routine-image-wrapper {
+        width: 100%;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 13px;
+        padding: 10px;
+        overflow: hidden;
     }
 
     .routine-photo {
         width: 100%;
-        max-height: 800px;
+        max-width: 100%;
+        max-height: 850px;
         object-fit: contain;
-        background: #f8fafc;
-        border-radius: 10px;
+        background: #ffffff;
+        border-radius: 9px;
         display: block;
+        margin: 0 auto;
     }
 
-    .routine-description {
-        margin-bottom: 15px;
-        color: #64748b;
+
+    /* ======================================================
+       FILE MISSING
+    ====================================================== */
+
+    .routine-file-missing {
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 40px 20px;
+        background: #fff7ed;
+        border: 1px dashed #fdba74;
+        border-radius: 12px;
+        color: #9a3412;
+    }
+
+    .routine-file-missing i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        color: #ea580c;
+    }
+
+    .routine-file-missing strong {
+        font-size: 17px;
+        margin-bottom: 6px;
+    }
+
+    .routine-file-missing p {
+        margin: 0;
         font-size: 13px;
         line-height: 1.6;
+        color: #9a3412;
     }
+
+
+    /* ======================================================
+       ACTION BUTTONS
+    ====================================================== */
 
     .routine-actions {
         display: flex;
-        gap: 8px;
-        margin-top: 15px;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
         flex-wrap: wrap;
     }
 
     .routine-btn {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 9px 13px;
-        border-radius: 8px;
+        justify-content: center;
+        gap: 7px;
+        padding: 10px 15px;
+        min-height: 40px;
+        border-radius: 9px;
         background: #eff6ff;
-        color: #2563eb;
+        color: #1d4ed8;
+        border: 1px solid #dbeafe;
         text-decoration: none;
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 13px;
+        font-weight: 700;
+        transition:
+            transform .18s ease,
+            background .18s ease,
+            box-shadow .18s ease;
     }
+
+    .routine-btn:hover {
+        color: #1d4ed8;
+        background: #dbeafe;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, .12);
+    }
+
+    .routine-btn.download-btn {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #047857;
+    }
+
+    .routine-btn.download-btn:hover {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+
+    /* ======================================================
+       EMPTY ROUTINE
+    ====================================================== */
 
     .empty-routine {
         text-align: center;
-        padding: 65px 20px;
+        padding: 80px 25px;
         color: #64748b;
     }
 
     .empty-routine i {
         display: block;
-        font-size: 45px;
+        font-size: 55px;
         color: #94a3b8;
-        margin-bottom: 12px;
+        margin-bottom: 15px;
     }
+
+    .empty-routine strong {
+        display: block;
+        font-size: 18px;
+        color: #334155;
+        margin-bottom: 7px;
+    }
+
+    .empty-routine p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+
+    /* ======================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media (max-width: 992px) {
+
+        .student-routine-page {
+            padding: 22px;
+        }
+
+        .routine-header h2 {
+            font-size: 25px;
+        }
+
+        .routine-card-header h5 {
+            font-size: 18px;
+        }
+
+    }
+
 
     @media (max-width: 768px) {
 
         .student-routine-page {
+            padding: 16px;
+        }
+
+        .routine-header {
+            margin-bottom: 18px;
+        }
+
+        .routine-header h2 {
+            font-size: 23px;
+        }
+
+        .routine-header p {
+            font-size: 14px;
+        }
+
+        .student-routine-info {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .routine-card {
+            border-radius: 13px;
+            margin-bottom: 18px;
+        }
+
+        .routine-card-header {
+            padding: 16px;
+        }
+
+        .routine-card-header h5 {
+            font-size: 17px;
+        }
+
+        .routine-body {
             padding: 15px;
+        }
+
+        .routine-badge {
+            font-size: 12px;
+            padding: 7px 10px;
+        }
+
+        .routine-description {
+            font-size: 13px;
+        }
+
+        .routine-photo {
+            max-height: 650px;
+        }
+
+        .routine-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .routine-btn {
+            width: 100%;
+        }
+
+    }
+
+
+    @media (max-width: 480px) {
+
+        .student-routine-page {
+            padding: 12px;
+        }
+
+        .routine-header h2 {
+            font-size: 21px;
+        }
+
+        .routine-header p {
+            font-size: 13px;
+        }
+
+        .routine-card-header {
+            padding: 14px;
+        }
+
+        .routine-body {
+            padding: 12px;
+        }
+
+        .routine-image-wrapper {
+            padding: 5px;
+        }
+
+        .routine-photo {
+            max-height: 500px;
+        }
+
+        .empty-routine {
+            padding: 60px 15px;
         }
 
     }
@@ -132,6 +445,11 @@ Class Routine
 
 <div class="student-routine-page">
 
+
+    <!-- ==================================================
+         HEADER
+    ================================================== -->
+
     <div class="routine-header">
 
         <h2>
@@ -140,11 +458,60 @@ Class Routine
         </h2>
 
         <p>
-            View the latest routine uploaded by the administrator.
+            View the class routine available for your department
+            and semester.
         </p>
 
     </div>
 
+
+    <!-- ==================================================
+         STUDENT INFORMATION
+    ================================================== -->
+
+    {% if student %}
+
+        <div class="student-routine-info">
+
+            <span class="info-label">
+                Showing routine for:
+            </span>
+
+            {% if student_department %}
+
+                <span class="info-badge">
+                    <i class="bi bi-building"></i>
+                    {{ student_department }}
+                </span>
+
+            {% endif %}
+
+            {% if student_semester %}
+
+                <span class="info-badge">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    Semester {{ student_semester }}
+                </span>
+
+            {% endif %}
+
+            {% if student[7] %}
+
+                <span class="info-badge">
+                    <i class="bi bi-people-fill"></i>
+                    Section {{ student[7] }}
+                </span>
+
+            {% endif %}
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- ==================================================
+         ROUTINES
+    ================================================== -->
 
     {% if routines %}
 
@@ -152,25 +519,46 @@ Class Routine
 
             <div class="routine-card">
 
+
+                <!-- ==========================================
+                     CARD HEADER
+                =========================================== -->
+
                 <div class="routine-card-header">
 
                     <h5>
+
                         <i class="bi bi-calendar3 me-1"></i>
+
                         {{ r[1] }}
+
                     </h5>
 
                 </div>
 
 
+                <!-- ==========================================
+                     CARD BODY
+                =========================================== -->
+
                 <div class="routine-body">
 
+
+                    <!-- ======================================
+                         INFORMATION
+                    ======================================= -->
+
                     <div class="routine-info">
+
 
                         {% if r[2] %}
 
                             <span class="routine-badge">
+
                                 <i class="bi bi-calendar3"></i>
+
                                 {{ r[2] }}
+
                             </span>
 
                         {% endif %}
@@ -179,8 +567,21 @@ Class Routine
                         {% if r[3] %}
 
                             <span class="routine-badge">
+
                                 <i class="bi bi-building"></i>
+
                                 {{ r[3] }}
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="routine-badge">
+
+                                <i class="bi bi-globe2"></i>
+
+                                All Departments
+
                             </span>
 
                         {% endif %}
@@ -189,59 +590,148 @@ Class Routine
                         {% if r[4] %}
 
                             <span class="routine-badge">
+
                                 <i class="bi bi-mortarboard"></i>
-                                {{ r[4] }}
+
+                                Semester {{ r[4] }}
+
                             </span>
 
                         {% else %}
 
                             <span class="routine-badge">
+
+                                <i class="bi bi-collection"></i>
+
                                 All Semesters
+
                             </span>
 
                         {% endif %}
 
+
                     </div>
 
+
+                    <!-- ======================================
+                         DESCRIPTION
+                    ======================================= -->
 
                     {% if r[5] %}
 
                         <div class="routine-description">
+
+                            <i class="bi bi-info-circle me-1"></i>
+
                             {{ r[5] }}
+
                         </div>
 
                     {% endif %}
 
 
-                    <img
-                        src="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
-                        alt="{{ r[1] }}"
-                        class="routine-photo"
-                    >
+                    <!-- ======================================
+                         ROUTINE IMAGE
+                    ======================================= -->
+
+                    {% if r[6] %}
+
+                        <div class="routine-image-wrapper">
+
+                            <img
+                                src="{{ url_for(
+                                    'student_routine.view',
+                                    filename=r[6]
+                                ) }}"
+                                alt="{{ r[1] }}"
+                                class="routine-photo"
+                                loading="lazy"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                            >
+
+                            <div
+                                class="routine-file-missing"
+                                style="display:none;"
+                            >
+
+                                <i class="bi bi-file-earmark-image"></i>
+
+                                <strong>
+                                    Routine file is unavailable
+                                </strong>
+
+                                <p>
+                                    This routine image is no longer
+                                    available on the server.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="routine-file-missing">
+
+                            <i class="bi bi-file-earmark-image"></i>
+
+                            <strong>
+                                Routine file is unavailable
+                            </strong>
+
+                            <p>
+                                No routine image has been attached
+                                to this record.
+                            </p>
+
+                        </div>
+
+                    {% endif %}
 
 
-                    <div class="routine-actions">
+                    <!-- ======================================
+                         ACTIONS
+                    ======================================= -->
 
-                        <a
-                            href="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
-                            target="_blank"
-                            class="routine-btn"
-                        >
-                            <i class="bi bi-arrows-fullscreen"></i>
-                            Full Screen
-                        </a>
+                    {% if r[6] %}
+
+                        <div class="routine-actions">
+
+                            <a
+                                href="{{ url_for(
+                                    'student_routine.view',
+                                    filename=r[6]
+                                ) }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="routine-btn"
+                            >
+
+                                <i class="bi bi-arrows-fullscreen"></i>
+
+                                View Full Size
+
+                            </a>
 
 
-                        <a
-                            href="{{ url_for('static', filename='uploads/routines/' ~ r[6]) }}"
-                            download
-                            class="routine-btn"
-                        >
-                            <i class="bi bi-download"></i>
-                            Download
-                        </a>
+                            <a
+                                href="{{ url_for(
+                                    'student_routine.download',
+                                    filename=r[6]
+                                ) }}"
+                                class="routine-btn download-btn"
+                            >
 
-                    </div>
+                                <i class="bi bi-download"></i>
+
+                                Download Routine
+
+                            </a>
+
+                        </div>
+
+                    {% endif %}
+
 
                 </div>
 
@@ -249,7 +739,13 @@ Class Routine
 
         {% endfor %}
 
+
     {% else %}
+
+
+        <!-- ==================================================
+             EMPTY
+        ================================================== -->
 
         <div class="routine-card">
 
@@ -262,7 +758,8 @@ Class Routine
                 </strong>
 
                 <p>
-                    The administrator has not uploaded a routine yet.
+                    There is currently no class routine available
+                    for your department and semester.
                 </p>
 
             </div>
@@ -270,6 +767,7 @@ Class Routine
         </div>
 
     {% endif %}
+
 
 </div>
 

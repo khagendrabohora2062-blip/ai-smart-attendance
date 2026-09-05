@@ -419,7 +419,7 @@
             {% if session.get('student_photo') %}
 
                 <img
-                    src="{{ url_for('static', filename='uploads/students/' ~ session.get('student_photo')) }}"
+                    src="{{ url_for('student_auth.profile_photo') }}"
                     class="sidebar-user-photo"
                     onerror="this.src='https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569';"
                 >
@@ -579,7 +579,7 @@
                 {% if session.get('student_photo') %}
 
                     <img
-                        src="{{ url_for('static', filename='uploads/students/' ~ session.get('student_photo')) }}"
+                        src="{{ url_for('student_auth.profile_photo') }}"
                         class="top-photo"
                         onerror="this.src='https://ui-avatars.com/api/?name={{ session.get('student_name','Student')|urlencode }}&background=e8eef8&color=475569';"
                     >

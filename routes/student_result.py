@@ -5,11 +5,15 @@ from flask import (
     redirect,
     url_for,
     flash,
-    send_from_directory
+    send_from_directory,
+    send_file
 )
 
 from extensions import mysql
+
 import os
+import io
+import mimetypes
 
 
 # ============================================================
@@ -35,18 +39,36 @@ MARKSHEET_FOLDER = os.path.join(
 
 
 # ============================================================
+# MIME TYPE
+# ============================================================
+
+def get_marksheet_mimetype(filename):
+
+    extension = os.path.splitext(
+        filename or ""
+    )[1].lower()
+
+    mime_types = {
+        ".pdf": "application/pdf",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".webp": "image/webp"
+    }
+
+    return (
+        mime_types.get(extension)
+        or mimetypes.guess_type(filename or "")[0]
+        or "application/octet-stream"
+    )
+
+
+# ============================================================
 # STUDENT RESULT PAGE
 # ============================================================
 
 @student_result.route("/")
 def index():
-
-    # --------------------------------------------------------
-    # LOGIN CHECK
-    # IMPORTANT:
-    # student_db_id = students table primary key
-    # student_id = student's visible ID such as 09
-    # --------------------------------------------------------
 
     student_db_id = session.get(
         "student_db_id"
@@ -63,10 +85,6 @@ def index():
     cursor = mysql.connection.cursor()
 
     try:
-
-        # ====================================================
-        # GET STUDENT + UPLOADED MARKSHEETS
-        # ====================================================
 
         cursor.execute(
             """
@@ -125,7 +143,6 @@ def index():
         except Exception:
             pass
 
-
     # ========================================================
     # STUDENT NOT FOUND
     # ========================================================
@@ -142,7 +159,6 @@ def index():
                 "student_auth.login"
             )
         )
-
 
     # ========================================================
     # STUDENT INFORMATION
@@ -164,7 +180,6 @@ def index():
 
     }
 
-
     # ========================================================
     # MARKSHEETS LIST
     # ========================================================
@@ -178,7 +193,6 @@ def index():
         marksheet_file = row[7]
 
         created_at = row[8]
-
 
         if marksheet_id and marksheet_file:
 
@@ -194,9 +208,8 @@ def index():
                 }
             )
 
-
     # ========================================================
-    # RENDER PAGE
+    # RENDER
     # ========================================================
 
     return render_template(
@@ -215,7 +228,6 @@ def index():
 )
 def view_marksheet(marksheet_id):
 
-
     # --------------------------------------------------------
     # LOGIN CHECK
     # --------------------------------------------------------
@@ -232,27 +244,27 @@ def view_marksheet(marksheet_id):
             )
         )
 
-
     cursor = mysql.connection.cursor()
 
     try:
 
         # ====================================================
-        # GET MARKSHEET
+        # GET FILE FROM DATABASE
+        #
         # Security:
-        # Student can only access their own marksheet
+        # Student can only access their own marksheet.
         # ====================================================
 
         cursor.execute(
             """
             SELECT
-                m.marksheet_file
+                m.marksheet_file,
+                m.file_data
 
             FROM marksheets m
 
             WHERE
                 m.id = %s
-
                 AND m.student_id = %s
 
             LIMIT 1
@@ -265,13 +277,17 @@ def view_marksheet(marksheet_id):
 
         data = cursor.fetchone()
 
-
     except Exception as e:
 
         print(
             "VIEW MARKSHEET ERROR:",
             repr(e)
         )
+
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         flash(
             "Unable to open marksheet.",
@@ -280,7 +296,6 @@ def view_marksheet(marksheet_id):
 
         data = None
 
-
     finally:
 
         try:
@@ -288,12 +303,11 @@ def view_marksheet(marksheet_id):
         except Exception:
             pass
 
-
     # ========================================================
-    # MARKSHEET NOT FOUND
+    # DATABASE RECORD NOT FOUND
     # ========================================================
 
-    if not data or not data[0]:
+    if not data:
 
         flash(
             "Marksheet not found.",
@@ -306,39 +320,81 @@ def view_marksheet(marksheet_id):
             )
         )
 
-
     marksheet_file = data[0]
-
+    file_data = data[1]
 
     # ========================================================
-    # FILE CHECK
+    # METHOD 1
+    # DATABASE BLOB
     # ========================================================
 
-    if not os.path.exists(
-        os.path.join(
+    if file_data:
+
+        try:
+
+            response = send_file(
+                io.BytesIO(
+                    bytes(file_data)
+                ),
+                mimetype=get_marksheet_mimetype(
+                    marksheet_file
+                ),
+                as_attachment=False,
+                download_name=marksheet_file
+            )
+
+            # Browser लाई PDF/image inline खोल्न force
+            response.headers["Content-Disposition"] = (
+                f'inline; filename="{marksheet_file}"'
+            )
+
+            # Correct MIME
+            response.headers["Content-Type"] = (
+                get_marksheet_mimetype(
+                    marksheet_file
+                )
+            )
+
+            return response
+
+        except Exception as e:
+
+            print(
+                "DATABASE MARKSHEET VIEW ERROR:",
+                repr(e)
+            )
+
+    # ========================================================
+    # METHOD 2
+    # OLD PHYSICAL FILE FALLBACK
+    # ========================================================
+
+    if marksheet_file:
+
+        file_path = os.path.join(
             MARKSHEET_FOLDER,
             marksheet_file
         )
-    ):
 
-        flash(
-            "Marksheet file is missing from the server.",
-            "danger"
-        )
+        if os.path.isfile(file_path):
 
-        return redirect(
-            url_for(
-                "student_result.index"
+            return send_from_directory(
+                MARKSHEET_FOLDER,
+                marksheet_file,
+                as_attachment=False
             )
+
+    # ========================================================
+    # FILE NOT AVAILABLE
+    # ========================================================
+
+    flash(
+        "Marksheet file is missing from the server.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "student_result.index"
         )
-
-
-    # ========================================================
-    # OPEN FILE
-    # ========================================================
-
-    return send_from_directory(
-        MARKSHEET_FOLDER,
-        marksheet_file,
-        as_attachment=False
     )

@@ -12,20 +12,29 @@
             <i class="bi bi-person-circle text-primary"></i>
             My Profile
         </h2>
+
         <p class="text-muted">
             Manage your account information and security.
         </p>
     </div>
 
+
     <div class="row">
 
-        <!-- Left -->
+        <!-- ===================================================== -->
+        <!-- LEFT - PROFILE PHOTO -->
+        <!-- ===================================================== -->
+
         <div class="col-lg-4">
+
             <div class="card border-0 shadow-lg">
+
                 <div class="card-body text-center">
 
                     <!-- Admin Profile Photo -->
+
                     {% if admin[5] %}
+
                         <img
                             src="{{ url_for(
                                 'static',
@@ -37,24 +46,52 @@
                             style="object-fit: cover;"
                             alt="Administrator Profile Photo"
                         >
+
+                    {% else %}
+
+                        <!-- Default Profile Icon -->
+
+                        <div
+                            class="rounded-circle bg-light shadow d-flex align-items-center justify-content-center mx-auto"
+                            style="
+                                width:170px;
+                                height:170px;
+                            "
+                        >
+                            <i
+                                class="bi bi-person-fill text-secondary"
+                                style="font-size: 90px;"
+                            ></i>
+                        </div>
+
                     {% endif %}
+
+
+                    <!-- Admin Name -->
 
                     <h4 class="fw-bold mt-3">
                         {{ admin[1] }}
                     </h4>
 
-                    <p class="text-muted">
+
+                    <p class="text-muted mb-3">
                         System Administrator
                     </p>
 
+
                     <hr>
 
-                    <!-- Upload Photo -->
+
+                    <!-- ================================================= -->
+                    <!-- UPLOAD PHOTO -->
+                    <!-- ================================================= -->
+
                     <form
                         method="POST"
                         enctype="multipart/form-data"
                         action="{{ url_for('admin.upload_photo') }}"
                     >
+
                         <input
                             type="file"
                             name="photo"
@@ -63,41 +100,97 @@
                             required
                         >
 
+
                         <button
                             type="submit"
                             class="btn btn-primary w-100"
                         >
+
                             <i class="bi bi-camera-fill"></i>
+
                             Upload Photo
+
                         </button>
+
                     </form>
 
+
+                    <!-- ================================================= -->
+                    <!-- DELETE PHOTO -->
+                    <!-- ================================================= -->
+
+                    {% if admin[5] %}
+
+                        <form
+                            method="POST"
+                            action="{{ url_for('admin.delete_photo') }}"
+                            class="mt-2"
+                            onsubmit="return confirm(
+                                'Are you sure you want to delete your profile photo?'
+                            );"
+                        >
+
+                            <button
+                                type="submit"
+                                class="btn btn-outline-danger w-100"
+                            >
+
+                                <i class="bi bi-trash3-fill"></i>
+
+                                Delete Photo
+
+                            </button>
+
+                        </form>
+
+                    {% endif %}
+
                 </div>
+
             </div>
+
         </div>
 
-        <!-- Right -->
+
+
+        <!-- ===================================================== -->
+        <!-- RIGHT - PROFILE INFORMATION -->
+        <!-- ===================================================== -->
+
         <div class="col-lg-8">
+
             <div class="card border-0 shadow-lg">
 
                 <div class="card-header bg-primary text-white">
+
                     <h5 class="mb-0">
+
                         <i class="bi bi-pencil-square"></i>
+
                         Profile Information
+
                     </h5>
+
                 </div>
+
 
                 <div class="card-body">
 
                     <!-- Profile Information Form -->
+
                     <form method="POST">
 
                         <div class="row">
 
+
                             <!-- Full Name -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label fw-semibold">
+
                                     Full Name
+
                                 </label>
 
                                 <input
@@ -107,12 +200,19 @@
                                     value="{{ admin[1] }}"
                                     required
                                 >
+
                             </div>
 
+
+
                             <!-- Username -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label fw-semibold">
+
                                     Username
+
                                 </label>
 
                                 <input
@@ -122,12 +222,19 @@
                                     value="{{ admin[2] }}"
                                     required
                                 >
+
                             </div>
 
+
+
                             <!-- Email -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label fw-semibold">
+
                                     Email
+
                                 </label>
 
                                 <input
@@ -137,12 +244,19 @@
                                     value="{{ admin[3] }}"
                                     required
                                 >
+
                             </div>
 
+
+
                             <!-- Account Created -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label fw-semibold">
+
                                     Account Created
+
                                 </label>
 
                                 <input
@@ -151,64 +265,99 @@
                                     value="{{ admin[4] }}"
                                     readonly
                                 >
+
                             </div>
 
                         </div>
 
+
                         <hr>
 
-                        <!-- Change Password -->
-                        <h5>
+
+                        <!-- ================================================= -->
+                        <!-- CHANGE PASSWORD -->
+                        <!-- ================================================= -->
+
+                        <h5 class="mb-3">
+
                             <i class="bi bi-lock-fill"></i>
+
                             Change Password
+
                         </h5>
+
 
                         <div class="row">
 
+
                             <!-- New Password -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
+
                                     New Password
+
                                 </label>
 
                                 <input
                                     type="password"
                                     name="password"
                                     class="form-control"
+                                    placeholder="Enter new password"
                                 >
+
                             </div>
 
+
+
                             <!-- Confirm Password -->
+
                             <div class="col-md-6 mb-3">
+
                                 <label class="form-label">
+
                                     Confirm Password
+
                                 </label>
 
                                 <input
                                     type="password"
                                     name="confirm_password"
                                     class="form-control"
+                                    placeholder="Confirm new password"
                                 >
+
                             </div>
 
                         </div>
 
-                        <!-- Save Changes -->
+
+                        <!-- ================================================= -->
+                        <!-- SAVE CHANGES -->
+                        <!-- ================================================= -->
+
                         <button
                             type="submit"
                             class="btn btn-success px-4"
                         >
+
                             <i class="bi bi-check-circle-fill"></i>
+
                             Save Changes
+
                         </button>
 
                     </form>
 
                 </div>
+
             </div>
+
         </div>
 
     </div>
+
 </div>
 
 {% endblock %}

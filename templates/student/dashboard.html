@@ -284,10 +284,7 @@
                     {% if student[8] %}
 
                         <img
-                            src="{{ url_for(
-                                'static',
-                                filename='uploads/students/' + student[8]
-                            ) }}"
+                            src="{{ url_for('student_auth.profile_photo') }}"
                             alt="Student Profile">
 
                     {% else %}

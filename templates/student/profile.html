@@ -30,10 +30,7 @@
                 {% if student and student[8] %}
 
                     <img
-                        src="{{ url_for(
-                            'static',
-                            filename='uploads/students/' + student[8]
-                        ) }}"
+                        src="{{ url_for('student_auth.profile_photo') }}"
                         alt="Profile Photo">
 
                 {% else %}
@@ -263,10 +260,7 @@
 
                                 <img
                                     id="profilePreview"
-                                    src="{{ url_for(
-                                        'static',
-                                        filename='uploads/students/' + student[8]
-                                    ) }}"
+                                    src="{{ url_for('student_auth.profile_photo') }}"
                                     alt="Profile">
 
                             {% else %}
@@ -340,6 +334,21 @@
                 </div>
 
             </form>
+
+            {% if student[8] %}
+                <form
+                    method="POST"
+                    action="{{ url_for('student_auth.delete_profile_photo') }}"
+                    class="delete-photo-form"
+                    onsubmit="return confirm('Are you sure you want to delete your profile photo?');">
+
+                    <button type="submit" class="delete-photo-btn">
+                        <i class="bi bi-trash3-fill"></i>
+                        Delete Profile Photo
+                    </button>
+
+                </form>
+            {% endif %}
 
         </div>
 
@@ -990,6 +999,33 @@
         flex: 1;
     }
 
+}
+
+
+/* =========================================================
+   DELETE PROFILE PHOTO
+========================================================= */
+
+.delete-photo-form {
+    margin-top: 12px;
+}
+
+.delete-photo-btn {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid #dc3545;
+    border-radius: 10px;
+    background: transparent;
+    color: #dc3545;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.delete-photo-btn:hover {
+    background: #dc3545;
+    color: #fff;
 }
 
 </style>

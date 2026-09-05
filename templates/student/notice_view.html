@@ -6,22 +6,28 @@
 
 {% block content %}
 
-<div class="container py-4">
+<div class="container-fluid py-4">
 
-    <a
-        href="{{ url_for('student_notice.index') }}"
-        class="btn btn-outline-secondary mb-4"
-    >
-        <i class="bi bi-arrow-left me-1"></i>
-        Back to Notices
-    </a>
+    <!-- Back -->
+    <div class="mb-4">
+
+        <a
+            href="{{ url_for('student_notice.index') }}"
+            class="btn btn-outline-secondary"
+        >
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Notices
+        </a>
+
+    </div>
 
 
+    <!-- Notice -->
     <div class="card border-0 shadow-sm">
 
         <div class="card-body p-4 p-lg-5">
 
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
                 <span class="badge bg-primary">
                     {{ notice[7] or "General" }}
@@ -34,21 +40,29 @@
             </div>
 
 
-            <h2 class="fw-bold mt-3">
+            <h1 class="fw-bold mt-4">
                 {{ notice[1] }}
-            </h2>
+            </h1>
 
 
             {% if notice[2] %}
 
-            <div class="notice-description mt-4">
-
+            <div
+                class="mt-4"
+                style="
+                    white-space:pre-line;
+                    line-height:1.8;
+                    color:#475569;
+                    font-size:16px;
+                "
+            >
                 {{ notice[2] }}
-
             </div>
 
             {% endif %}
 
+
+            <!-- Notice Image -->
 
             {% if notice[3] %}
 
@@ -56,35 +70,83 @@
 
                 <img
                     src="{{ url_for(
-                        'static',
-                        filename='uploads/notices/' ~ notice[3]
+                        'student_notice.image',
+                        notice_id=notice[0]
                     ) }}"
                     class="img-fluid rounded shadow-sm"
-                    style="max-height:700px;"
+                    style="
+                        max-height:700px;
+                        object-fit:contain;
+                    "
                     alt="{{ notice[1] }}"
+                    onerror="
+                        this.style.display='none';
+                        document.getElementById('noticeImageError').style.display='block';
+                    "
                 >
+
+                <div
+                    id="noticeImageError"
+                    class="alert alert-warning mt-3"
+                    style="display:none;"
+                >
+                    Notice image is currently unavailable.
+                </div>
 
             </div>
 
             {% endif %}
 
 
+            <!-- PDF -->
+
             {% if notice[4] %}
 
-            <div class="mt-4">
+            <div class="mt-4 d-flex gap-2 flex-wrap">
 
                 <a
                     href="{{ url_for(
-                        'static',
-                        filename='uploads/notices/pdf/' ~ notice[4]
+                        'student_notice.pdf',
+                        notice_id=notice[0]
                     ) }}"
                     target="_blank"
                     class="btn btn-danger"
                 >
-
-                    <i class="bi bi-file-earmark-pdf me-2"></i>
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i>
                     Open Official PDF
+                </a>
 
+                <a
+                    href="{{ url_for(
+                        'student_notice.download_pdf',
+                        notice_id=notice[0]
+                    ) }}"
+                    class="btn btn-outline-danger"
+                >
+                    <i class="bi bi-download me-2"></i>
+                    Download PDF
+                </a>
+
+            </div>
+
+            {% endif %}
+
+
+            <!-- Image Download -->
+
+            {% if notice[3] %}
+
+            <div class="mt-3">
+
+                <a
+                    href="{{ url_for(
+                        'student_notice.download_image',
+                        notice_id=notice[0]
+                    ) }}"
+                    class="btn btn-outline-success"
+                >
+                    <i class="bi bi-image me-2"></i>
+                    Download Notice Image
                 </a>
 
             </div>
@@ -96,17 +158,5 @@
     </div>
 
 </div>
-
-
-<style>
-
-.notice-description {
-    white-space: pre-line;
-    line-height: 1.8;
-    font-size: 16px;
-    color: #475569;
-}
-
-</style>
 
 {% endblock %}
