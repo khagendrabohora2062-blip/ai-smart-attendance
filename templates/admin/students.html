@@ -231,12 +231,12 @@ Student Management
 
                         <td class="text-center">
 
-                            {% if student[5] %}
+                            {% if student[8] %}
 
                                 <img
                                     src="{{ url_for(
                                         'static',
-                                        filename='uploads/students/' ~ student[5]
+                                        filename='uploads/students/' ~ student[8]
                                     ) }}"
                                     alt="Student Photo"
                                     class="rounded-circle shadow-sm border"
@@ -321,7 +321,7 @@ Student Management
 
                             <span class="badge bg-primary">
 
-                                {{ student[3] }}
+                                {{ student[5] }}
 
                             </span>
 
@@ -334,7 +334,7 @@ Student Management
 
                             <span class="badge bg-success">
 
-                                Semester {{ student[4] }}
+                                Semester {{ student[6] }}
 
                             </span>
 
