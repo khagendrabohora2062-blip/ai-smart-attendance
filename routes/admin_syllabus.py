@@ -8,12 +8,14 @@ from flask import (
     flash,
     current_app,
     send_from_directory,
+    send_file,
     abort
 )
 
 from extensions import mysql
 from werkzeug.utils import secure_filename
 
+from io import BytesIO
 import os
 import uuid
 
@@ -75,16 +77,6 @@ def allowed_file(filename):
 
 # ==========================================================
 # NORMALIZE SEMESTER
-#
-# Examples:
-# 4
-# "4"
-# "4th"
-# "4th Semester"
-# "4 Semester"
-#
-# All become:
-# "4"
 # ==========================================================
 
 def normalize_semester(value):
@@ -97,17 +89,14 @@ def normalize_semester(value):
     if not value:
         return ""
 
-    # Remove common semester words
     value = value.replace("semester", "")
     value = value.replace("sem", "")
 
-    # Remove ordinal suffixes
     value = value.replace("st", "")
     value = value.replace("nd", "")
     value = value.replace("rd", "")
     value = value.replace("th", "")
 
-    # Remove spaces
     value = value.replace(" ", "")
 
     return value
@@ -127,18 +116,12 @@ def normalize_department(value):
 
 # ==========================================================
 # GENERATE UNIQUE SYLLABUS ID
-#
-# TiDB:
-# syllabus.id is NOT AUTO_INCREMENT
-#
-# Therefore we manually generate a unique integer ID.
 # ==========================================================
 
 def generate_syllabus_id(cursor):
 
     while True:
 
-        # Generate positive INT value
         new_id = uuid.uuid4().int % 2147483647
 
         if new_id <= 0:
@@ -177,10 +160,12 @@ def index():
             url_for("auth.login")
         )
 
+
     cursor = mysql.connection.cursor()
 
     syllabuses = []
     subjects = []
+
 
     try:
 
@@ -219,9 +204,6 @@ def index():
 
         # ==================================================
         # LOAD SUBJECTS
-        #
-        # JavaScript can filter:
-        # department + semester
         # ==================================================
 
         cursor.execute(
@@ -250,6 +232,7 @@ def index():
             f"Syllabus loading error: {e}",
             "danger"
         )
+
 
     finally:
 
@@ -531,6 +514,7 @@ def upload():
             url_for("admin_syllabus.index")
         )
 
+
     finally:
 
         try:
@@ -540,14 +524,14 @@ def upload():
 
 
     # ======================================================
-    # SAVE PDF
+    # PREPARE PDF
     # ======================================================
 
     original_name = secure_filename(
         pdf_file.filename
     )
 
-    # Keep PDF extension
+    # Unique PDF filename
     unique_name = (
         str(uuid.uuid4())
         + ".pdf"
@@ -574,8 +558,34 @@ def upload():
     try:
 
         # ==================================================
-        # SAVE PHYSICAL PDF
+        # READ PDF INTO MEMORY
+        #
+        # IMPORTANT:
+        # This is the main fix for Render 404.
+        #
+        # PDF bytes are stored in syllabus.file_data.
         # ==================================================
+
+        pdf_file.seek(0)
+
+        file_data = pdf_file.read()
+
+
+        if not file_data:
+
+            raise ValueError(
+                "Uploaded PDF file is empty."
+            )
+
+
+        # ==================================================
+        # SAVE PHYSICAL PDF
+        #
+        # This is kept for local development and
+        # backward compatibility.
+        # ==================================================
+
+        pdf_file.seek(0)
 
         pdf_file.save(
             file_path
@@ -591,8 +601,6 @@ def upload():
 
         # ==================================================
         # GENERATE MANUAL ID
-        #
-        # IMPORTANT FOR TiDB
         # ==================================================
 
         syllabus_id = generate_syllabus_id(
@@ -603,12 +611,7 @@ def upload():
         # ==================================================
         # DATABASE INSERT
         #
-        # IMPORTANT:
-        # id is explicitly inserted.
-        #
-        # This fixes:
-        #
-        # Field 'id' doesn't have a default value
+        # file_data is now stored permanently in DB.
         # ==================================================
 
         cursor.execute(
@@ -622,11 +625,13 @@ def upload():
                 title,
                 description,
                 file_name,
-                file_path
+                file_path,
+                file_data
             )
 
             VALUES
             (
+                %s,
                 %s,
                 %s,
                 %s,
@@ -656,7 +661,9 @@ def upload():
                     "uploads",
                     "syllabus",
                     unique_name
-                ).replace("\\", "/")
+                ).replace("\\", "/"),
+
+                file_data
             )
         )
 
@@ -673,6 +680,7 @@ def upload():
         # ==================================================
 
         cursor.close()
+
         cursor = None
 
 
@@ -696,8 +704,11 @@ def upload():
         # --------------------------------------------------
 
         try:
+
             mysql.connection.rollback()
+
         except Exception:
+
             pass
 
 
@@ -711,19 +722,22 @@ def upload():
                 cursor.close()
 
         except Exception:
+
             pass
 
 
         # --------------------------------------------------
-        # DELETE PDF IF DATABASE INSERT FAILED
+        # DELETE PHYSICAL PDF IF DATABASE INSERT FAILED
         # --------------------------------------------------
 
         if os.path.exists(file_path):
 
             try:
+
                 os.remove(file_path)
 
             except Exception:
+
                 pass
 
 
@@ -749,181 +763,492 @@ def upload():
 
 
 # ==========================================================
+# SAFE FILE NAME
+# ==========================================================
 
 def _safe_syllabus_filename(filename):
+
     if not filename:
         return ""
-    return os.path.basename(str(filename).replace("\\", "/").strip())
+
+    return os.path.basename(
+        str(filename)
+        .replace("\\", "/")
+        .strip()
+    )
 
 
-def _find_syllabus_file(filename):
-    safe_name = _safe_syllabus_filename(filename)
-    if not safe_name:
+# ==========================================================
+# GET SYLLABUS FILE FROM DATABASE
+# ==========================================================
+
+def _get_syllabus_file_data(filename):
+
+    """
+    Find syllabus by filename/path.
+
+    Returns:
+
+        (stored_filename, file_data)
+
+    New uploads:
+        file_data contains PDF bytes.
+
+    Old uploads:
+        file_data may be NULL.
+    """
+
+    safe_name = _safe_syllabus_filename(
+        filename
+    )
+
+
+    if (
+        not safe_name
+        or not safe_name.lower().endswith(".pdf")
+    ):
+
         return None, None
 
-    folder = get_syllabus_upload_folder()
-    physical = os.path.join(folder, safe_name)
 
-    if os.path.isfile(physical):
-        return folder, safe_name
+    normalized_path = (
+        filename
+        .replace("\\", "/")
+        .lstrip("/")
+    )
 
-    return None, None
+
+    cursor = mysql.connection.cursor()
+
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                file_name,
+                file_data
+
+            FROM syllabus
+
+            WHERE
+                file_name = %s
+
+                OR
+
+                file_path = %s
+
+                OR
+
+                file_path = %s
+
+            LIMIT 1
+            """,
+            (
+                safe_name,
+
+                normalized_path,
+
+                "uploads/syllabus/"
+                + safe_name
+            )
+        )
+
+
+        row = cursor.fetchone()
+
+
+    finally:
+
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+
+    if not row:
+
+        return None, None
+
+
+    stored_name = _safe_syllabus_filename(
+        row[0]
+    )
+
+    file_data = row[1]
+
+
+    if not stored_name:
+
+        return None, None
+
+
+    # ------------------------------------------------------
+    # Convert bytearray to bytes if necessary
+    # ------------------------------------------------------
+
+    if isinstance(
+        file_data,
+        bytearray
+    ):
+
+        file_data = bytes(
+            file_data
+        )
+
+
+    # ------------------------------------------------------
+    # Return database PDF
+    # ------------------------------------------------------
+
+    if (
+        isinstance(file_data, bytes)
+        and len(file_data) > 0
+    ):
+
+        return (
+            stored_name,
+            file_data
+        )
+
+
+    # ------------------------------------------------------
+    # Old record with NULL file_data
+    # ------------------------------------------------------
+
+    return (
+        stored_name,
+        None
+    )
+
 
 # ==========================================================
 # DELETE SYLLABUS
 # ==========================================================
 
-@admin_syllabus.route("/delete/<int:id>", methods=["POST"])
+@admin_syllabus.route(
+    "/delete/<int:id>",
+    methods=["POST"]
+)
 def delete(id):
+
     if not admin_logged_in():
-        return redirect(url_for("auth.login"))
+
+        return redirect(
+            url_for("auth.login")
+        )
+
 
     cursor = mysql.connection.cursor()
+
     file_name = None
 
+
     try:
-        cursor.execute("SELECT file_name FROM syllabus WHERE id = %s LIMIT 1", (id,))
-        row = cursor.fetchone()
 
-        if not row:
-            flash("Syllabus not found.", "warning")
-            return redirect(url_for("admin_syllabus.index"))
+        # ==================================================
+        # GET FILE NAME
+        # ==================================================
 
-        file_name = _safe_syllabus_filename(row[0])
-        cursor.execute("DELETE FROM syllabus WHERE id = %s", (id,))
-        mysql.connection.commit()
-
-    except Exception as e:
-        try:
-            mysql.connection.rollback()
-        except Exception:
-            pass
-        flash(f"Unable to delete syllabus: {e}", "danger")
-        return redirect(url_for("admin_syllabus.index"))
-    finally:
-        try:
-            cursor.close()
-        except Exception:
-            pass
-
-    if file_name:
-        try:
-            physical_file = os.path.join(get_syllabus_upload_folder(), file_name)
-            if os.path.isfile(physical_file):
-                os.remove(physical_file)
-        except Exception as e:
-            print("SYLLABUS FILE DELETE WARNING:", repr(e))
-
-    flash("Syllabus deleted successfully.", "success")
-    return redirect(url_for("admin_syllabus.index"))
-
-
-# ==========================================================
-# VIEW / DOWNLOAD SYLLABUS
-# ==========================================================
-
-@admin_syllabus.route("/file/<path:filename>")
-def file(filename):
-    if not admin_logged_in():
-        return redirect(url_for("auth.login"))
-
-    safe_name = _safe_syllabus_filename(filename)
-    folder = get_syllabus_upload_folder()
-
-    if not safe_name.lower().endswith(".pdf"):
-        abort(404)
-
-    # The database stores paths such as uploads/syllabus/name.pdf,
-    # while the real file is in static/uploads/syllabus/name.pdf.
-    # Match by basename so both formats work.
-    cursor = mysql.connection.cursor()
-    try:
         cursor.execute(
             """
-            SELECT file_name
+            SELECT
+                file_name
+
             FROM syllabus
-            WHERE file_name = %s
-               OR file_path = %s
-               OR file_path = %s
+
+            WHERE id = %s
+
             LIMIT 1
             """,
-            (
-                safe_name,
-                filename.replace("\\", "/").lstrip("/"),
-                "uploads/syllabus/" + safe_name,
-            ),
+            (id,)
         )
+
+
         row = cursor.fetchone()
+
+
+        if not row:
+
+            flash(
+                "Syllabus not found.",
+                "warning"
+            )
+
+            return redirect(
+                url_for("admin_syllabus.index")
+            )
+
+
+        file_name = _safe_syllabus_filename(
+            row[0]
+        )
+
+
+        # ==================================================
+        # DELETE DATABASE ROW
+        # ==================================================
+
+        cursor.execute(
+            """
+            DELETE FROM syllabus
+            WHERE id = %s
+            """,
+            (id,)
+        )
+
+
+        mysql.connection.commit()
+
+
+    except Exception as e:
+
+        try:
+
+            mysql.connection.rollback()
+
+        except Exception:
+
+            pass
+
+
+        flash(
+            f"Unable to delete syllabus: {e}",
+            "danger"
+        )
+
+
+        return redirect(
+            url_for("admin_syllabus.index")
+        )
+
+
     finally:
+
         try:
             cursor.close()
         except Exception:
             pass
 
-    if not row:
-        abort(404)
 
-    safe_name = _safe_syllabus_filename(row[0])
-    physical = os.path.join(folder, safe_name)
+    # ======================================================
+    # DELETE PHYSICAL COPY
+    # ======================================================
 
-    if not os.path.isfile(physical):
-        abort(404)
+    if file_name:
 
-    return send_from_directory(
-        folder,
-        safe_name,
-        as_attachment=False,
-        download_name=safe_name,
+        try:
+
+            physical_file = os.path.join(
+                get_syllabus_upload_folder(),
+                file_name
+            )
+
+
+            if os.path.isfile(
+                physical_file
+            ):
+
+                os.remove(
+                    physical_file
+                )
+
+
+        except Exception as e:
+
+            print(
+                "SYLLABUS FILE DELETE WARNING:",
+                repr(e)
+            )
+
+
+    flash(
+        "Syllabus deleted successfully.",
+        "success"
     )
 
 
-@admin_syllabus.route("/download/<path:filename>")
-def download(filename):
-    if not admin_logged_in():
-        return redirect(url_for("auth.login"))
-
-    safe_name = _safe_syllabus_filename(filename)
-    folder = get_syllabus_upload_folder()
-
-    if not safe_name.lower().endswith(".pdf"):
-        abort(404)
-
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            """
-            SELECT file_name
-            FROM syllabus
-            WHERE file_name = %s
-               OR file_path = %s
-               OR file_path = %s
-            LIMIT 1
-            """,
-            (
-                safe_name,
-                filename.replace("\\", "/").lstrip("/"),
-                "uploads/syllabus/" + safe_name,
-            ),
+    return redirect(
+        url_for(
+            "admin_syllabus.index"
         )
-        row = cursor.fetchone()
-    finally:
-        try:
-            cursor.close()
-        except Exception:
-            pass
+    )
 
-    if not row:
+
+# ==========================================================
+# VIEW SYLLABUS
+# ==========================================================
+
+@admin_syllabus.route(
+    "/file/<path:filename>"
+)
+def file(filename):
+
+    # ------------------------------------------------------
+    # LOGIN CHECK
+    # ------------------------------------------------------
+
+    if not admin_logged_in():
+
+        return redirect(
+            url_for("auth.login")
+        )
+
+
+    # ------------------------------------------------------
+    # GET FILE FROM DATABASE
+    # ------------------------------------------------------
+
+    stored_name, file_data = (
+        _get_syllabus_file_data(
+            filename
+        )
+    )
+
+
+    if not stored_name:
+
         abort(404)
 
-    safe_name = _safe_syllabus_filename(row[0])
-    physical = os.path.join(folder, safe_name)
 
-    if not os.path.isfile(physical):
+    # ======================================================
+    # PRIMARY METHOD
+    #
+    # Serve PDF directly from database.
+    # ======================================================
+
+    if file_data:
+
+        return send_file(
+            BytesIO(file_data),
+
+            mimetype="application/pdf",
+
+            as_attachment=False,
+
+            download_name=stored_name
+        )
+
+
+    # ======================================================
+    # FALLBACK FOR OLD RECORDS
+    #
+    # Used only if file_data is NULL and physical
+    # PDF still exists.
+    # ======================================================
+
+    folder = (
+        get_syllabus_upload_folder()
+    )
+
+
+    physical = os.path.join(
+        folder,
+        stored_name
+    )
+
+
+    if not os.path.isfile(
+        physical
+    ):
+
         abort(404)
+
 
     return send_from_directory(
         folder,
-        safe_name,
+
+        stored_name,
+
+        as_attachment=False,
+
+        download_name=stored_name
+    )
+
+
+# ==========================================================
+# DOWNLOAD SYLLABUS
+# ==========================================================
+
+@admin_syllabus.route(
+    "/download/<path:filename>"
+)
+def download(filename):
+
+    # ------------------------------------------------------
+    # LOGIN CHECK
+    # ------------------------------------------------------
+
+    if not admin_logged_in():
+
+        return redirect(
+            url_for("auth.login")
+        )
+
+
+    # ------------------------------------------------------
+    # GET FILE FROM DATABASE
+    # ------------------------------------------------------
+
+    stored_name, file_data = (
+        _get_syllabus_file_data(
+            filename
+        )
+    )
+
+
+    if not stored_name:
+
+        abort(404)
+
+
+    # ======================================================
+    # PRIMARY METHOD
+    #
+    # Download directly from database.
+    # ======================================================
+
+    if file_data:
+
+        return send_file(
+            BytesIO(file_data),
+
+            mimetype="application/pdf",
+
+            as_attachment=True,
+
+            download_name=stored_name
+        )
+
+
+    # ======================================================
+    # FALLBACK FOR OLD RECORDS
+    # ======================================================
+
+    folder = (
+        get_syllabus_upload_folder()
+    )
+
+
+    physical = os.path.join(
+        folder,
+        stored_name
+    )
+
+
+    if not os.path.isfile(
+        physical
+    ):
+
+        abort(404)
+
+
+    return send_from_directory(
+        folder,
+
+        stored_name,
+
         as_attachment=True,
-        download_name=safe_name,
+
+        download_name=stored_name
     )

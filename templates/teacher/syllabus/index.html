@@ -4,9 +4,7 @@
 Teacher Syllabus - AI Smart Attendance
 {% endblock %}
 
-
 {% block css %}
-
 <style>
 
 /* =========================================================
@@ -51,7 +49,7 @@ Teacher Syllabus - AI Smart Attendance
 
 
 /* =========================================================
-   INFO CARD
+   TEACHER INFO CARD
 ========================================================= */
 
 .teacher-info-card {
@@ -264,7 +262,7 @@ Teacher Syllabus - AI Smart Attendance
 
 
 /* =========================================================
-   EMPTY
+   EMPTY STATE
 ========================================================= */
 
 .empty-syllabus {
@@ -309,26 +307,67 @@ Teacher Syllabus - AI Smart Attendance
 
 @media (max-width: 768px) {
 
+    .teacher-syllabus-page {
+        padding: 5px 0 30px;
+    }
+
     .syllabus-header {
         flex-direction: column;
         align-items: flex-start;
+        margin-bottom: 22px;
     }
 
     .syllabus-title {
         font-size: 23px;
     }
 
+    .syllabus-subtitle {
+        font-size: 13px;
+    }
+
+    .teacher-info-card {
+        padding: 16px;
+    }
+
+    .teacher-info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .syllabus-card-header {
+        padding: 16px;
+    }
+
+    .syllabus-card-body {
+        padding: 16px;
+    }
+
+    .syllabus-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .syllabus-btn {
+        width: 100%;
+    }
+
+    .file-name {
+        max-width: calc(100vw - 110px);
+    }
+
+    .empty-syllabus {
+        padding: 45px 20px;
+    }
 }
 
 </style>
-
 {% endblock %}
 
 
 {% block content %}
 
 <div class="teacher-syllabus-page">
-
 
     <!-- =====================================================
          HEADER
@@ -339,23 +378,17 @@ Teacher Syllabus - AI Smart Attendance
         <div>
 
             <h2 class="syllabus-title">
-
                 <i class="bi bi-journal-bookmark-fill"></i>
-
                 Syllabus
-
             </h2>
 
             <p class="syllabus-subtitle">
-
                 View and download syllabus for your subjects.
-
             </p>
 
         </div>
 
     </div>
-
 
 
     <!-- =====================================================
@@ -413,7 +446,6 @@ Teacher Syllabus - AI Smart Attendance
     {% endif %}
 
 
-
     <!-- =====================================================
          SYLLABUS LIST
     ====================================================== -->
@@ -430,7 +462,7 @@ Teacher Syllabus - AI Smart Attendance
 
 
                 <!-- =================================================
-                     HEADER
+                     CARD HEADER
                 ================================================== -->
 
                 <div class="syllabus-card-header">
@@ -438,9 +470,7 @@ Teacher Syllabus - AI Smart Attendance
                     {% if syllabus[4] %}
 
                     <span class="subject-code">
-
                         {{ syllabus[4] }}
-
                     </span>
 
                     {% endif %}
@@ -462,9 +492,8 @@ Teacher Syllabus - AI Smart Attendance
                 </div>
 
 
-
                 <!-- =================================================
-                     BODY
+                     CARD BODY
                 ================================================== -->
 
                 <div class="syllabus-card-body">
@@ -491,7 +520,6 @@ Teacher Syllabus - AI Smart Attendance
                     {% endif %}
 
 
-
                     <!-- META -->
 
                     <div class="syllabus-meta">
@@ -516,7 +544,6 @@ Teacher Syllabus - AI Smart Attendance
                     </div>
 
 
-
                     <!-- FILE -->
 
                     {% if syllabus[8] %}
@@ -536,8 +563,9 @@ Teacher Syllabus - AI Smart Attendance
                     {% endif %}
 
 
-
-                    <!-- ACTIONS -->
+                    <!-- =================================================
+                         ACTIONS
+                    ================================================== -->
 
                     {% if syllabus[8] %}
 
@@ -547,8 +575,9 @@ Teacher Syllabus - AI Smart Attendance
                         <!-- VIEW -->
 
                         <a
-                            href="{{ url_for('static', filename='uploads/syllabus/' ~ syllabus[8]) }}"
+                            href="{{ url_for('teacher_syllabus.view', filename=syllabus[8]) }}"
                             target="_blank"
+                            rel="noopener noreferrer"
                             class="syllabus-btn view-btn"
                         >
 
@@ -562,7 +591,7 @@ Teacher Syllabus - AI Smart Attendance
                         <!-- DOWNLOAD -->
 
                         <a
-                            href="{{ url_for('static', filename='uploads/syllabus/' ~ syllabus[8]) }}"
+                            href="{{ url_for('teacher_syllabus.download', filename=syllabus[8]) }}"
                             class="syllabus-btn download-btn"
                         >
 
@@ -572,9 +601,11 @@ Teacher Syllabus - AI Smart Attendance
 
                         </a>
 
+
                     </div>
 
                     {% endif %}
+
 
                 </div>
 
@@ -591,7 +622,7 @@ Teacher Syllabus - AI Smart Attendance
 
 
     <!-- =====================================================
-         EMPTY
+         EMPTY STATE
     ====================================================== -->
 
     <div class="empty-syllabus">
@@ -602,17 +633,25 @@ Teacher Syllabus - AI Smart Attendance
 
         </div>
 
+
         <h4>
+
             No Syllabus Available
+
         </h4>
 
+
         <p>
-            No syllabus has been uploaded for your department or assigned subjects yet.
+
+            No syllabus has been uploaded for your department
+            or assigned subjects yet.
+
         </p>
 
     </div>
 
     {% endif %}
+
 
 </div>
 

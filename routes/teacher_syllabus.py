@@ -1,27 +1,21 @@
-# ============================================================
-# TEACHER SYLLABUS
-# File:
-# routes/teacher_syllabus.py
-# ============================================================
-
-import os
-
 from flask import (
     Blueprint,
-    render_template,
+    session,
     redirect,
     url_for,
-    session,
-    current_app,
-    send_from_directory,
-    abort
+    flash,
+    render_template,
+    send_file
 )
+
+from io import BytesIO
+import os
 
 from extensions import mysql
 
 
 # ============================================================
-# BLUEPRINT
+# TEACHER SYLLABUS BLUEPRINT
 # ============================================================
 
 teacher_syllabus = Blueprint(
@@ -32,33 +26,35 @@ teacher_syllabus = Blueprint(
 
 
 # ============================================================
-# TEACHER LOGIN CHECK
+# HELPER: GET SYLLABUS FILE DATA
 # ============================================================
 
-def teacher_logged_in():
+def _get_syllabus_file_data(filename):
+    """
+    Get syllabus PDF from database using filename.
+    Returns:
+        file_data, file_path
+    """
 
-    return "teacher_id" in session
+    cur = mysql.connection.cursor()
 
-
-# ============================================================
-# SYLLABUS UPLOAD FOLDER
-# ============================================================
-
-def get_syllabus_upload_folder():
-
-    folder = os.path.join(
-        current_app.root_path,
-        "static",
-        "uploads",
-        "syllabus"
+    cur.execute(
+        """
+        SELECT file_data, file_path
+        FROM syllabus
+        WHERE file_name = %s
+        LIMIT 1
+        """,
+        (filename,)
     )
 
-    os.makedirs(
-        folder,
-        exist_ok=True
-    )
+    result = cur.fetchone()
+    cur.close()
 
-    return folder
+    if not result:
+        return None, None
+
+    return result[0], result[1]
 
 
 # ============================================================
@@ -69,264 +65,222 @@ def get_syllabus_upload_folder():
 def index():
 
     # --------------------------------------------------------
-    # LOGIN CHECK
+    # CHECK TEACHER LOGIN
     # --------------------------------------------------------
 
-    if not teacher_logged_in():
+    if "teacher_id" not in session:
+        flash("Please login as teacher to access syllabus.", "warning")
+        return redirect(url_for("teacher_auth.login"))
 
-        return redirect(
-            url_for("teacher_auth.login")
-        )
+    teacher_id = session.get("teacher_id")
 
+    cur = mysql.connection.cursor()
 
-    teacher_id = session["teacher_id"]
+    # --------------------------------------------------------
+    # GET CURRENT TEACHER
+    # --------------------------------------------------------
 
-    cursor = mysql.connection.cursor()
+    cur.execute(
+        """
+        SELECT
+            id,
+            teacher_id,
+            full_name,
+            email,
+            department
+        FROM teachers
+        WHERE teacher_id = %s
+        LIMIT 1
+        """,
+        (teacher_id,)
+    )
 
-    teacher = None
-    syllabuses = []
+    teacher = cur.fetchone()
 
+    if not teacher:
+        cur.close()
+        flash("Teacher record not found.", "danger")
+        return redirect(url_for("teacher_auth.login"))
 
-    try:
+    department = teacher[4]
 
-        # ====================================================
-        # CURRENT TEACHER
-        # ====================================================
+    # --------------------------------------------------------
+    # GET SYLLABUS
+    #
+    # Teacher can view syllabus belonging to:
+    # - Same department
+    # - Subjects assigned to the teacher
+    # --------------------------------------------------------
 
-        cursor.execute(
-            """
-            SELECT
-                id,
-                teacher_id,
-                full_name,
-                email,
-                department
-            FROM teachers
-            WHERE id = %s
-            LIMIT 1
-            """,
-            (teacher_id,)
-        )
+    cur.execute(
+        """
+        SELECT
+            s.id,
+            s.department,
+            s.semester,
+            s.subject_id,
+            sub.subject_code,
+            sub.subject_name,
+            s.title,
+            s.description,
+            s.file_name,
+            s.file_path,
+            s.created_at,
+            s.updated_at
+        FROM syllabus s
+        LEFT JOIN subjects sub
+            ON s.subject_id = sub.id
+        WHERE s.department = %s
+          AND (
+                sub.teacher_id = %s
+                OR sub.teacher_id IS NULL
+              )
+        ORDER BY s.created_at DESC
+        """,
+        (department, teacher[0])
+    )
 
-        teacher = cursor.fetchone()
+    syllabi = cur.fetchall()
 
-
-        if not teacher:
-
-            session.clear()
-
-            return redirect(
-                url_for("teacher_auth.login")
-            )
-
-
-        department = teacher[4]
-
-
-        # ====================================================
-        # GET SYLLABUS
-        #
-        # Show syllabus for:
-        # 1. Teacher's department
-        # 2. Teacher's assigned subjects
-        #
-        # ====================================================
-
-        cursor.execute(
-            """
-            SELECT DISTINCT
-                s.id,
-                s.department,
-                s.semester,
-                s.subject_id,
-                sub.subject_code,
-                sub.subject_name,
-                s.title,
-                s.description,
-                s.file_name,
-                s.file_path,
-                s.created_at,
-                s.updated_at
-
-            FROM syllabus s
-
-            LEFT JOIN subjects sub
-                ON s.subject_id = sub.id
-
-            WHERE
-                LOWER(TRIM(s.department))
-                =
-                LOWER(TRIM(%s))
-
-            AND
-                (
-                    sub.teacher_id = %s
-                    OR sub.teacher_id IS NULL
-                )
-
-            ORDER BY
-                s.semester ASC,
-                sub.subject_code ASC,
-                s.id DESC
-            """,
-            (
-                department,
-                teacher_id
-            )
-        )
-
-        syllabuses = cursor.fetchall() or []
-
-
-    except Exception as e:
-
-        print(
-            "TEACHER SYLLABUS ERROR:",
-            repr(e)
-        )
-
-        syllabuses = []
-
-
-    finally:
-
-        cursor.close()
-
+    cur.close()
 
     return render_template(
         "teacher/syllabus/index.html",
         teacher=teacher,
-        syllabuses=syllabuses
+        syllabi=syllabi,
+        department=department
     )
 
 
 # ============================================================
-
-def _safe_syllabus_filename(filename):
-    if not filename:
-        return ""
-    return os.path.basename(str(filename).replace("\\", "/").strip())
-
-
-def _find_syllabus_file(filename):
-    safe_name = _safe_syllabus_filename(filename)
-    if not safe_name:
-        return None, None
-
-    folder = get_syllabus_upload_folder()
-    physical = os.path.join(folder, safe_name)
-
-    if os.path.isfile(physical):
-        return folder, safe_name
-
-    return None, None
-
-# ==========================================================
-# VIEW / DOWNLOAD SYLLABUS
-# ==========================================================
+# VIEW SYLLABUS PDF
+# ============================================================
 
 @teacher_syllabus.route("/view/<path:filename>")
 def view(filename):
-    if not teacher_logged_in():
+
+    # --------------------------------------------------------
+    # CHECK TEACHER LOGIN
+    # --------------------------------------------------------
+
+    if "teacher_id" not in session:
+        flash("Please login as teacher first.", "warning")
         return redirect(url_for("teacher_auth.login"))
 
-    safe_name = _safe_syllabus_filename(filename)
-    folder = get_syllabus_upload_folder()
+    # --------------------------------------------------------
+    # GET FILE
+    # --------------------------------------------------------
 
-    if not safe_name.lower().endswith(".pdf"):
-        abort(404)
+    file_data, file_path = _get_syllabus_file_data(filename)
 
-    # The database stores paths such as uploads/syllabus/name.pdf,
-    # while the real file is in static/uploads/syllabus/name.pdf.
-    # Match by basename so both formats work.
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            """
-            SELECT file_name
-            FROM syllabus
-            WHERE file_name = %s
-               OR file_path = %s
-               OR file_path = %s
-            LIMIT 1
-            """,
-            (
-                safe_name,
-                filename.replace("\\", "/").lstrip("/"),
-                "uploads/syllabus/" + safe_name,
-            ),
+    # --------------------------------------------------------
+    # DATABASE FILE AVAILABLE
+    # --------------------------------------------------------
+
+    if file_data:
+        return send_file(
+            BytesIO(bytes(file_data)),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=filename
         )
-        row = cursor.fetchone()
-    finally:
-        try:
-            cursor.close()
-        except Exception:
-            pass
 
-    if not row:
-        abort(404)
+    # --------------------------------------------------------
+    # FALLBACK TO PHYSICAL FILE
+    # --------------------------------------------------------
 
-    safe_name = _safe_syllabus_filename(row[0])
-    physical = os.path.join(folder, safe_name)
+    if file_path:
 
-    if not os.path.isfile(physical):
-        abort(404)
+        physical_path = file_path
 
-    return send_from_directory(
-        folder,
-        safe_name,
-        as_attachment=False,
-        download_name=safe_name,
+        if not os.path.isabs(physical_path):
+            physical_path = os.path.join(
+                os.getcwd(),
+                physical_path
+            )
+
+        if os.path.exists(physical_path):
+            return send_file(
+                physical_path,
+                mimetype="application/pdf",
+                as_attachment=False,
+                download_name=filename
+            )
+
+    # --------------------------------------------------------
+    # FILE NOT FOUND
+    # --------------------------------------------------------
+
+    flash(
+        "Syllabus file not found. Please contact administrator.",
+        "danger"
     )
 
+    return redirect(url_for("teacher_syllabus.index"))
+
+
+# ============================================================
+# DOWNLOAD SYLLABUS PDF
+# ============================================================
 
 @teacher_syllabus.route("/download/<path:filename>")
 def download(filename):
-    if not teacher_logged_in():
+
+    # --------------------------------------------------------
+    # CHECK TEACHER LOGIN
+    # --------------------------------------------------------
+
+    if "teacher_id" not in session:
+        flash("Please login as teacher first.", "warning")
         return redirect(url_for("teacher_auth.login"))
 
-    safe_name = _safe_syllabus_filename(filename)
-    folder = get_syllabus_upload_folder()
+    # --------------------------------------------------------
+    # GET FILE
+    # --------------------------------------------------------
 
-    if not safe_name.lower().endswith(".pdf"):
-        abort(404)
+    file_data, file_path = _get_syllabus_file_data(filename)
 
-    cursor = mysql.connection.cursor()
-    try:
-        cursor.execute(
-            """
-            SELECT file_name
-            FROM syllabus
-            WHERE file_name = %s
-               OR file_path = %s
-               OR file_path = %s
-            LIMIT 1
-            """,
-            (
-                safe_name,
-                filename.replace("\\", "/").lstrip("/"),
-                "uploads/syllabus/" + safe_name,
-            ),
+    # --------------------------------------------------------
+    # DATABASE FILE AVAILABLE
+    # --------------------------------------------------------
+
+    if file_data:
+        return send_file(
+            BytesIO(bytes(file_data)),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=filename
         )
-        row = cursor.fetchone()
-    finally:
-        try:
-            cursor.close()
-        except Exception:
-            pass
 
-    if not row:
-        abort(404)
+    # --------------------------------------------------------
+    # FALLBACK TO PHYSICAL FILE
+    # --------------------------------------------------------
 
-    safe_name = _safe_syllabus_filename(row[0])
-    physical = os.path.join(folder, safe_name)
+    if file_path:
 
-    if not os.path.isfile(physical):
-        abort(404)
+        physical_path = file_path
 
-    return send_from_directory(
-        folder,
-        safe_name,
-        as_attachment=True,
-        download_name=safe_name,
+        if not os.path.isabs(physical_path):
+            physical_path = os.path.join(
+                os.getcwd(),
+                physical_path
+            )
+
+        if os.path.exists(physical_path):
+            return send_file(
+                physical_path,
+                mimetype="application/pdf",
+                as_attachment=True,
+                download_name=filename
+            )
+
+    # --------------------------------------------------------
+    # FILE NOT FOUND
+    # --------------------------------------------------------
+
+    flash(
+        "Syllabus file not found. Please contact administrator.",
+        "danger"
     )
+
+    return redirect(url_for("teacher_syllabus.index"))
