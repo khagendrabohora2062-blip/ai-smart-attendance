@@ -808,10 +808,23 @@ def submit_assignment(
 
         else:
 
+            # ----------------------------------------------------
+            # AUTO-GENERATE SUBMISSION ID
+            # ----------------------------------------------------
+            cursor.execute(
+                """
+                SELECT COALESCE(MAX(id), 0) + 1
+                FROM assignment_submissions
+                """
+            )
+
+            next_submission_id = cursor.fetchone()[0]
+
             cursor.execute(
                 """
                 INSERT INTO assignment_submissions
                 (
+                    id,
                     assignment_id,
                     student_id,
                     answer,
@@ -829,6 +842,7 @@ def submit_assignment(
                     %s,
                     %s,
                     %s,
+                    %s,
                     NOW(),
                     NULL,
                     NULL,
@@ -836,6 +850,7 @@ def submit_assignment(
                 )
                 """,
                 (
+                    next_submission_id,
                     assignment_id,
                     student[0],
                     answer or None,

@@ -13,12 +13,14 @@ from flask import (
     session,
     flash,
     current_app,
-    send_from_directory
+    send_from_directory,
+    send_file
 )
 
 from extensions import mysql
 
 import os
+from io import BytesIO
 import uuid
 
 from werkzeug.utils import secure_filename
@@ -1817,10 +1819,20 @@ def submission_file(submission_id):
 
     try:
 
+        # ----------------------------------------------------
+        # GET SUBMISSION FILE FROM DATABASE
+        # ----------------------------------------------------
+        # Student submissions are stored in:
+        #   attachment      -> original/generated filename
+        #   attachment_data -> actual file bytes
+        #
+        # Therefore the teacher must read attachment_data
+        # instead of relying only on a physical file.
         cursor.execute(
             """
             SELECT
-                sub.attachment
+                sub.attachment,
+                sub.attachment_data
             FROM assignment_submissions sub
             INNER JOIN assignments a
                 ON sub.assignment_id = a.id
@@ -1838,7 +1850,10 @@ def submission_file(submission_id):
 
     except Exception as e:
 
-        mysql.connection.rollback()
+        try:
+            mysql.connection.rollback()
+        except Exception:
+            pass
 
         flash(
             f"Unable to load submission file: {e}",
@@ -1847,9 +1862,12 @@ def submission_file(submission_id):
 
     finally:
 
-        cursor.close()
+        try:
+            cursor.close()
+        except Exception:
+            pass
 
-    if not submission or not submission[0]:
+    if not submission:
 
         flash(
             "Submission attachment not found.",
@@ -1862,10 +1880,56 @@ def submission_file(submission_id):
             )
         )
 
-    return send_from_directory(
-        submission_upload_folder(),
-        submission[0],
-        as_attachment=False
+    filename = os.path.basename(
+        str(submission[0] or "")
+    )
+
+    file_data = submission[1]
+
+    # ----------------------------------------------------
+    # DATABASE FILE
+    # ----------------------------------------------------
+    if file_data:
+
+        if not filename:
+            filename = (
+                f"submission_{submission_id}"
+            )
+
+        return send_file(
+            BytesIO(bytes(file_data)),
+            mimetype="application/octet-stream",
+            as_attachment=False,
+            download_name=filename
+        )
+
+    # ----------------------------------------------------
+    # OLD PHYSICAL FILE FALLBACK
+    # ----------------------------------------------------
+    if filename:
+
+        path = os.path.join(
+            submission_upload_folder(),
+            filename
+        )
+
+        if os.path.isfile(path):
+
+            return send_from_directory(
+                submission_upload_folder(),
+                filename,
+                as_attachment=False
+            )
+
+    flash(
+        "Submission attachment not found.",
+        "danger"
+    )
+
+    return redirect(
+        url_for(
+            "teacher_assignment.index"
+        )
     )
 
 
